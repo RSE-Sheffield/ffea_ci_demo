@@ -192,7 +192,7 @@ SimulationParams::~SimulationParams()
 
     trajectory_out_fname = "\n";
     measurement_out_fname = "\n";
-    kinetics_out_fname, "\n";
+    kinetics_out_fname = "\n";
     icheckpoint_fname = "\n";
     ocheckpoint_fname = "\n";
     bsite_in_fname = "\n";
@@ -717,7 +717,7 @@ int SimulationParams::assign(string lvalue, string rvalue)
         if (detailed_meas_out_fname == "\n")
         {
             string meas_basename = measurement_out_fname;
-            meas_basename = RemoveFileExtension(meas_basename);
+            meas_basename = std::filesystem::path(meas_basename).replace_extension().generic_string();
             detailed_meas_out_fname = meas_basename + ".fdm";
         }
     }
@@ -737,7 +737,7 @@ int SimulationParams::assign(string lvalue, string rvalue)
         if (userInfo::verblevel > 1)
             cout << "\tSetting " << lvalue << " = " << ssint_in_fname << endl;
     }
-    else if (lvalue == "rod_lj_in_fname" || lvalue == "rod_lj_in_fname" || lvalue == "rod_vdw_forcefield_params" || lvalue == "rod_lj_params")
+    else if (lvalue == "rod_lj_in_fname" || lvalue == "rod_vdw_forcefield_params" || lvalue == "rod_lj_params")
     {
         fs::path auxpath = FFEA_script_path / rvalue;
         rod_lj_in_fname = auxpath.string();
@@ -1338,11 +1338,4 @@ void SimulationParams::write_to_file(FILE *fout, PreComp_params &pc_params)
     }
 
     fprintf(fout, "\n\n");
-}
-
-string SimulationParams::RemoveFileExtension(const string &FileName)
-{
-    if (FileName.find_last_of(".") != std::string::npos)
-        return FileName.substr(0, FileName.find_last_of("."));
-    return "";
 }

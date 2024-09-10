@@ -208,7 +208,6 @@ private:
   *     where N is an integer so that the resulting file is new.
   */
     int checkFileName(string oFile);
-
-    string RemoveFileExtension(const string &FileName);
+    
 };
 #endif

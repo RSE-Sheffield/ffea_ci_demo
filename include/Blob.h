@@ -654,7 +654,8 @@ private:
     connectivity_entry *element_connectivity_table{};
 
     /*
-     *
+     * Mass Matrix
+     * @see build_mass_matrix()
      */
     SparseMatrixFixedPattern *M{};
 
