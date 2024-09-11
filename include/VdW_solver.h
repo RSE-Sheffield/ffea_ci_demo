@@ -37,7 +37,7 @@ public:
 
     ~VdW_solver();
 
-    int init(NearestNeighbourLinkedListCube *surface_face_lookup, vector3 *box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs);
+    int init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs);
 
     int solve(scalar *blob_corr);
 
@@ -53,7 +53,7 @@ protected:
     int total_num_surface_faces;
     NearestNeighbourLinkedListCube *surface_face_lookup;
 
-    vector3 box_size;
+    arr3 box_size;
     SSINT_matrix *ssint_matrix;
 
     scalar **fieldenergy;
@@ -91,17 +91,17 @@ protected:
     void do_sticky_xz_interaction(Face *f, bool bottom_wall, scalar dim_y);
 
     void calc_lj_force_pair_matrix(
-              vector3 (&force_pair_matrix)[num_tri_gauss_quad_points][num_tri_gauss_quad_points],
-              vector3 (&p)[num_tri_gauss_quad_points], vector3 (&q)[num_tri_gauss_quad_points], 
+              arr3 (&force_pair_matrix)[num_tri_gauss_quad_points][num_tri_gauss_quad_points],
+              arr3 (&p)[num_tri_gauss_quad_points], arr3 (&q)[num_tri_gauss_quad_points], 
               scalar &Rmin, scalar &Emin, scalar &energy);
 
     void calc_ljinterpolated_force_pair_matrix(
-              vector3 (&force_pair_matrix)[num_tri_gauss_quad_points][num_tri_gauss_quad_points],
-              vector3 (&p)[num_tri_gauss_quad_points], vector3 (&q)[num_tri_gauss_quad_points], 
+              arr3 (&force_pair_matrix)[num_tri_gauss_quad_points][num_tri_gauss_quad_points],
+              arr3 (&p)[num_tri_gauss_quad_points], arr3 (&q)[num_tri_gauss_quad_points], 
               scalar &Rmin, scalar &Emin, scalar &energy);
 
-    void calc_gensoft_force_pair_matrix(vector3 (&force_pair_matrix)[num_tri_gauss_quad_points][num_tri_gauss_quad_points],
-        vector3 (&p)[num_tri_gauss_quad_points], vector3 (&q)[num_tri_gauss_quad_points],
+    void calc_gensoft_force_pair_matrix(arr3 (&force_pair_matrix)[num_tri_gauss_quad_points][num_tri_gauss_quad_points],
+        arr3 (&p)[num_tri_gauss_quad_points], arr3 (&q)[num_tri_gauss_quad_points],
         scalar &Rmin, scalar &Emin, scalar &k0, scalar &energy);
 
     void calc_lj_factors(scalar &mag_r, int index_k, int index_l, scalar &Emin, scalar &Rmin_6,
@@ -113,11 +113,11 @@ protected:
     void calc_gensoft_factors(scalar &mag_r, int index_k, int index_l, scalar &Emin, scalar &Rmin_2, scalar &Rmin_3, scalar &k0, 
                                  scalar &force_mag, scalar &e);
 
-    scalar distance2(vector3 &p, vector3 &q);
+    scalar distance2(const arr3 &p, const arr3 &q);
 
-    scalar dot(vector3 *p, vector3 *q);
+    scalar dot(const arr3 &p, const arr3 &q);
 
-    scalar dot_with_normal(vector3 *p, vector3 *q, vector3 *n);
+    scalar dot_with_normal(const arr3 &p, const arr3 &q, const arr3 &n);
 
     scalar minimum_image(scalar delta, scalar size);
 

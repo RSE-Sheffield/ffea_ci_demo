@@ -83,7 +83,7 @@ void PoissonMatrixQuadratic::build(mesh_node *n[10], scalar epsilon) {
     };
 
     SecondOrderFunctions::abcd J_coeff[3][3];
-    vector3 grad_psi[10];
+    arr3 grad_psi[10];
 
     SecondOrderFunctions::calc_jacobian_column_coefficients(n, J_coeff);
 
@@ -145,18 +145,18 @@ scalar PoissonMatrixQuadratic::get_K_alpha_value(int i, int j) {
 }
 
 /* */
-void PoissonMatrixQuadratic::add_grad_dot_products(vector3 grad_psi[10], scalar det_J, scalar weight) {
+void PoissonMatrixQuadratic::add_grad_dot_products(arr3 grad_psi[10], scalar det_J, scalar weight) {
     int c = 0;
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j <= i; j++) {
-            K_alpha[c] += det_J * weight * grad_dot(&grad_psi[i], &grad_psi[j]);
+            K_alpha[c] += det_J * weight * grad_dot(grad_psi[i], grad_psi[j]);
             c++;
         }
     }
 }
 
-scalar PoissonMatrixQuadratic::grad_dot(vector3 *grad_psi_i, vector3 *grad_psi_j) {
-    return grad_psi_i->x * grad_psi_j->x + grad_psi_i->y * grad_psi_j->y + grad_psi_i->z * grad_psi_j->z;
+scalar PoissonMatrixQuadratic::grad_dot(arr3 &grad_psi_i, arr3 &grad_psi_j) {
+    return grad_psi_i[0] * grad_psi_j[0] + grad_psi_i[1] * grad_psi_j[1] + grad_psi_i[2] * grad_psi_j[2];
 }
 
 void PoissonMatrixQuadratic::zero() {

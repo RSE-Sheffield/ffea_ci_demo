@@ -188,14 +188,14 @@ void get_gradient_deformation(float J_inv_0[9], mesh_node**nodes_curr, OUT float
     float_3x3_mult_unrolled(J_after, J_inv_0, gradient_deformation_3x3);
     transpose_3x3(gradient_deformation_3x3, transposed_gradient_deformation_3x3);
     
-//    print_array("  Tet before node 0", nodes_before[0]->pos.data, 3);
-//    print_array("  Tet before node 1", nodes_before[1]->pos.data, 3);
-//    print_array("  Tet before node 2", nodes_before[2]->pos.data, 3);
-//    print_array("  Tet before node 3", nodes_before[3]->pos.data, 3);
-    print_array("  Tet after node 0", nodes_curr[0]->pos.data, 3);
-    print_array("  Tet after node 1", nodes_curr[1]->pos.data, 3);
-    print_array("  Tet after node 2", nodes_curr[2]->pos.data, 3);
-    print_array("  Tet after node 3", nodes_curr[3]->pos.data, 3);
+//    print_array("  Tet before node 0", nodes_before[0]->pos, 3);
+//    print_array("  Tet before node 1", nodes_before[1]->pos, 3);
+//    print_array("  Tet before node 2", nodes_before[2]->pos, 3);
+//    print_array("  Tet before node 3", nodes_before[3]->pos, 3);
+    print_array("  Tet after node 0", nodes_curr[0]->pos);
+    print_array("  Tet after node 1", nodes_curr[1]->pos);
+    print_array("  Tet after node 2", nodes_curr[2]->pos);
+    print_array("  Tet after node 3", nodes_curr[3]->pos);
     
     print_array("  J after", J_after, 9);
     print_array("  before inverse", J_inv_0, 9);
@@ -293,7 +293,7 @@ void rotate_tet(float rotmat[9], mesh_node **nodes, OUT mesh_node **rotated_node
     // get centroid
     float tet_centroid[3] = {0,0,0};
     for (int i=0; i<4; i++){
-        vec3d(n) {tet_centroid[n] += nodes[i]->pos.data[n];}
+        vec3d(n) {tet_centroid[n] += nodes[i]->pos[n];}
         
     }
     
@@ -313,7 +313,7 @@ void rotate_tet(float rotmat[9], mesh_node **nodes, OUT mesh_node **rotated_node
     //    print_array("posdata_toflnfr", nodes[i]->pos.data, 3);
         vec3d(n){posdata_tofloat[n] = (float)nodes[i]->pos[n];}
         apply_rotation_matrix(posdata_tofloat, rotmat, posdata_rotated);
-        vec3d(n){rotated_nodes[i]->pos.data[n] = posdata_rotated[n];}
+        vec3d(n){rotated_nodes[i]->pos[n] = posdata_rotated[n];}
     //    print_array("rotated_nodes[i]->pos.data[n]", rotated_nodes[i]->pos.data, 3);
     }
     
@@ -734,12 +734,12 @@ void Rod_blob_interface::update_J_0(){
  Recompute te edge vectors for a tetrahedron. These are not automatically updated when the nodes are moved. If you do something to the attachment tetrahedron, consider running Rod_blob_interface->update_internal_state().
 */
 void Rod_blob_interface::set_edge_vecs(){
-    vec3d(v){this->tet_origin[v] = this->deformed_tet_nodes[0]->pos.data[v];}
+    vec3d(v){this->tet_origin[v] = this->deformed_tet_nodes[0]->pos[v];}
     vec3d(v){this->edge_vecs[0][v] = this->deformed_tet_nodes[1]->pos[v] - this->tet_origin[v];}
     vec3d(v){this->edge_vecs[1][v] = this->deformed_tet_nodes[2]->pos[v] - this->tet_origin[v];}
     vec3d(v){this->edge_vecs[2][v] = this->deformed_tet_nodes[3]->pos[v] - this->tet_origin[v];}
     
-    //vec3d(v){this->tet_origin_equil[v] = this->deformed_tet_nodes[0]->pos_0.data[v];}
+    //vec3d(v){this->tet_origin_equil[v] = this->deformed_tet_nodes[0]->pos_0[v];}
     //vec3d(v){this->edge_vecs_equil[0][v] = this->deformed_tet_nodes[1]->pos_0[v] - this->tet_origin_equil[v];}
     //vec3d(v){this->edge_vecs_equil[1][v] = this->deformed_tet_nodes[2]->pos_0[v] - this->tet_origin_equil[v];}
     //vec3d(v){this->edge_vecs_equil[2][v] = this->deformed_tet_nodes[3]->pos_0[v] - this->tet_origin_equil[v];}
@@ -764,9 +764,9 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
     
     
     //grab face nodes
-    //vector3 face_node_1_data;
-    //vector3 face_node_2_data;
-    //vector3 face_node_3_data;
+    //arr3 face_node_1_data;
+    //arr3 face_node_2_data;
+    //arr3 face_node_3_data;
     //float face_node_1[3];
     //float face_node_2[3];
     //float face_node_3[3];
@@ -798,15 +798,15 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
     //    vec3d(n){face_node_3[n] = this->deformed_tet_nodes[this->face_node_indices[2]]->pos_0.data[n];}
     //}
     //else{
-    vec3d(n){face_node_1[n] = this->deformed_tet_nodes[this->face_node_indices[0]]->pos.data[n];}
-    vec3d(n){face_node_2[n] = this->deformed_tet_nodes[this->face_node_indices[1]]->pos.data[n];}
-    vec3d(n){face_node_3[n] = this->deformed_tet_nodes[this->face_node_indices[2]]->pos.data[n];}
+    vec3d(n){face_node_1[n] = this->deformed_tet_nodes[this->face_node_indices[0]]->pos[n];}
+    vec3d(n){face_node_2[n] = this->deformed_tet_nodes[this->face_node_indices[1]]->pos[n];}
+    vec3d(n){face_node_3[n] = this->deformed_tet_nodes[this->face_node_indices[2]]->pos[n];}
     //}
     
     for( int i=0; i<4; i++){
         bool i_in_face_nodes = false;
         for (int j = 0; j<3; j++){ if (face_node_indices[j] == i){i_in_face_nodes = true;} }
-        if (!i_in_face_nodes){ vec3d(n){ non_face_node[n] = this->deformed_tet_nodes[i]->pos.data[n]; } }
+        if (!i_in_face_nodes){ vec3d(n){ non_face_node[n] = this->deformed_tet_nodes[i]->pos[n]; } }
     }
     
     if(dbg_print){std::cout << "face node indices: " << this->face_node_indices[0] << ", " << this->face_node_indices[1] << ", " << this->face_node_indices[2] << "\n";}
@@ -901,7 +901,7 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
     //make sure normal is facing the right way
     //note: blob centroid, not the tet centroid
     //float way_to_centroid[3];
-    //vector3 blob_centroid[3];
+    //arr3 blob_centroid[3];
     //this->connected_blob->get_centroid(blob_centroid);
     //vec3d(n){way_to_centroid[n] = blob_centroid->data[n] - attachment_node_pos[n];}
     //vec3d(n){way_to_centroid[n] = this->connected_tet->centroid[n] - attachment_node_pos[n];}
@@ -948,14 +948,14 @@ void Rod_blob_interface::get_attachment_node_pos(float attachment_node_pos[3], b
     float face_node_3[3];
     
     if (equil){
-        vec3d(n){face_node_1[n] = this->deformed_tet_nodes[this->face_node_indices[0]]->pos_0.data[n];}
-        vec3d(n){face_node_2[n] = this->deformed_tet_nodes[this->face_node_indices[1]]->pos_0.data[n];}
-        vec3d(n){face_node_3[n] = this->deformed_tet_nodes[this->face_node_indices[2]]->pos_0.data[n];}
+        vec3d(n){face_node_1[n] = this->deformed_tet_nodes[this->face_node_indices[0]]->pos_0[n];}
+        vec3d(n){face_node_2[n] = this->deformed_tet_nodes[this->face_node_indices[1]]->pos_0[n];}
+        vec3d(n){face_node_3[n] = this->deformed_tet_nodes[this->face_node_indices[2]]->pos_0[n];}
     }
     else{
-        vec3d(n){face_node_1[n] = this->deformed_tet_nodes[this->face_node_indices[0]]->pos.data[n];}
-        vec3d(n){face_node_2[n] = this->deformed_tet_nodes[this->face_node_indices[1]]->pos.data[n];}
-        vec3d(n){face_node_3[n] = this->deformed_tet_nodes[this->face_node_indices[2]]->pos.data[n];}
+        vec3d(n){face_node_1[n] = this->deformed_tet_nodes[this->face_node_indices[0]]->pos[n];}
+        vec3d(n){face_node_2[n] = this->deformed_tet_nodes[this->face_node_indices[1]]->pos[n];}
+        vec3d(n){face_node_3[n] = this->deformed_tet_nodes[this->face_node_indices[2]]->pos[n];}
     }    
 
     
@@ -1216,22 +1216,22 @@ void Rod_blob_interface::position_blob_from_rod(){
 */
 void Rod_blob_interface::select_face_nodes(OUT int face_node_indices[3]){
     
-    vector3 face_node_1_data;
-    vector3 face_node_2_data;
-    vector3 face_node_3_data;
+    arr3 face_node_1_data;
+    arr3 face_node_2_data;
+    arr3 face_node_3_data;
     float face_nodes[3][3];
     for (int i=0; i<3; i++){
-        this->connected_blob->get_node(this->face_nodes[0], face_node_1_data.data);
-        this->connected_blob->get_node(this->face_nodes[1], face_node_2_data.data);
-        this->connected_blob->get_node(this->face_nodes[2], face_node_3_data.data);
+        this->connected_blob->get_node(this->face_nodes[0], face_node_1_data);
+        this->connected_blob->get_node(this->face_nodes[1], face_node_2_data);
+        this->connected_blob->get_node(this->face_nodes[2], face_node_3_data);
     }
-    vec3d(n){face_nodes[0][n] = face_node_1_data.data[n];}
-    vec3d(n){face_nodes[1][n] = face_node_2_data.data[n];}
-    vec3d(n){face_nodes[2][n] = face_node_3_data.data[n];}
+    vec3d(n){face_nodes[0][n] = face_node_1_data[n];}
+    vec3d(n){face_nodes[1][n] = face_node_2_data[n];}
+    vec3d(n){face_nodes[2][n] = face_node_3_data[n];}
     
     float all_nodes[4][3];
     for (int i=0; i<4; i++){
-        vec3d(n){all_nodes[i][n] = (float)this->deformed_tet_nodes[i]->pos.data[n];}
+        vec3d(n){all_nodes[i][n] = (float)this->deformed_tet_nodes[i]->pos[n];}
     }
     
     // check for equality
@@ -1254,18 +1254,18 @@ int Rod_blob_interface::get_element_id(int nodes[3]){
     
     int element_id = -1;
     
-    vector3 face_node_1_data;
-    vector3 face_node_2_data;
-    vector3 face_node_3_data;
+    arr3 face_node_1_data;
+    arr3 face_node_2_data;
+    arr3 face_node_3_data;
     float face_nodes[3][3];
     for (int i=0; i<3; i++){
-        this->connected_blob->get_node(this->face_nodes[0], face_node_1_data.data);
-        this->connected_blob->get_node(this->face_nodes[1], face_node_2_data.data);
-        this->connected_blob->get_node(this->face_nodes[2], face_node_3_data.data);
+        this->connected_blob->get_node(this->face_nodes[0], face_node_1_data);
+        this->connected_blob->get_node(this->face_nodes[1], face_node_2_data);
+        this->connected_blob->get_node(this->face_nodes[2], face_node_3_data);
     }
-    vec3d(n){face_nodes[0][n] = face_node_1_data.data[n];}
-    vec3d(n){face_nodes[1][n] = face_node_2_data.data[n];}
-    vec3d(n){face_nodes[2][n] = face_node_3_data.data[n];}
+    vec3d(n){face_nodes[0][n] = face_node_1_data[n];}
+    vec3d(n){face_nodes[1][n] = face_node_2_data[n];}
+    vec3d(n){face_nodes[2][n] = face_node_3_data[n];}
     
     // Note: Unfortunate as it is, this cannot be avoided.
     
@@ -1277,7 +1277,7 @@ int Rod_blob_interface::get_element_id(int nodes[3]){
         float elem_nodes[4][3];
         
         for (int j=0; j<4; j++){
-            vec3d(n){elem_nodes[j][n] = (float)curr_element->n[j]->pos.data[n];}
+            vec3d(n){elem_nodes[j][n] = (float)curr_element->n[j]->pos[n];}
         }
 
         if( array_contains(elem_nodes, face_nodes)){
@@ -1392,10 +1392,10 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
     for (int i=0; i<4; i++){ B[0][i] = this->connected_rod->B_matrix[(adjacent_index*4)+i]; }
     for (int i=0; i<4; i++){ B[1][i] = this->connected_rod->B_matrix[(double_adjacent_index*4)+i]; }
     
-    print_array(" undeformed tetrahedron node 0", this->deformed_tet_nodes[0]->pos.data, 3);
-    print_array(" undeformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos.data, 3);
-    print_array(" undeformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos.data, 3);
-    print_array(" undeformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos.data, 3);
+    print_array(" undeformed tetrahedron node 0", this->deformed_tet_nodes[0]->pos);
+    print_array(" undeformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos);
+    print_array(" undeformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos);
+    print_array(" undeformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos);
     print_array(" attachment_node_equil", attachment_node_equil, 3);
     print_array(" attachment_n_equil", attachment_n_equil, 3);
     print_array(" attachment_material_axis_equil", attachment_material_axis_equil, 3);
@@ -1428,13 +1428,16 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
         if(dbg_print){std::cout << " ...with displacement " << displacement << " in axis " << displacement_index << " with sign " << displacement_sign << "\n";}
         
         // apply displacement to tetrahedron
-        this->deformed_tet_nodes[node_index]->pos.data[displacement_index] += (displacement_sign*(displacement));
+        this->deformed_tet_nodes[node_index]->pos[displacement_index] += (displacement_sign*(displacement));
         
         // get actual attachment node
         this->reorientate_connection(attachment_node_equil, attachment_material_axis_equil, attachment_node, attachment_material_axis);
                 
         float facevec[3];
-        vec3d(n){facevec[n] = deformed_tet_nodes[this->face_node_indices[0]][n].pos.data -  deformed_tet_nodes[this->face_node_indices[1]][n].pos.data;}
+        // Below line is the original code, which appears wrong as data-data was pointer arithmetic
+        //vec3d(n){facevec[n] = deformed_tet_nodes[this->face_node_indices[0]][n].pos.data -  deformed_tet_nodes[this->face_node_indices[1]][n].pos.data;}
+        // This version seems right, but regardless it's not used
+        vec3d(n) { facevec[n] = deformed_tet_nodes[this->face_node_indices[0]][n].pos[n] -  deformed_tet_nodes[this->face_node_indices[1]][n].pos[n]; }
         normalize(facevec, facevec);
         //float edge_attachment_dotprod = (facevec[0] * attachment_node[0]) + (facevec[1] * attachment_node[1]) + (facevec[2] * attachment_node[2]);
                 
@@ -1474,10 +1477,10 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
         // attachment node is scaled to provide neutral weighting for bend energy
         rescale_attachment_node(attachment_node, p[0], attachment_node_equil, p_equil[0], attachment_node, attachment_node_equil);
         
-        print_array(" deformed tetrahedron node 0", this->deformed_tet_nodes[0]->pos.data, 3);
-        print_array(" deformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos.data, 3);
-        print_array(" deformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos.data, 3);
-        print_array(" deformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos.data, 3);
+        print_array(" deformed tetrahedron node 0", this->deformed_tet_nodes[0]->pos);
+        print_array(" deformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos);
+        print_array(" deformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos);
+        print_array(" deformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos);
         print_array(" attachment_node", attachment_node, 3);
         print_array(" attachment_node_pos", attachment_node_pos, 3);
         print_array(" attachment_material_axis", attachment_material_axis, 3);
@@ -1504,7 +1507,7 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
         normalize(attachment_node_equil, attachment_node_equil);
 
         // un-apply displacement to tetrahedron
-        this->deformed_tet_nodes[node_index]->pos.data[displacement_index] += (displacement_sign*displacement*-1);
+        this->deformed_tet_nodes[node_index]->pos[displacement_index] += (displacement_sign*displacement*-1);
         this->position_rod_ends(attachment_node_pos);
         
     }
@@ -1569,9 +1572,9 @@ void Rod_blob_interface::do_connection_timestep(){ // run this after regular blo
     for(int i=0; i<4; i++){
         float curr_node_energy[6] = {0,0,0,0,0,0};
         get_node_energy(i, this->attachment_node_equil, this->attachment_m_equil, this->attachment_node, this->attachment_m, dynamics_displacement*0.5, curr_node_energy)   ; 
-        vector3 force;
+        arr3 force;
         vec3d(n){force[n] = (curr_node_energy[n+3] - curr_node_energy[n])/dynamics_displacement;}
-        print_array("Force added to node: ", force.data, 3);
+        print_array("Force added to node: ", force);
         //std::cout << "Interface " << this->order << " node " << i << " force: [" << force.data[0] << ", " << force.data[1] << ", " << force.data[2] << "]\n"; //DEBUGGO
         this->connected_blob->add_force_to_node(force, this->connected_tet->n[i]->index);
     }

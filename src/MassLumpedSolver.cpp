@@ -79,12 +79,12 @@ int MassLumpedSolver::init(int num_nodes, int num_elements, mesh_node *node, tet
 }
 
 /* */
-int MassLumpedSolver::solve(vector3 *x) {
+int MassLumpedSolver::solve(arr3 *x) {
     int i = 0;
     for (i = 0; i < num_rows; i++) {
-        x[i].x = x[i].x * inv_M[i];
-        x[i].y = x[i].y * inv_M[i];
-        x[i].z = x[i].z * inv_M[i];
+        x[i][0] = x[i][0] * inv_M[i];
+        x[i][1] = x[i][1] * inv_M[i];
+        x[i][2] = x[i][2] * inv_M[i];
     }
     return FFEA_OK;
 }

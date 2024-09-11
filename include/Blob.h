@@ -147,7 +147,7 @@ public:
     /**
       * Translates the linear nodes, then linearises the secondary nodes
       */
-    void translate_linear(vector3 *vec);
+    void translate_linear(arr3 *vec);
 
     /**
      * Calculates the centroid of this Blob, then brings the Blob to the origin,
@@ -166,11 +166,11 @@ public:
      * so that the new centroid position is at the given (x,y,z) position, while
      * returning a vector with the displacement (dx, dy, dz) applied to every node.
      */
-    vector3 position(scalar x, scalar y, scalar z);
+    arr3 position(scalar x, scalar y, scalar z);
 
     /**
      * Moves the beads according to (dx, dy, dz).
-     * The name is to be related to "vector3 position(scalar x, scalar y, scalar z).
+     * The name is to be related to "arr3 position(scalar x, scalar y, scalar z).
      */
     void position_beads(scalar x, scalar y, scalar z);
 
@@ -194,14 +194,14 @@ public:
     /**
      * Calculates and returns the centre of mass of this Blob
      */
-    void get_CoM(vector3 *com);
+    void get_CoM(arr3 &com);
 
     /**
      * Calculates and returns the centroid of this Blob
      */
-    void get_centroid(vector3 *com);
-    void calc_and_store_centroid(vector3 &com);
-    vector3 calc_centroid();
+    void get_centroid(arr3 &com);
+    void calc_and_store_centroid(arr3 &com);
+    arr3 calc_centroid();
 
     void set_pos_0();
     void kinetically_set_faces(bool state);
@@ -323,19 +323,19 @@ public:
 
     void set_forces_to_zero();
 
-    // vector3 get_node(int index);
+    // arr3 get_node(int index);
     // std::array<scalar,3> get_node(int index);
     void get_node(int index, arr3 &v);
     
     void get_node_0(int index, arr3 &v);
 
-    void copy_node_positions(vector3 *nodes);
+    void copy_node_positions(arr3 *nodes);
 
-    vector3 ** get_actual_node_positions();
+    arr3 ** get_actual_node_positions();
 
-    void set_node_positions(vector3 *node_pos);
+    void set_node_positions(arr3 *node_pos);
 
-    void add_force_to_node(vector3 f, int index);
+    void add_force_to_node(arr3 f, int index);
 
     // void zero_vdw_bb_measurement_data(); // DEPRECATED
 
@@ -384,7 +384,7 @@ public:
      * its way back out of the wall (and effectively prevents any penetration larger than dt * largest velocity,
      * generally very small for sensible dt).
      */
-    void enforce_box_boundaries(vector3 *box_dim);
+    void enforce_box_boundaries(arr3 &box_dim);
 
     /* DEPRECTATED
      *   Will be removed.
@@ -435,7 +435,7 @@ public:
 
     scalar calculate_strain_energy();
 
-    void get_min_max(vector3 *blob_min, vector3 *blob_max);
+    void get_min_max(arr3 &blob_min, arr3 &blob_max);
 
     /* Blob, conformation and state indices */
     int blob_index;
@@ -523,7 +523,7 @@ private:
     mesh_node *node;
 
     /** Array of node positions only */
-    vector3 **node_position;
+    arr3 **node_position;
 
     /** Array of elements */
     tetra_element_linear *elem;
@@ -621,7 +621,7 @@ private:
     bool beads_on_blob;
 
     /** The Blob force vector (an array of the force on every node) */
-    vector3 *force;
+    arr3 *force;
 
     /** The array of random number generators (needed for parallel runs) */
     RngStream *rng;
@@ -632,11 +632,11 @@ private:
     //@}
 
     /** Momenta */
-    vector3 L;
+    arr3 L;
 
     //@{
     /** Geometries */
-    vector3 CoM, CoG, CoM_0, CoG_0;
+    arr3 CoM, CoG, CoM_0, CoG_0;
     scalar rmsd{};
     //@}
 

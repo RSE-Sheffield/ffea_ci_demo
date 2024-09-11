@@ -59,9 +59,9 @@ private:
         scalar eta[4];
     };
 
-    void add_grad_dot_products(vector3 grad_psi[10], scalar det_J, scalar weight);
+    void add_grad_dot_products(arr3 grad_psi[10], scalar det_J, scalar weight);
 
-    scalar grad_dot(vector3 *grad_psi_i, vector3 *grad_psi_j);
+    scalar grad_dot(arr3 &grad_psi_i, arr3 &grad_psi_j);
 
     void zero();
 

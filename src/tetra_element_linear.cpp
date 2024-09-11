@@ -82,8 +82,8 @@ void tetra_element_linear::add_K_alpha(scalar *K, int num_nodes) {
 }
 
 /* Returns the gradient of the potential at the given (s,t,u) position in the element */
-void tetra_element_linear::get_grad_phi_at_stu(vector3 &grad_phi, scalar s, scalar t, scalar u) {
-    vector3 grad_psi[NUM_NODES_QUADRATIC_TET];
+void tetra_element_linear::get_grad_phi_at_stu(arr3 &grad_phi, scalar s, scalar t, scalar u) {
+    arr3 grad_psi[NUM_NODES_QUADRATIC_TET];
 
     SecondOrderFunctions::abcd J_coeff[3][3];
     SecondOrderFunctions::calc_jacobian_column_coefficients(n, J_coeff);
@@ -140,15 +140,15 @@ void tetra_element_linear::calculate_electrostatic_forces() {
     };
 
     SecondOrderFunctions::abcd J_coeff[3][3];
-    vector3 grad_psi[NUM_NODES_QUADRATIC_TET];
+    arr3 grad_psi[NUM_NODES_QUADRATIC_TET];
     scalar psi[NUM_NODES_QUADRATIC_TET];
-    vector3 force[NUM_NODES_QUADRATIC_TET];
-    vector3 grad_phi_here;
+    arr3 force[NUM_NODES_QUADRATIC_TET];
+    arr3 grad_phi_here;
 
     for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
-        force[i].x = 0;
-        force[i].y = 0;
-        force[i].z = 0;
+        force[i][0] = 0;
+        force[i][1] = 0;
+        force[i][2] = 0;
     }
 
     SecondOrderFunctions::calc_jacobian_column_coefficients(n, J_coeff);
@@ -160,31 +160,31 @@ void tetra_element_linear::calculate_electrostatic_forces() {
         SecondOrderFunctions::calc_grad_psi(grad_psi, gauss_points[i].eta[0], gauss_points[i].eta[1], gauss_points[i].eta[2], J_inv);
         SecondOrderFunctions::calc_psi(psi, gauss_points[i].eta[0], gauss_points[i].eta[1], gauss_points[i].eta[2]);
 
-        grad_phi_here.x = 0;
-        grad_phi_here.y = 0;
-        grad_phi_here.z = 0;
+        grad_phi_here[0] = 0;
+        grad_phi_here[1] = 0;
+        grad_phi_here[2] = 0;
         for (int j = 0; j < NUM_NODES_QUADRATIC_TET; j++) {
-            grad_phi_here.x += grad_psi[j].x * n[j]->phi * det_J;
-            grad_phi_here.y += grad_psi[j].y * n[j]->phi * det_J;
-            grad_phi_here.z += grad_psi[j].z * n[j]->phi * det_J;
-            //					printf("%d >> %e (%e %e %e)\n", i, det_J, grad_psi[j].x, grad_psi[j].y, grad_psi[j].z);
+            grad_phi_here[0] += grad_psi[j][0] * n[j]->phi * det_J;
+            grad_phi_here[1] += grad_psi[j][1] * n[j]->phi * det_J;
+            grad_phi_here[2] += grad_psi[j][2] * n[j]->phi * det_J;
+            //					printf("%d >> %e (%e %e %e)\n", i, det_J, grad_psi[j][0], grad_psi[j][1], grad_psi[j][2]);
         }
 
-        //				printf("%d :: (%e, %e, %e)\n", i, grad_phi_here.x, grad_phi_here.y, grad_phi_here.z);
+        //				printf("%d :: (%e, %e, %e)\n", i, grad_phi_here[0], grad_phi_here[1], grad_phi_here[2]);
 
         for (int j = 0; j < NUM_NODES_QUADRATIC_TET; j++) {
-            //					force[j].x -= gauss_points[i].W * grad_phi_here.x * psi[j] * n[j]->rho;
-            //					force[j].y -= gauss_points[i].W * grad_phi_here.y * psi[j] * n[j]->rho;
-            //					force[j].z -= gauss_points[i].W * grad_phi_here.z * psi[j] * n[j]->rho;
+            //					force[j][0] -= gauss_points[i].W * grad_phi_here[0] * psi[j] * n[j]->rho;
+            //					force[j][1] -= gauss_points[i].W * grad_phi_here[1] * psi[j] * n[j]->rho;
+            //					force[j][2] -= gauss_points[i].W * grad_phi_here[2] * psi[j] * n[j]->rho;
             //					printf("%d == %e\n", i, n[j]->rho);
-            force[j].x -= gauss_points[i].W * grad_phi_here.x * n[j]->rho;
-            force[j].y -= gauss_points[i].W * grad_phi_here.y * n[j]->rho;
-            force[j].z -= gauss_points[i].W * grad_phi_here.z * n[j]->rho;
+            force[j][0] -= gauss_points[i].W * grad_phi_here[0] * n[j]->rho;
+            force[j][1] -= gauss_points[i].W * grad_phi_here[1] * n[j]->rho;
+            force[j][2] -= gauss_points[i].W * grad_phi_here[2] * n[j]->rho;
         }
     }
 
     for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
-        add_force_to_node(i, &force[i]);
+        add_force_to_node(i, force[i]);
     }
 
 }
@@ -452,47 +452,47 @@ void tetra_element_linear::apply_stress_tensor(matrix3 stress, vector12 du) {
  * Sets the given 12-vector to the velocities of this element's four nodes,
  */
 void tetra_element_linear::get_element_velocity_vector(vector12 v) {
-    v[0] = n[0]->vel.x;
-    v[1] = n[1]->vel.x;
-    v[2] = n[2]->vel.x;
-    v[3] = n[3]->vel.x;
+    v[0] = n[0]->vel[0];
+    v[1] = n[1]->vel[0];
+    v[2] = n[2]->vel[0];
+    v[3] = n[3]->vel[0];
 
-    v[4] = n[0]->vel.y;
-    v[5] = n[1]->vel.y;
-    v[6] = n[2]->vel.y;
-    v[7] = n[3]->vel.y;
+    v[4] = n[0]->vel[1];
+    v[5] = n[1]->vel[1];
+    v[6] = n[2]->vel[1];
+    v[7] = n[3]->vel[1];
 
-    v[8] = n[0]->vel.z;
-    v[9] = n[1]->vel.z;
-    v[10] = n[2]->vel.z;
-    v[11] = n[3]->vel.z;
+    v[8] = n[0]->vel[2];
+    v[9] = n[1]->vel[2];
+    v[10] = n[2]->vel[2];
+    v[11] = n[3]->vel[2];
 }
 
 /*
  * Add this element's nodal forces to those given in the force 12-vector
  */
 void tetra_element_linear::add_element_force_vector(vector12 force) {
-    node_force[0].x -= force[0];
-    node_force[1].x -= force[1];
-    node_force[2].x -= force[2];
-    node_force[3].x -= force[3];
+    node_force[0][0] -= force[0];
+    node_force[1][0] -= force[1];
+    node_force[2][0] -= force[2];
+    node_force[3][0] -= force[3];
 
-    node_force[0].y -= force[4];
-    node_force[1].y -= force[5];
-    node_force[2].y -= force[6];
-    node_force[3].y -= force[7];
+    node_force[0][1] -= force[4];
+    node_force[1][1] -= force[5];
+    node_force[2][1] -= force[6];
+    node_force[3][1] -= force[7];
 
-    node_force[0].z -= force[8];
-    node_force[1].z -= force[9];
-    node_force[2].z -= force[10];
-    node_force[3].z -= force[11];
+    node_force[0][2] -= force[8];
+    node_force[1][2] -= force[9];
+    node_force[2][2] -= force[10];
+    node_force[3][2] -= force[11];
 }
 
 /* Add given force to the specified node of this element */
-void tetra_element_linear::add_force_to_node(int i, vector3 *f) {
-    node_force[i].x += f->x;
-    node_force[i].y += f->y;
-    node_force[i].z += f->z;
+void tetra_element_linear::add_force_to_node(int i, arr3 &f) {
+    node_force[i][0] += f[0];
+    node_force[i][1] += f[1];
+    node_force[i][2] += f[2];
 }
 
 /* A roundabout and inefficient way of working out what node (from 0 to 9) this index corresponds to */
@@ -511,7 +511,7 @@ void tetra_element_linear::print() {
     for (i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
         printf("Node %d:\n", i);
         n[i]->print();
-        printf("node_force: %e %e %e\n", node_force[i].x, node_force[i].y, node_force[i].z);
+        printf("node_force: %e %e %e\n", node_force[i][0], node_force[i][1], node_force[i][2]);
         printf("volume: %e\n", vol);
     }
 
@@ -552,48 +552,47 @@ void tetra_element_linear::apply_element_mass_matrix(vector12 du) {
     for (i = 0; i < 12; i++) du[i] = temp_du[i] * (vol_0 * rho);
 }
 
-void tetra_element_linear::volume_coord_to_xyz(scalar eta0, scalar eta1, scalar eta2, scalar eta3, vector3 *r) {
-    r->x = eta0 * n[0]->pos.x + eta1 * n[1]->pos.x + eta2 * n[2]->pos.x + eta3 * n[3]->pos.x;
-    r->y = eta0 * n[0]->pos.y + eta1 * n[1]->pos.y + eta2 * n[2]->pos.y + eta3 * n[3]->pos.y;
-    r->z = eta0 * n[0]->pos.z + eta1 * n[1]->pos.z + eta2 * n[2]->pos.z + eta3 * n[3]->pos.z;
+void tetra_element_linear::volume_coord_to_xyz(scalar eta0, scalar eta1, scalar eta2, scalar eta3, arr3 &r) {
+    for(int i = 0; i < 3; ++i)
+        r[i] = eta0 * n[0]->pos[i] + eta1 * n[1]->pos[i] + eta2 * n[2]->pos[i] + eta3 * n[3]->pos[i];
 }
 
 void tetra_element_linear::zero_force() {
     for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
-        vector3_set_zero(node_force[i]);
+        arr3_set_zero(node_force[i]);
     }
 }
 
 void tetra_element_linear::linearise_element() {
-    n[4]->pos.x = .5 * (n[0]->pos.x + n[1]->pos.x);
-    n[4]->pos.y = .5 * (n[0]->pos.y + n[1]->pos.y);
-    n[4]->pos.z = .5 * (n[0]->pos.z + n[1]->pos.z);
+    n[4]->pos[0] = .5 * (n[0]->pos[0] + n[1]->pos[0]);
+    n[4]->pos[1] = .5 * (n[0]->pos[1] + n[1]->pos[1]);
+    n[4]->pos[2] = .5 * (n[0]->pos[2] + n[1]->pos[2]);
 
-    n[5]->pos.x = .5 * (n[0]->pos.x + n[2]->pos.x);
-    n[5]->pos.y = .5 * (n[0]->pos.y + n[2]->pos.y);
-    n[5]->pos.z = .5 * (n[0]->pos.z + n[2]->pos.z);
+    n[5]->pos[0] = .5 * (n[0]->pos[0] + n[2]->pos[0]);
+    n[5]->pos[1] = .5 * (n[0]->pos[1] + n[2]->pos[1]);
+    n[5]->pos[2] = .5 * (n[0]->pos[2] + n[2]->pos[2]);
 
-    n[6]->pos.x = .5 * (n[0]->pos.x + n[3]->pos.x);
-    n[6]->pos.y = .5 * (n[0]->pos.y + n[3]->pos.y);
-    n[6]->pos.z = .5 * (n[0]->pos.z + n[3]->pos.z);
+    n[6]->pos[0] = .5 * (n[0]->pos[0] + n[3]->pos[0]);
+    n[6]->pos[1] = .5 * (n[0]->pos[1] + n[3]->pos[1]);
+    n[6]->pos[2] = .5 * (n[0]->pos[2] + n[3]->pos[2]);
 
-    n[7]->pos.x = .5 * (n[1]->pos.x + n[2]->pos.x);
-    n[7]->pos.y = .5 * (n[1]->pos.y + n[2]->pos.y);
-    n[7]->pos.z = .5 * (n[1]->pos.z + n[2]->pos.z);
+    n[7]->pos[0] = .5 * (n[1]->pos[0] + n[2]->pos[0]);
+    n[7]->pos[1] = .5 * (n[1]->pos[1] + n[2]->pos[1]);
+    n[7]->pos[2] = .5 * (n[1]->pos[2] + n[2]->pos[2]);
 
-    n[8]->pos.x = .5 * (n[1]->pos.x + n[3]->pos.x);
-    n[8]->pos.y = .5 * (n[1]->pos.y + n[3]->pos.y);
-    n[8]->pos.z = .5 * (n[1]->pos.z + n[3]->pos.z);
+    n[8]->pos[0] = .5 * (n[1]->pos[0] + n[3]->pos[0]);
+    n[8]->pos[1] = .5 * (n[1]->pos[1] + n[3]->pos[1]);
+    n[8]->pos[2] = .5 * (n[1]->pos[2] + n[3]->pos[2]);
 
-    n[9]->pos.x = .5 * (n[2]->pos.x + n[3]->pos.x);
-    n[9]->pos.y = .5 * (n[2]->pos.y + n[3]->pos.y);
-    n[9]->pos.z = .5 * (n[2]->pos.z + n[3]->pos.z);
+    n[9]->pos[0] = .5 * (n[2]->pos[0] + n[3]->pos[0]);
+    n[9]->pos[1] = .5 * (n[2]->pos[1] + n[3]->pos[1]);
+    n[9]->pos[2] = .5 * (n[2]->pos[2] + n[3]->pos[2]);
 }
 
 void tetra_element_linear::calc_centroid() {
-    centroid.x = .25 * (n[0]->pos.x + n[1]->pos.x + n[2]->pos.x + n[3]->pos.x);
-    centroid.y = .25 * (n[0]->pos.y + n[1]->pos.y + n[2]->pos.y + n[3]->pos.y);
-    centroid.z = .25 * (n[0]->pos.z + n[1]->pos.z + n[2]->pos.z + n[3]->pos.z);
+    centroid[0] = .25 * (n[0]->pos[0] + n[1]->pos[0] + n[2]->pos[0] + n[3]->pos[0]);
+    centroid[1] = .25 * (n[0]->pos[1] + n[1]->pos[1] + n[2]->pos[1] + n[3]->pos[1]);
+    centroid[2] = .25 * (n[0]->pos[2] + n[1]->pos[2] + n[2]->pos[2] + n[3]->pos[2]);
 }
 
 void tetra_element_linear::calc_del2_matrix() {
@@ -695,9 +694,9 @@ scalar tetra_element_linear::length_of_longest_edge() {
    scalar di2 = 0;
    for (int i=0; i<NUM_NODES_LINEAR_TET; i++) { // loop over the linear nodes.
       for (int j=i+1; j<NUM_NODES_LINEAR_TET; j++) {
-         di2 = (n[i]->pos.x - n[j]->pos.x)*(n[i]->pos.x - n[j]->pos.x); 
-         di2 += (n[i]->pos.y - n[j]->pos.y)*(n[i]->pos.y - n[j]->pos.y);
-         di2 += (n[i]->pos.z - n[j]->pos.z)*(n[i]->pos.z - n[j]->pos.z);
+         di2 = (n[i]->pos[0] - n[j]->pos[0])*(n[i]->pos[0] - n[j]->pos[0]); 
+         di2 += (n[i]->pos[1] - n[j]->pos[1])*(n[i]->pos[1] - n[j]->pos[1]);
+         di2 += (n[i]->pos[2] - n[j]->pos[2])*(n[i]->pos[2] - n[j]->pos[2]);
          if (di2 > d2) d2 = di2;
       }
    }

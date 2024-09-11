@@ -151,18 +151,18 @@ int NoMassCGSolver::init(int num_nodes, int num_elements, mesh_node *node, tetra
 
 
     // create the work vectors necessary for use by the conjugate gradient solver in 'solve'
-    r = new(std::nothrow) vector3[num_nodes];
-    p = new(std::nothrow) vector3[num_nodes];
-    z = new(std::nothrow) vector3[num_nodes];
-    q = new(std::nothrow) vector3[num_nodes];
-    f = new(std::nothrow) vector3[num_nodes];
+    r = new(std::nothrow) arr3[num_nodes];
+    p = new(std::nothrow) arr3[num_nodes];
+    z = new(std::nothrow) arr3[num_nodes];
+    q = new(std::nothrow) arr3[num_nodes];
+    f = new(std::nothrow) arr3[num_nodes];
     if (!r || !p || !z || !q || !f ) FFEA_ERROR_MESSG(" Failed to create the work vectors necessary for NoMassCGSolver\n"); 
 
     return FFEA_OK;
 }
 
 /*  */
-int NoMassCGSolver::solve(vector3* x) {
+int NoMassCGSolver::solve(arr3* x) {
     // Complete the sparse viscosity matrix
     V->build();
     V->calc_inverse_diagonal(preconditioner);
@@ -197,34 +197,34 @@ int NoMassCGSolver::solve(vector3* x) {
 }
 
 /* */
-void NoMassCGSolver::print_matrices(vector3* force) {
+void NoMassCGSolver::print_matrices(arr3* force) {
     V->print_dense_to_file(force);
 }
 
 /* */
-scalar NoMassCGSolver::conjugate_gradient_residual_assume_x_zero(vector3 *b) {
+scalar NoMassCGSolver::conjugate_gradient_residual_assume_x_zero(arr3 *b) {
 
     scalar delta_new = 0;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) shared(b) reduction(+:delta_new)
 #endif
     for (int i = 0; i < num_nodes; i++) {
-        r[i].x = b[i].x;
-        r[i].y = b[i].y;
-        r[i].z = b[i].z;
-        f[i].x = b[i].x;
-        f[i].y = b[i].y;
-        f[i].z = b[i].z;
-        b[i].x = 0;
-        b[i].y = 0;
-        b[i].z = 0;
-        z[i].x = preconditioner[(3 * i)] * r[i].x;
-        z[i].y = preconditioner[(3 * i) + 1] * r[i].y;
-        z[i].z = preconditioner[(3 * i) + 2] * r[i].z;
-        p[i].x = z[i].x;
-        p[i].y = z[i].y;
-        p[i].z = z[i].z;
-        delta_new += r[i].x * z[i].x + r[i].y * z[i].y + r[i].z * z[i].z;
+        r[i][0] = b[i][0];
+        r[i][1] = b[i][1];
+        r[i][2] = b[i][2];
+        f[i][0] = b[i][0];
+        f[i][1] = b[i][1];
+        f[i][2] = b[i][2];
+        b[i][0] = 0;
+        b[i][1] = 0;
+        b[i][2] = 0;
+        z[i][0] = preconditioner[(3 * i)] * r[i][0];
+        z[i][1] = preconditioner[(3 * i) + 1] * r[i][1];
+        z[i][2] = preconditioner[(3 * i) + 2] * r[i][2];
+        p[i][0] = z[i][0];
+        p[i][1] = z[i][1];
+        p[i][2] = z[i][2];
+        delta_new += r[i][0] * z[i][0] + r[i][1] * z[i][1] + r[i][2] * z[i][2];
     }
     return delta_new;
 }
@@ -236,8 +236,8 @@ scalar NoMassCGSolver::residual2() {
 #pragma omp parallel for default(none) reduction(+:r2, f2)
 #endif
     for (int i = 0; i < num_nodes; i++) {
-        r2 += r[i].x * r[i].x + r[i].y * r[i].y + r[i].z * r[i].z;
-        f2 += f[i].x * f[i].x + f[i].y * f[i].y + f[i].z * f[i].z;
+        r2 += r[i][0] * r[i][0] + r[i][1] * r[i][1] + r[i][2] * r[i][2];
+        f2 += f[i][0] * f[i][0] + f[i][1] * f[i][1] + f[i][2] * f[i][2];
     }
     if (f2 == 0.0) {
         return 0.0;
@@ -247,13 +247,13 @@ scalar NoMassCGSolver::residual2() {
 }
 
 /* */
-scalar NoMassCGSolver::modx(vector3 *x) {
+scalar NoMassCGSolver::modx(arr3 *x) {
     scalar r2 = 0;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) shared(x) reduction(+:r2)
 #endif
     for (int i = 0; i < num_nodes; i++) {
-        r2 += x[i].x * x[i].x + x[i].y * x[i].y + x[i].z * x[i].z;
+        r2 += x[i][0] * x[i][0] + x[i][1] * x[i][1] + x[i][2] * x[i][2];
     }
     return r2;
 }
@@ -268,7 +268,7 @@ scalar NoMassCGSolver::get_alpha_denominator() {
 #pragma omp parallel for default(none) reduction(+:pTq)
 #endif
     for (int i = 0; i < num_nodes; ++i) {
-        pTq += p[i].x * q[i].x + p[i].y * q[i].y + p[i].z * q[i].z;
+        pTq += p[i][0] * q[i][0] + p[i][1] * q[i][1] + p[i][2] * q[i][2];
     }
 
     return pTq;
@@ -281,26 +281,26 @@ scalar NoMassCGSolver::parallel_apply_preconditioner() {
 #pragma omp parallel for default(none) reduction(+:delta_new)
 #endif
     for (int i = 0; i < num_nodes; i++) {
-        z[i].x = preconditioner[(3 * i)] * r[i].x;
-        z[i].y = preconditioner[(3 * i) + 1] * r[i].y;
-        z[i].z = preconditioner[(3 * i) + 2] * r[i].z;
-        delta_new += r[i].x * z[i].x + r[i].y * z[i].y + r[i].z * z[i].z;
+        z[i][0] = preconditioner[(3 * i)] * r[i][0];
+        z[i][1] = preconditioner[(3 * i) + 1] * r[i][1];
+        z[i][2] = preconditioner[(3 * i) + 2] * r[i][2];
+        delta_new += r[i][0] * z[i][0] + r[i][1] * z[i][1] + r[i][2] * z[i][2];
     }
 
     return delta_new;
 }
 
 /* */
-void NoMassCGSolver::check(vector3 *x) {
+void NoMassCGSolver::check(arr3 *x) {
     FILE *fout2;
     fout2 = fopen("/localhome/py09bh/output/nomass/cube_viscosity_no_mass.csv", "a");
     int i;
     double temp = 0, temp2 = 0;
-    vector3 *temp_vec = new vector3[num_nodes];
+    arr3 *temp_vec = new arr3[num_nodes];
     V->apply(x, temp_vec);
     for (i = 0; i < num_nodes; ++i) {
-        temp += x[i].x * temp_vec[i].x + x[i].y * temp_vec[i].y + x[i].z * temp_vec[i].z;
-        temp2 += x[i].x * f[i].x + x[i].y * f[i].y + x[i].z * f[i].z;
+        temp += x[i][0] * temp_vec[i][0] + x[i][1] * temp_vec[i][1] + x[i][2] * temp_vec[i][2];
+        temp2 += x[i][0] * f[i][0] + x[i][1] * f[i][1] + x[i][2] * f[i][2];
     }
     fprintf(fout2, "%e,%e\n", temp2, fabs(temp - temp2));
     fclose(fout2);

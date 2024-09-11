@@ -49,7 +49,7 @@ public:
      * M has already been constructed (in whatever representation) by the init() function for
      * a particular Blob. The solution is written to x.
      */
-    virtual int solve(vector3 *x) = 0;
+    virtual int solve(arr3 *x) = 0;
 
     virtual void apply_matrix(scalar *in, scalar *result) = 0;
 };

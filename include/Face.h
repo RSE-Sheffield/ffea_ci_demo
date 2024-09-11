@@ -61,15 +61,15 @@ public:
     scalar area;
 
     /** Last calculated normal (by most recent call to calc_area_normal_centroid()) **/
-    vector3 normal;
+    arr3 normal;
 
     /** Last calculated centroid (by most recent call to calc_area_normal_centroid()) **/
-    vector3 centroid;
+    arr3 centroid;
 
     /** Stores the current force applied to this face.
       * The first 3 "vectors" are to those surface nodes that define this face,
       * while the last one belongs to the opposite node of the linear tetrahedron **/
-    vector3 force[4];
+    arr3 force[4];
 
 
     /** Stores the natural (shape function) coords of the centroid of this face in the parent element **/
@@ -82,9 +82,9 @@ public:
     //@{
     /** vdw measurement info **/
     int num_blobs;
-    // vector3 *vdw_bb_force; // DEPRECATED
+    // arr3 *vdw_bb_force; // DEPRECATED
     // scalar *vdw_bb_energy; // DEPRECATED
-    // vector3 *vdw_xz_force; // DEPRECATED
+    // arr3 *vdw_xz_force; // DEPRECATED
     // scalar vdw_xz_energy; // DEPRECATED
     //@}
 
@@ -150,31 +150,34 @@ public:
     void calc_area_normal_centroid();
     void set_kinetic_state(bool state);
 
-    vector3 * get_centroid();
+    arr3 &get_centroid();
     void print_centroid();
     void print_nodes();
     scalar get_area();
 
     /** Calculate the point p on this triangle given the barycentric coordinates b1, b2, b3. Altered to act periodically around box boundaries. **/
-    void barycentric_calc_point(scalar b1, scalar b2, scalar b3, vector3 *p);
-    void barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, vector3 *p,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    void barycentric_calc_point(scalar b1, scalar b2, scalar b3, arr3 &p);
+    void barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     /** Returns the average electrostatic potential of this face **/
     scalar average_phi();
 
     scalar get_normal_flux();
 
-    void add_force_to_node(int i, vector3 *f);
+    void add_force_to_node(int i, arr3 &f);
     template <class brr3> void add_force_to_node(int i, brr3 (&f));
 
-    void add_force_to_node_atomic(int i, vector3 *f);
+    /**
+     * @note Implementation matches add_force_to_node(int i, arr3 &f) ??
+     */
+    void add_force_to_node_atomic(int i, arr3 &f);
 
-    // void add_bb_vdw_force_to_record(vector3 *f, int other_blob_index); // DEPRECATED
+    // void add_bb_vdw_force_to_record(arr3 *f, int other_blob_index); // DEPRECATED
     // template <class brr3> void add_bb_vdw_force_to_record(brr3 &f, int other_blob_index); // DEPRECATED
 
     // void add_bb_vdw_energy_to_record(scalar energy, int other_blob_index); // DEPRECATED
 
-    // void add_xz_vdw_force_to_record(vector3 *f); // DEPRECATED
+    // void add_xz_vdw_force_to_record(arr3 *f); // DEPRECATED
 
     // void add_xz_vdw_energy_to_record(scalar energy); // DEPRECATED
 

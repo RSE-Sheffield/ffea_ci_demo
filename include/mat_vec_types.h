@@ -67,45 +67,21 @@ namespace ffea_const {
    const scalar sphereFactor = 4.0 * 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148 / 3.0;
 }
 
-/** arr3 will hopefully substitute vector3 one day */ 
-typedef scalar arr3[3]; 
-typedef geoscalar grr3[3];
+typedef std::array<scalar, 3> arr3;
+typedef std::array<geoscalar, 3> grr3;
 
 
-typedef scalar arr4[4]; 
-typedef geoscalar grr4[4]; 
-
-/*
- * The old 3 dimensional vector (x, y, z)
- *   that is responsible of so many .x, .y, and .z,
- *   stopping people from simply looping.
-typedef struct {
-    scalar x, y, z;
-} vector3; */ 
-
-// The following class is a temporary replacement
-    //   for the old vector3 struct so that we have some
-    //   time to change from Whatever.x into Whatever[0] 
-    // Then vector3 will become arr3.
-    // Therefore, don't ever populate this class with methods!!
-class vector3 {
-public:
-    arr3 data;
-    scalar& x = data[0]; 
-    scalar& y = data[1]; 
-    scalar& z = data[2]; 
-    scalar& operator [](std::size_t i) { return data[i]; }
-    void assign( scalar t0, scalar t1, scalar t2 )
-    { data[0] = t0; data[1] = t1; data[2] = t2; }
-};
+typedef std::array<scalar, 4> arr4;
+typedef std::array<geoscalar, 4> grr4;
 
 /** arr3_view has the spirit of "span" or "array_view" 
  *    allowing us to have long arrays 
  *    and use the arr3 functions in mat_vec_fns_II  */
-template <class t_scalar, class brr3> class arr3_view
+template <class t_scalar, class brr3>
+class arr3_view
 {
 public:
-    arr3_view(brr3 (&arr) ) : data(arr) {}
+    arr3_view(brr3 &arr ) : data(arr.data()) {}
     arr3_view(t_scalar* data, std::size_t size) : data(data) { }
 
     t_scalar* begin() { return data; }

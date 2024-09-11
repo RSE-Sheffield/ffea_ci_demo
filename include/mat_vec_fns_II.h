@@ -204,7 +204,7 @@ template <class t_scalar, class brr3> bool samePlane(brr3 &p1, brr3 &p2, brr3 &p
  * Essentially implementing "Intersection of two lines in three-space",
  *  by Ronald Goldman, in Graphics Gems I. */
 template <class t_scalar, class brr3> void intersectingPointToLine(arr3_view<t_scalar,brr3> p0, arr3_view<t_scalar,brr3> p1, arr3_view<t_scalar,brr3> p2p1, arr3_view<t_scalar,brr3> p3);
-template <class t_scalar, class brr3> void intersectingPointToLine(vector3 &p0, arr3_view<t_scalar,brr3> p1, arr3_view<t_scalar,brr3> p2p1, arr3_view<t_scalar,brr3> p3);
+template <class t_scalar, class brr3> void intersectingPointToLine(arr3 &p0, arr3_view<t_scalar,brr3> p1, arr3_view<t_scalar,brr3> p2p1, arr3_view<t_scalar,brr3> p3);
 // template <class t_scalar, class brr3> void intersectingPointToLine(brr3 &p0, brr3 &p1, brr3 &p2, brr3 &p3);
 
 /** Given a line defined by points p1 and p2, 
@@ -220,19 +220,19 @@ template <class brr3> void getTetrahedraCM(brr3 &p1, brr3 &p2, brr3 &p3, brr3 &p
 template <class t_scalar, class brr3, class brr4> void getLocalCoordinatesForLinTet(arr3_view<t_scalar,brr3> t0, arr3_view<t_scalar,brr3> t1, arr3_view<t_scalar,brr3> t2, arr3_view<t_scalar,brr3> t3, arr3_view<t_scalar,brr3> p, brr4 &phi);
 
 ///////////////// SECTION 3 ////////////////////
-//// Transition functions from vector3 to arr3 // 
+//// Transition functions from arr3 to arr3 // 
 ////////////////////////////////////////////////
-template <class brr3> void vec3Vec3SubsToArr3(vector3 &u, vector3 &v, brr3 (&w));
-void vec3Arr3SubsToArr3(vector3 &u, arr3 &v, arr3 &w);
-void arr3Vec3SubsToArr3(arr3 (&u), vector3 &v, arr3 (&w));
+template <class brr3> void vec3Vec3SubsToArr3(arr3 &u, arr3 &v, brr3 (&w));
+void vec3Arr3SubsToArr3(arr3 &u, arr3 &v, arr3 &w);
+void arr3Vec3SubsToArr3(arr3 (&u), arr3 &v, arr3 (&w));
 
 
-void vec3Arr3AddToArr3(vector3 &u, arr3 (&v), arr3 (&w));
-void vec3Vec3AddToArr3(vector3 &u, vector3 &v, arr3 (&w));
+void vec3Arr3AddToArr3(arr3 &u, arr3 (&v), arr3 (&w));
+void vec3Vec3AddToArr3(arr3 &u, arr3 &v, arr3 (&w));
 
 /** Given a scalar f, resize vec3 u into arr3 u*/
-void vec3ResizeToArr3(scalar f, vector3 &u, arr3 &v);
+void vec3ResizeToArr3(scalar f, arr3 &u, arr3 &v);
 
-scalar vec3Arr3DotProduct(vector3 &u, arr3 &v);
+scalar vec3Arr3DotProduct(arr3 &u, arr3 &v);
 
 #endif 

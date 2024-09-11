@@ -102,39 +102,48 @@ namespace rod
     }
 
     // Print the contents of an array to the stdout.
-    void print_array(std::string array_name, const float array[], int length)
+    template<typename T, size_t N>
+    void print_array(std::string array_name, const std::array<T, N> &arr)
     {
         std::cout << array_name << " : [";
-        for (int i = 0; i < length; i++)
+        for (size_t i = 0; i < N; i++)
         {
-            if (i != length - 1)
+            if (i != N - 1)
             {
-                std::cout << array[i] << ", ";
+                std::cout << arr[i] << ", ";
             }
             else
             {
-                std::cout << array[i];
+                std::cout << arr[i];
             }
         }
         std::cout << "]\n";
     }
+    template void print_array(std::string, const std::array<int, 3>&);
+    template void print_array(std::string, const std::array<float, 3>&);
+    template void print_array(std::string, const std::array<double, 3>&);
 
-    void print_array(std::string array_name, const int array[], int length)
+
+    template<typename T>
+    void print_array(std::string array_name, const T arr[], int length)
     {
         std::cout << array_name << " : [";
         for (int i = 0; i < length; i++)
         {
             if (i != length - 1)
             {
-                std::cout << array[i] << ", ";
+                std::cout << arr[i] << ", ";
             }
             else
             {
-                std::cout << array[i];
+                std::cout << arr[i];
             }
         }
         std::cout << "]\n";
     }
+    template void print_array(std::string, const int[], int);
+    template void print_array(std::string, const float[], int);
+    template void print_array(std::string, const double[], int);
 
     // Print array slice from start to end (inclusive).
     void print_array(std::string array_name, const float array[], int start, int end)

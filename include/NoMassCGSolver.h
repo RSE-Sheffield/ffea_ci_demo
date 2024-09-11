@@ -51,10 +51,10 @@ public:
     int init(int num_nodes, int num_elements, mesh_node *node, tetra_element_linear *elem, SimulationParams *params, int num_pinned_nodes, int *pinned_nodes_list, set<int> bsite_pinned_node_list);
 
     /** Adds values to sparse viscosity matrix and uses it to solve the system Kv = f using conjugate gradient*/
-    int solve(vector3* x);
+    int solve(arr3* x);
 
     /* */
-    void print_matrices(vector3* force);
+    void print_matrices(arr3* force);
 
 private:
 
@@ -77,19 +77,19 @@ private:
     scalar *preconditioner;
 
     /** Work vectors */
-    vector3 *r, *p, *z, *q, *f;
+    arr3 *r, *p, *z, *q, *f;
 
     /** Unchanging memory locoation */
     scalar one;
 
     /* */
-    scalar conjugate_gradient_residual_assume_x_zero(vector3 *b);
+    scalar conjugate_gradient_residual_assume_x_zero(arr3 *b);
 
     /* */
     scalar residual2();
 
     /* */
-    scalar modx(vector3 *x);
+    scalar modx(arr3 *x);
 
     scalar get_alpha_denominator();
 
@@ -97,7 +97,7 @@ private:
     scalar parallel_apply_preconditioner();
 
     /* */
-    void check(vector3 *x);
+    void check(arr3 *x);
 
     /* */
     void apply_matrix(scalar *in, scalar *result) {

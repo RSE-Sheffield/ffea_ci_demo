@@ -58,7 +58,7 @@ public:
      *
      * This implementation is memory efficient as it modifies the vector x in place (no temporary vectors are needed).
      */
-    int solve(vector3 *x);
+    int solve(arr3 *x);
 
     void apply_matrix(scalar *in, scalar *result);
 

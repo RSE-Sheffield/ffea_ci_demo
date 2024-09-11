@@ -195,21 +195,21 @@ int SparseSubstitutionSolver::init(int num_nodes, int num_elements, mesh_node *n
     return FFEA_OK;
 }
 
-int SparseSubstitutionSolver::solve(vector3 *x) {
+int SparseSubstitutionSolver::solve(arr3 *x) {
     int i, j, index;
 
     // Forward substitution step Ly = b :
     index = 0;
     for (i = 0; i < num_rows; i++) {
 
-        x[i].x *= inverse_diag[i];
-        x[i].y *= inverse_diag[i];
-        x[i].z *= inverse_diag[i];
+        x[i][0] *= inverse_diag[i];
+        x[i][1] *= inverse_diag[i];
+        x[i][2] *= inverse_diag[i];
 
         for (j = 0; j < L_key[i]; j++) {
-            x[i + j + 1].x -= x[i].x * L[j + index];
-            x[i + j + 1].y -= x[i].y * L[j + index];
-            x[i + j + 1].z -= x[i].z * L[j + index];
+            x[i + j + 1][0] -= x[i][0] * L[j + index];
+            x[i + j + 1][1] -= x[i][1] * L[j + index];
+            x[i + j + 1][2] -= x[i][2] * L[j + index];
         }
 
         index += L_key[i];
@@ -219,14 +219,14 @@ int SparseSubstitutionSolver::solve(vector3 *x) {
     index = total_entries_in_U - 1;
     for (i = num_rows - 1; i >= 0; i--) {
 
-        x[i].x *= inverse_diag[i];
-        x[i].y *= inverse_diag[i];
-        x[i].z *= inverse_diag[i];
+        x[i][0] *= inverse_diag[i];
+        x[i][1] *= inverse_diag[i];
+        x[i][2] *= inverse_diag[i];
 
         for (j = 0; j < U_key[i]; j++) {
-            x[i - j - 1].x -= x[i].x * U[index - j];
-            x[i - j - 1].y -= x[i].y * U[index - j];
-            x[i - j - 1].z -= x[i].z * U[index - j];
+            x[i - j - 1][0] -= x[i][0] * U[index - j];
+            x[i - j - 1][1] -= x[i][1] * U[index - j];
+            x[i - j - 1][2] -= x[i][2] * U[index - j];
         }
 
         index -= U_key[i];

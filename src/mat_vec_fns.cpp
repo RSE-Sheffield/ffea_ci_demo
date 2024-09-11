@@ -33,7 +33,7 @@ void mat12_apply(matrix12 A, vector12 v) {
     for (i = 0; i < 12; i++) v[i] = temp_v[i];
 }
 
-void vec3_mat3_mult(vector3 &v, matrix3 &A, vector3 &notv) {
+void vec3_mat3_mult(arr3 &v, matrix3 &A, arr3 &notv) {
     //int i, j;
 
     notv[0] = A[0][0]*v[0] + A[1][0]*v[1] + A[2][0]*v[2];
@@ -42,7 +42,7 @@ void vec3_mat3_mult(vector3 &v, matrix3 &A, vector3 &notv) {
 
 }
 
-/* void vec3_vec3_subs(vector3 *u, vector3 *v, vector3 *w) {
+/* void vec3_vec3_subs(arr3 *u, arr3 *v, arr3 *w) {
     
     w->x = u->x - v->x;
     w->y = u->y - v->y;
@@ -50,7 +50,7 @@ void vec3_mat3_mult(vector3 &v, matrix3 &A, vector3 &notv) {
 
 }
 
-void vec3_vec3_cross(vector3 *u, vector3 *v, vector3 *w) {
+void vec3_vec3_cross(arr3 *u, arr3 *v, arr3 *w) {
 
 	w->x = u->y * v->z - u->z * v->y;
 	w->y = u->z * v->x - u->x * v->z;
@@ -220,7 +220,7 @@ void mat4_set_zero(matrix4 A) {
 /*
  *
  */
-void vector3_set_zero(vector3 &v) {
+void arr3_set_zero(arr3 &v) {
    
     v[0] = 0;
     v[1] = 0;
@@ -230,13 +230,13 @@ void vector3_set_zero(vector3 &v) {
 
 /*
  *
-void vec3_scale(vector3 *v, scalar scale) {
+void vec3_scale(arr3 *v, scalar scale) {
 	v->x *= scale;
 	v->y *= scale;
 	v->z *= scale;
 }
 
-void vec3_scale2(vector3 *v1, vector3 *v2, scalar scale) {
+void vec3_scale2(arr3 *v1, arr3 *v2, scalar scale) {
 	v2->x = scale*v1->x;
 	v2->y = scale*v1->y;
 	v2->z = scale*v1->z;
@@ -247,7 +247,7 @@ void vec3_scale2(vector3 *v1, vector3 *v2, scalar scale) {
 /*
  *
  */
-void vec3_add_to_scaled(vector3 *v1, vector3 *v2, scalar a, int vec_size) {
+void vec3_add_to_scaled(arr3 *v1, arr3 *v2, scalar a, int vec_size) {
     int i;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) private(i) shared(v1, v2, a, vec_size)
@@ -262,7 +262,7 @@ void vec3_add_to_scaled(vector3 *v1, vector3 *v2, scalar a, int vec_size) {
 /*
  *
  */
-void vec3_scale_and_add(vector3 *v1, vector3 *v2, scalar a, int vec_size) {
+void vec3_scale_and_add(arr3 *v1, arr3 *v2, scalar a, int vec_size) {
     int i;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) private(i) shared(v1, v2, a, vec_size)
@@ -322,17 +322,17 @@ void print_vector12(vector12 v) {
         printf("%e\n", v[i]);
 }
 
-void print_vector3(vector3 &v) {
-    printf("%e %e %e\n", v.x, v.y, v.z);
+void print_arr3(arr3 &v) {
+    printf("%e %e %e\n", v[0], v[1], v[2]);
 }
 
-/*scalar mag(vector3 &v) {
+/*scalar mag(arr3 &v) {
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-std::array<scalar,3> normalise(vector3 &v) {
+std::array<scalar,3> normalise(arr3 &v) {
     scalar magnitude;
-    vector3 norm;
+    arr3 norm;
     magnitude = mag(v);
     if(magnitude == 0.0) {
 	throw -1;

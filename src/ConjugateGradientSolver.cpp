@@ -191,11 +191,11 @@ int ConjugateGradientSolver::init(int num_nodes, int num_elements, mesh_node *no
         preconditioner[i] = 1.0 / mass_LU[i * num_rows + i];
 
     // create the work vectors necessary for use by the conjugate gradient solver
-    d = new(std::nothrow) vector3[num_rows];
-    r = new(std::nothrow) vector3[num_rows];
-    q = new(std::nothrow) vector3[num_rows];
-    s = new(std::nothrow) vector3[num_rows];
-    f = new(std::nothrow) vector3[num_rows];
+    d = new(std::nothrow) arr3[num_rows];
+    r = new(std::nothrow) arr3[num_rows];
+    q = new(std::nothrow) arr3[num_rows];
+    s = new(std::nothrow) arr3[num_rows];
+    f = new(std::nothrow) arr3[num_rows];
     if (!d || !r || !q || !s || !f) FFEA_ERROR_MESSG(" Failed to create the work vectors necessary for ConjugateGradientSolver\n"); 
 
     delete[] mass_LU;
@@ -203,7 +203,7 @@ int ConjugateGradientSolver::init(int num_nodes, int num_elements, mesh_node *no
     return FFEA_OK;
 }
 
-int ConjugateGradientSolver::solve(vector3 *x) {
+int ConjugateGradientSolver::solve(arr3 *x) {
     int i = 0;
 
     scalar delta_new, delta_old, dTq, alpha;
@@ -241,26 +241,26 @@ void ConjugateGradientSolver::apply_matrix(scalar *in, scalar *result) {
 }
 
 /* */
-scalar ConjugateGradientSolver::conjugate_gradient_residual_assume_x_zero(vector3 *b) {
+scalar ConjugateGradientSolver::conjugate_gradient_residual_assume_x_zero(arr3 *b) {
     int i;
     scalar delta_new = 0;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 // //#pragma omp parallel for default(none) private(i) shared(b) reduction(+:delta_new)
 #endif
     for (i = 0; i < num_rows; i++) {
-        r[i].x = b[i].x;
-        r[i].y = b[i].y;
-        r[i].z = b[i].z;
-        f[i].x = b[i].x;
-        f[i].y = b[i].y;
-        f[i].z = b[i].z;
-        b[i].x = 0;
-        b[i].y = 0;
-        b[i].z = 0;
-        d[i].x = preconditioner[i] * r[i].x;
-        d[i].y = preconditioner[i] * r[i].y;
-        d[i].z = preconditioner[i] * r[i].z;
-        delta_new += r[i].x * d[i].x + r[i].y * d[i].y + r[i].z * d[i].z;
+        r[i][0] = b[i][0];
+        r[i][1] = b[i][1];
+        r[i][2] = b[i][2];
+        f[i][0] = b[i][0];
+        f[i][1] = b[i][1];
+        f[i][2] = b[i][2];
+        b[i][0] = 0;
+        b[i][1] = 0;
+        b[i][2] = 0;
+        d[i][0] = preconditioner[i] * r[i][0];
+        d[i][1] = preconditioner[i] * r[i][1];
+        d[i][2] = preconditioner[i] * r[i][2];
+        delta_new += r[i][0] * d[i][0] + r[i][1] * d[i][1] + r[i][2] * d[i][2];
     }
 
     return delta_new;
@@ -274,42 +274,42 @@ scalar ConjugateGradientSolver::parallel_sparse_matrix_apply() {
 // //#pragma omp parallel for default(none) private(i, j) reduction(+:dTq)
 #endif
     for (i = 0; i < num_rows; i++) {
-        q[i].x = 0;
-        q[i].y = 0;
-        q[i].z = 0;
+        q[i][0] = 0;
+        q[i][1] = 0;
+        q[i][2] = 0;
         for (j = key[i]; j < key[i + 1]; j++) {
-            q[i].x += entry[j].val * d[entry[j].column_index].x;
-            q[i].y += entry[j].val * d[entry[j].column_index].y;
-            q[i].z += entry[j].val * d[entry[j].column_index].z;
+            q[i][0] += entry[j].val * d[entry[j].column_index][0];
+            q[i][1] += entry[j].val * d[entry[j].column_index][1];
+            q[i][2] += entry[j].val * d[entry[j].column_index][2];
         }
 
-        dTq += d[i].x * q[i].x + d[i].y * q[i].y + d[i].z * q[i].z;
+        dTq += d[i][0] * q[i][0] + d[i][1] * q[i][1] + d[i][2] * q[i][2];
     }
 
     return dTq;
 }
 
-void ConjugateGradientSolver::parallel_vector_add_self(vector3 *v1, scalar a, vector3 *v2, int vec_size) {
+void ConjugateGradientSolver::parallel_vector_add_self(arr3 *v1, scalar a, arr3 *v2, int vec_size) {
     int i;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) private(i) shared(v1, a, v2, vec_size)
 #endif
     for (i = 0; i < vec_size; i++) {
-        v1[i].x += a * v2[i].x;
-        v1[i].y += a * v2[i].y;
-        v1[i].z += a * v2[i].z;
+        v1[i][0] += a * v2[i][0];
+        v1[i][1] += a * v2[i][1];
+        v1[i][2] += a * v2[i][2];
     }
 }
 
-void ConjugateGradientSolver::parallel_vector_add(vector3 *v1, scalar a, vector3 *v2, int vec_size) {
+void ConjugateGradientSolver::parallel_vector_add(arr3 *v1, scalar a, arr3 *v2, int vec_size) {
     int i;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) private(i) shared(v1, a, v2, vec_size)
 #endif
     for (i = 0; i < vec_size; i++) {
-        v1[i].x = v2[i].x + a * v1[i].x;
-        v1[i].y = v2[i].y + a * v1[i].y;
-        v1[i].z = v2[i].z + a * v1[i].z;
+        v1[i][0] = v2[i][0] + a * v1[i][0];
+        v1[i][1] = v2[i][1] + a * v1[i][1];
+        v1[i][2] = v2[i][2] + a * v1[i][2];
     }
 }
 
@@ -321,10 +321,10 @@ scalar ConjugateGradientSolver::parallel_apply_preconditioner() {
 // //#pragma omp parallel for default(none) private(i) reduction(+:delta_new)
 #endif
     for (i = 0; i < num_rows; i++) {
-        s[i].x = preconditioner[i] * r[i].x;
-        s[i].y = preconditioner[i] * r[i].y;
-        s[i].z = preconditioner[i] * r[i].z;
-        delta_new += r[i].x * s[i].x + r[i].y * s[i].y + r[i].z * s[i].z;
+        s[i][0] = preconditioner[i] * r[i][0];
+        s[i][1] = preconditioner[i] * r[i][1];
+        s[i][2] = preconditioner[i] * r[i][2];
+        delta_new += r[i][0] * s[i][0] + r[i][1] * s[i][1] + r[i][2] * s[i][2];
     }
 
     return delta_new;
@@ -338,8 +338,8 @@ scalar ConjugateGradientSolver::residual2() {
 // //#pragma omp parallel for default(none) private(i) shared(stderr) reduction(+:r2, f2)
 #endif
     for (i = 0; i < num_rows; i++) {
-        r2 += r[i].x * r[i].x + r[i].y * r[i].y + r[i].z * r[i].z;
-        f2 += f[i].x * f[i].x + f[i].y * f[i].y + f[i].z * f[i].z;
+        r2 += r[i][0] * r[i][0] + r[i][1] * r[i][1] + r[i][2] * r[i][2];
+        f2 += f[i][0] * f[i][0] + f[i][1] * f[i][1] + f[i][2] * f[i][2];
     }
     if (f2 == 0.0) {
         return 0.0;

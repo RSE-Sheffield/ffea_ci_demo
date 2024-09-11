@@ -162,7 +162,7 @@ public:
     PoissonMatrixQuadratic K_alpha;
 
     /** @brief Store the contribution from this element to the force on each of its four nodes */
-    vector3 node_force[NUM_NODES_QUADRATIC_TET];
+    arr3 node_force[NUM_NODES_QUADRATIC_TET];
 
     /** @brief The rest volume of this element */
     scalar vol_0;
@@ -188,7 +188,7 @@ public:
     /** @brief Index of this element in the parent Blob */
     int index;
 
-    vector3 centroid;
+    arr3 centroid;
 
     /** @brief
      * Get the memory location of the specified element of K_alpha
@@ -204,7 +204,7 @@ public:
     void add_K_alpha(scalar *K, int num_nodes);
 
     /** @brief Returns the gradient of the potential at the given (s,t,u) position in the element */
-    void get_grad_phi_at_stu(vector3 &grad_phi, scalar s, scalar t, scalar u);
+    void get_grad_phi_at_stu(arr3 &grad_phi, scalar s, scalar t, scalar u);
 
     /** @brief Calculates the force on each node of the element due to the electrostatic potential gradient there */
     void calculate_electrostatic_forces();
@@ -288,7 +288,7 @@ public:
     void add_element_force_vector(vector12 force);
 
     /** @brief Add given force to the specified node of this element */
-    void add_force_to_node(int i, vector3 *f);
+    void add_force_to_node(int i, arr3 &f);
 
     /** @brief A roundabout and inefficient way of working out what node (from 0 to 9) this index corresponds to */
     int what_node_is_this(int index);
@@ -302,7 +302,7 @@ public:
      */
     void apply_element_mass_matrix(vector12 du);
 
-    void volume_coord_to_xyz(scalar eta0, scalar eta1, scalar eta2, scalar eta3, vector3 *r);
+    void volume_coord_to_xyz(scalar eta0, scalar eta1, scalar eta2, scalar eta3, arr3 &r);
 
     void zero_force();
 

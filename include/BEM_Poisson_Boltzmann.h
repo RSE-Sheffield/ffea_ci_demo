@@ -47,8 +47,8 @@ public:
     /** Sets the inverse debye screening length for the system */
     void set_kappa(scalar kappa);
     void build_BEM_matrices();
-    void perform_integrals_for_lookup_cell_self(LinkedListNode<Face> *l_i, vector3 gqp[4]);
-    void perform_integrals_for_lookup_cell_relative(LinkedListNode<Face> *l_i, vector3 gqp[4], int dx, int dy, int dz);
+    void perform_integrals_for_lookup_cell_self(LinkedListNode<Face> *l_i, arr3 gqp[4]);
+    void perform_integrals_for_lookup_cell_relative(LinkedListNode<Face> *l_i, arr3 gqp[4], int dx, int dy, int dz);
     void print_matrices();
     SparseMatrixUnknownPattern * get_C();
     SparseMatrixUnknownPattern * get_D();
@@ -79,13 +79,13 @@ private:
                     scalar screened_R_theta(scalar r_perp_mag, scalar half_theta_max, scalar theta_bar, scalar xi);
      */
 
-    void gauss_quadrature_4_point(vector3 gqp[4], vector3 *p, scalar *int_u, scalar *int_du, Face *f);
+    void gauss_quadrature_4_point(arr3 gqp[4], arr3 &p, scalar *int_u, scalar *int_du, Face *f);
 
-    scalar self_term(vector3 *n0, vector3 *n1, vector3 *n2, int precision);
+    scalar self_term(arr3 &n0, arr3 &n1, arr3 &n2, int precision);
 
     scalar f_1d(scalar r);
 
-    scalar f_3d(vector3 *p, vector3 *q);
+    scalar f_3d(const arr3 &p, const arr3 &q);
 };
 
 #endif

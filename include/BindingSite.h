@@ -70,7 +70,7 @@ class BindingSite{
 	private:
 
 		/** Centroid of the whole site (needs recalculating if simulation has continued) */
-		vector3 centroid;
+		arr3 centroid;
 
 		/** Area of the whole site (needs recalculating if simulation has continued) */
 		scalar area;

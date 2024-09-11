@@ -104,50 +104,50 @@ void SparseMatrixFixedPattern::apply(scalar *in, scalar *result) {
     }
 }
 
-/* Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'vector3's */
+/* Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'arr3's */
 /* Designed for use in NoMassCGSolver */
-/*void SparseMatrixFixedPattern::apply(vector3 *in, vector3 *result) {
+/*void SparseMatrixFixedPattern::apply(arr3 *in, arr3 *result) {
     int i, j;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) private(i, j) shared(result, in)
 #endif
     for (i = 0; i < num_rows / 3; i++) {
-        result[i].x = 0;
-        result[i].y = 0;
-        result[i].z = 0;
+        result[i][0] = 0;
+        result[i][1] = 0;
+        result[i][2] = 0;
         for (j = key[3 * i]; j < key[(3 * i) + 1]; j++) {
             if (entry[j].column_index % 3 == 0) {
-                result[i].x += entry[j].val * in[entry[j].column_index / 3].x;
+                result[i][0] += entry[j].val * in[entry[j].column_index / 3][0];
             } else if (entry[j].column_index % 3 == 1) {
-                result[i].x += entry[j].val * in[entry[j].column_index / 3].y;
+                result[i][0] += entry[j].val * in[entry[j].column_index / 3][1];
             } else if (entry[j].column_index % 3 == 2) {
-                result[i].x += entry[j].val * in[entry[j].column_index / 3].z;
+                result[i][0] += entry[j].val * in[entry[j].column_index / 3][2];
             }
         }
         for (j = key[(3 * i) + 1]; j < key[(3 * i) + 2]; j++) {
             if (entry[j].column_index % 3 == 0) {
-                result[i].y += entry[j].val * in[entry[j].column_index / 3].x;
+                result[i][1] += entry[j].val * in[entry[j].column_index / 3][0];
             } else if (entry[j].column_index % 3 == 1) {
-                result[i].y += entry[j].val * in[entry[j].column_index / 3].y;
+                result[i][1] += entry[j].val * in[entry[j].column_index / 3][1];
             } else if (entry[j].column_index % 3 == 2) {
-                result[i].y += entry[j].val * in[entry[j].column_index / 3].z;
+                result[i][1] += entry[j].val * in[entry[j].column_index / 3][2];
             }
         }
         for (j = key[(3 * i) + 2]; j < key[(3 * i) + 3]; j++) {
             if (entry[j].column_index % 3 == 0) {
-                result[i].z += entry[j].val * in[entry[j].column_index / 3].x;
+                result[i][2] += entry[j].val * in[entry[j].column_index / 3][0];
             } else if (entry[j].column_index % 3 == 1) {
-                result[i].z += entry[j].val * in[entry[j].column_index / 3].y;
+                result[i][2] += entry[j].val * in[entry[j].column_index / 3][1];
             } else if (entry[j].column_index % 3 == 2) {
-                result[i].z += entry[j].val * in[entry[j].column_index / 3].z;
+                result[i][2] += entry[j].val * in[entry[j].column_index / 3][2];
             }
         }
     }
 }*/
 
-/* Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'vector3's */
+/* Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'arr3's */
 /* Designed for use in NoMassCGSolver */
-void SparseMatrixFixedPattern::apply(vector3 *in, vector3 *result) {
+void SparseMatrixFixedPattern::apply(arr3 *in, arr3 *result) {
 
     int i, j;
 
@@ -161,9 +161,9 @@ void SparseMatrixFixedPattern::apply(vector3 *in, vector3 *result) {
     #pragma omp for 
 #endif
     for(i = 0; i < num_rows / 3; ++i) {
-        work_in[3 * i] = in[i].x;
-        work_in[3 * i + 1] = in[i].y;
-        work_in[3 * i + 2] = in[i].z;
+        work_in[3 * i] = in[i][0];
+        work_in[3 * i + 1] = in[i][1];
+        work_in[3 * i + 2] = in[i][2];
     }
 
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
@@ -183,69 +183,69 @@ void SparseMatrixFixedPattern::apply(vector3 *in, vector3 *result) {
     #pragma omp for 
 #endif
     for(i = 0; i < num_rows / 3; ++i) {
-        result[i].x = work_result[3 * i];
-        result[i].y = work_result[3 * i + 1];
-        result[i].z = work_result[3 * i + 2];
+        result[i][0] = work_result[3 * i];
+        result[i][1] = work_result[3 * i + 1];
+        result[i][2] = work_result[3 * i + 2];
     }
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
     }
 #endif
 }
 
-/* Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'vector3's */
+/* Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'arr3's */
 /* Each element applies to whole vector */
 /* Designed to apply sparse matrix (kinetic map) to list of node positions for conformation changes */
-void SparseMatrixFixedPattern::block_apply(vector3 *in, vector3 *result) {
+void SparseMatrixFixedPattern::block_apply(arr3 *in, arr3 *result) {
     int i, j;
     for(i = 0; i < num_rows; ++i) {
-        result[i].x = 0;
-        result[i].y = 0;
-        result[i].z = 0;
+        result[i][0] = 0;
+        result[i][1] = 0;
+        result[i][2] = 0;
         for(j = key[i]; j < key[i + 1]; ++j) {
-            result[i].x += entry[j].val * in[entry[j].column_index].x;
-            result[i].y += entry[j].val * in[entry[j].column_index].y;
-            result[i].z += entry[j].val * in[entry[j].column_index].z;
+            result[i][0] += entry[j].val * in[entry[j].column_index][0];
+            result[i][1] += entry[j].val * in[entry[j].column_index][1];
+            result[i][2] += entry[j].val * in[entry[j].column_index][2];
         }
     }
 }
 
-/* Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'vector3's */
+/* Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'arr3's */
 /* Each element applies to whole vector */
 /* Designed to apply sparse matrix (kinetic map) to list of node positions for conformation changes */
-void SparseMatrixFixedPattern::block_apply(vector3 **in, vector3 **result) {
+void SparseMatrixFixedPattern::block_apply(arr3 **in, arr3 **result) {
     int i, j;
     for(i = 0; i < num_rows; ++i) {
-        result[i]->x = 0;
-        result[i]->y = 0;
-        result[i]->z = 0;
+        (*result[i])[0] = 0;
+        (*result[i])[1] = 0;
+        (*result[i])[2] = 0;
         for(j = key[i]; j < key[i + 1]; ++j) {
-            result[i]->x += entry[j].val * in[entry[j].column_index]->x;
-            result[i]->y += entry[j].val * in[entry[j].column_index]->y;
-            result[i]->z += entry[j].val * in[entry[j].column_index]->z;
+            (*result[i])[0] += entry[j].val * (*in[entry[j].column_index])[0];
+            (*result[i])[1] += entry[j].val * (*in[entry[j].column_index])[1];
+            (*result[i])[2] += entry[j].val * (*in[entry[j].column_index])[2];
         }
     }
 }
 
-/* Applies this matrix to the given vector 'in', also writing the result to 'in'. 'in' is made of 'vector3's */
+/* Applies this matrix to the given vector 'in', also writing the result to 'in'. 'in' is made of 'arr3's */
 /* Designed to apply sparse matrix (kinetic map) to list of node positions for conformation changes */
-void SparseMatrixFixedPattern::block_apply(vector3 **in) {
+void SparseMatrixFixedPattern::block_apply(arr3 **in) {
     int i, j;
-    vector<vector3> result(num_rows);
+    vector<arr3> result(num_rows);
 
     for(i = 0; i < num_rows; ++i) {
-        result[i].x = 0;
-        result[i].y = 0;
-        result[i].z = 0;
+        result[i][0] = 0;
+        result[i][1] = 0;
+        result[i][2] = 0;
         for(j = key[i]; j < key[i + 1]; ++j) {
-            result[i].x += entry[j].val * in[entry[j].column_index]->x;
-            result[i].y += entry[j].val * in[entry[j].column_index]->y;
-            result[i].z += entry[j].val * in[entry[j].column_index]->z;
+            result[i][0] += entry[j].val * (*in[entry[j].column_index])[0];
+            result[i][1] += entry[j].val * (*in[entry[j].column_index])[1];
+            result[i][2] += entry[j].val * (*in[entry[j].column_index])[2];
         }
     }
     for(i = 0; i < num_rows; ++i) {
-        in[i]->x = result[i].x;
-        in[i]->y = result[i].y;
-        in[i]->z = result[i].z;
+        (*in[i])[0] = result[i][0];
+        (*in[i])[1] = result[i][1];
+        (*in[i])[2] = result[i][2];
     }
 }
 
@@ -357,7 +357,7 @@ void SparseMatrixFixedPattern::print_dense() {
 }
 
 /* Prints dense matrix out to file for analysis. I suggest only letting this function run once (step = 1?) */
-void SparseMatrixFixedPattern::print_dense_to_file(vector3 *a) {
+void SparseMatrixFixedPattern::print_dense_to_file(arr3 *a) {
     FILE *fout, *fout2;
     fout = fopen("dense_matrix.csv", "w");
     fout2 = fopen("force.csv", "w");
@@ -375,7 +375,7 @@ void SparseMatrixFixedPattern::print_dense_to_file(vector3 *a) {
         fprintf(fout, "\n");
     }
     for (i = 0; i < num_rows / 3; ++i) {
-        fprintf(fout2, "%e\n%e\n%e\n", a[i].x, a[i].y, a[i].z);
+        fprintf(fout2, "%e\n%e\n%e\n", a[i][0], a[i][1], a[i][2]);
     }
     fclose(fout);
     fclose(fout2);

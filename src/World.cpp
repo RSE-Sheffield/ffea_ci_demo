@@ -46,9 +46,9 @@ World::World()
     rng = nullptr;
     phi_Gamma = nullptr;
     total_num_surface_faces = 0;
-    box_dim.x = 0;
-    box_dim.y = 0;
-    box_dim.z = 0;
+    box_dim[0] = 0;
+    box_dim[1] = 0;
+    box_dim[2] = 0;
     step_initial = 0;
     trajectory_out = nullptr;
     measurement_out = nullptr;
@@ -70,9 +70,9 @@ World::World()
     ssintenergy = 0.0;
     preCompenergy = 0.0;
 
-    vector3_set_zero(L);
-    vector3_set_zero(CoM);
-    vector3_set_zero(CoG);
+    arr3_set_zero(L);
+    arr3_set_zero(CoM);
+    arr3_set_zero(CoG);
     rmsd = 0.0;
 }
 
@@ -127,9 +127,7 @@ World::~World()
 
     total_num_surface_faces = 0;
 
-    box_dim.x = 0;
-    box_dim.y = 0;
-    box_dim.z = 0;
+    memset(&box_dim, 0, sizeof(arr3));
     step_initial = 0;
 
     if (trajectory_out)
@@ -176,9 +174,9 @@ World::~World()
     ssintenergy = 0.0;
     preCompenergy = 0.0;
 
-    vector3_set_zero(L);
-    vector3_set_zero(CoM);
-    vector3_set_zero(CoG);
+    arr3_set_zero(L);
+    arr3_set_zero(CoM);
+    arr3_set_zero(CoG);
     rmsd = 0.0;
 }
 
@@ -516,41 +514,41 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
     }
 
     // Set up a Box:
-    vector3 world_centroid, shift;
-    get_system_centroid(&world_centroid);
+    arr3 world_centroid, shift;
+    get_system_centroid(world_centroid);
     if (params.es_N_x < 1 || params.es_N_y < 1 || params.es_N_z < 1)
     {
-        vector3 dimension_vector;
-        get_system_dimensions(&dimension_vector);
+        arr3 dimension_vector;
+        get_system_dimensions(dimension_vector);
 
         // Calculate decent box size
-        params.es_N_x = 2 * (int)ceil(dimension_vector.x / params.ssint_cutoff);
-        params.es_N_y = 2 * (int)ceil(dimension_vector.y / params.ssint_cutoff);
-        params.es_N_z = 2 * (int)ceil(dimension_vector.z / params.ssint_cutoff);
+        params.es_N_x = 2 * (int)ceil(dimension_vector[0] / params.ssint_cutoff);
+        params.es_N_y = 2 * (int)ceil(dimension_vector[1] / params.ssint_cutoff);
+        params.es_N_z = 2 * (int)ceil(dimension_vector[2] / params.ssint_cutoff);
     }
 
     // Move to box centre (if it is a new simulation! Otherwise trajectory will already have taken care of the move)
-    box_dim.x = params.ssint_cutoff * params.es_N_x;
-    box_dim.y = params.ssint_cutoff * params.es_N_y;
-    box_dim.z = params.ssint_cutoff * params.es_N_z;
+    box_dim[0] = params.ssint_cutoff * params.es_N_x;
+    box_dim[1] = params.ssint_cutoff * params.es_N_y;
+    box_dim[2] = params.ssint_cutoff * params.es_N_z;
 
-    shift.x = box_dim.x / 2.0 - world_centroid.x;
-    shift.y = box_dim.y / 2.0 - world_centroid.y;
-    shift.z = box_dim.z / 2.0 - world_centroid.z;
+    shift[0] = box_dim[0] / 2.0 - world_centroid[0];
+    shift[1] = box_dim[1] / 2.0 - world_centroid[1];
+    shift[2] = box_dim[2] / 2.0 - world_centroid[2];
 
-    std::cout << "Box dimensions: (" << box_dim.x << ", " << box_dim.y << ", " << box_dim.z << ")\n";
-    std::cout << "World centroid: (" << world_centroid.x << ", " << world_centroid.y << ", " << world_centroid.z << ")\n";
-    std::cout << "Shift: (" << shift.x << ", " << shift.y << ", " << shift.z << ")\n";
+    std::cout << "Box dimensions: (" << box_dim[0] << ", " << box_dim[1] << ", " << box_dim[2] << ")\n";
+    std::cout << "World centroid: (" << world_centroid[0] << ", " << world_centroid[1] << ", " << world_centroid[2] << ")\n";
+    std::cout << "Shift: (" << shift[0] << ", " << shift[1] << ", " << shift[2] << ")\n";
 
     if (params.move_into_box == 1)
     { // && params.restart == 0)
         for (i = 0; i < params.num_blobs; i++)
         {
             //active_blob_array[i]->get_centroid(&world_centroid);
-            active_blob_array[i]->move(shift.x, shift.y, shift.z);
+            active_blob_array[i]->move(shift[0], shift[1], shift[2]);
             active_blob_array[i]->calc_all_centroids();
         }
-        float shift_rod[3] = {(float)shift.x, (float)shift.y, (float)shift.z}; // this class is some historical junk
+        float shift_rod[3] = {(float)shift[0], (float)shift[1], (float)shift[2]}; // this class is some historical junk
         for (i = 0; i < params.num_rods; i++)
         {
             if (rod_array[i]->restarting == false)
@@ -578,7 +576,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
     if (params.pbc_rod == 1)
     {
         for (int i = 0; i < params.num_rods; i++)
-            rod_box_length_check(rod_array[i], {(float)box_dim.x, (float)box_dim.y, (float)box_dim.z});
+            rod_box_length_check(rod_array[i], {(float)box_dim[0], (float)box_dim[1], (float)box_dim[2]});
     }
 
     // Now everything has been moved into boxes etc, save all initial positions
@@ -662,7 +660,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
                 fprintf(measurement_out, "%-14s", "KineticEnergy");
             }
             fprintf(measurement_out, "%-14s", "StrainEnergy");
-            fprintf(measurement_out, "%-14s%-14s%-14s%-14s", "Centroid.x", "Centroid.y", "Centroid.z", "RMSD");
+            fprintf(measurement_out, "%-14s%-14s%-14s%-14s", "Centroid[0]", "Centroid[1]", "Centroid[2]", "RMSD");
 
             // Are these field enabled?
             if (params.calc_springs != 0)
@@ -694,7 +692,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
                         fprintf(detailed_meas_out, "%-14s", "KineticEnergy");
                     }
                     fprintf(detailed_meas_out, "%-14s", "StrainEnergy");
-                    fprintf(detailed_meas_out, "%-14s%-14s%-14s%-14s", "Centroid.x", "Centroid.y", "Centroid.z", "RMSD");
+                    fprintf(detailed_meas_out, "%-14s%-14s%-14s%-14s", "Centroid[0]", "Centroid[1]", "Centroid[2]", "RMSD");
                 }
 
                 if (params.calc_ssint == 1 || params.calc_steric == 1 || params.calc_preComp == 1 || params.calc_springs == 1)
@@ -1064,7 +1062,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         if (!vdw_solver)
             FFEA_ERROR_MESSG("World::init failed to initialise the ssint_solver.\n");
 
-        vdw_solver->init(&lookup, &box_dim, &ssint_matrix, params.steric_factor, params.num_blobs, params.inc_self_ssint, params.ssint_type, params.steric_dr, params.calc_kinetics, there_are_static_blobs);
+        vdw_solver->init(&lookup, box_dim, &ssint_matrix, params.steric_factor, params.num_blobs, params.inc_self_ssint, params.ssint_type, params.steric_dr, params.calc_kinetics, there_are_static_blobs);
     }
 
     // Calculate the total number of vdw interacting faces in the entire system
@@ -1097,7 +1095,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         }
         printf("...done\n");
 
-        printf("Box has volume %e cubic angstroms\n", (box_dim.x * box_dim.y * box_dim.z) * mesoDimensions::volume * 1e30);
+        printf("Box has volume %e cubic angstroms\n", (box_dim[0]* box_dim[1]* box_dim[2])* mesoDimensions::volume * 1e30);
 
         // Add all the faces from each Blob to the lookup pool
         printf("Adding all faces to nearest neighbour grid lookup pool\n");
@@ -1627,19 +1625,19 @@ int World::lem(set<int> blob_indices, int num_modes)
 
         // Most important mode will have motion ~ largest system size. Get a length...
         scalar dx = -1 * INFINITY;
-        vector3 min, max;
-        active_blob_array[i]->get_min_max(&min, &max);
-        if (max.x - min.x > dx)
+        arr3 min, max;
+        active_blob_array[i]->get_min_max(min, max);
+        if (max[0] - min[0] > dx)
         {
-            dx = max.x - min.x;
+            dx = max[0] - min[0];
         }
-        if (max.y - min.y > dx)
+        if (max[1] - min[1] > dx)
         {
-            dx = max.y - min.y;
+            dx = max[1] - min[1];
         }
-        if (max.z - min.z > dx)
+        if (max[2] - min[2] > dx)
         {
-            dx = max.z - min.z;
+            dx = max[2] - min[2];
         }
 
         dx /= 5.0;
@@ -1783,19 +1781,19 @@ int World::dmm(set<int> blob_indices, int num_modes)
 
         // Most important mode will have motion ~ largest system size. Get a length...
         scalar dx = -1 * INFINITY;
-        vector3 min, max;
-        active_blob_array[i]->get_min_max(&min, &max);
-        if (max.x - min.x > dx)
+        arr3 min, max;
+        active_blob_array[i]->get_min_max(min, max);
+        if (max[0] - min[0] > dx)
         {
-            dx = max.x - min.x;
+            dx = max[0] - min[0];
         }
-        if (max.y - min.y > dx)
+        if (max[1] - min[1] > dx)
         {
-            dx = max.y - min.y;
+            dx = max[1] - min[1];
         }
-        if (max.z - min.z > dx)
+        if (max[2] - min[2] > dx)
         {
-            dx = max.z - min.z;
+            dx = max[2] - min[2];
         }
 
         dx /= 10.0;
@@ -1992,19 +1990,19 @@ int World::dmm_rp(set<int> blob_indices, int num_modes)
 
         // Most important mode will have motion ~ largest system size. Get a length...
         scalar dx = -1 * INFINITY;
-        vector3 min, max;
-        active_blob_array[i]->get_min_max(&min, &max);
-        if (max.x - min.x > dx)
+        arr3 min, max;
+        active_blob_array[i]->get_min_max(min, max);
+        if (max[0] - min[0] > dx)
         {
-            dx = max.x - min.x;
+            dx = max[0] - min[0];
         }
-        if (max.y - min.y > dx)
+        if (max[1] - min[1] > dx)
         {
-            dx = max.y - min.y;
+            dx = max[1] - min[1];
         }
-        if (max.z - min.z > dx)
+        if (max[2] - min[2] > dx)
         {
-            dx = max.z - min.z;
+            dx = max[2] - min[2];
         }
 
         dx /= 20.0;
@@ -2120,62 +2118,62 @@ int World::run()
             } */
 
             // If blob centre of mass moves outside simulation box, apply PBC to it
-            vector3 com;
+            arr3 com;
             active_blob_array[i]->calc_and_store_centroid(com);
 
             scalar dx = 0, dy = 0, dz = 0;
             int check_move = 0;
 
-            if (com.x < 0)
+            if (com[0] < 0)
             {
                 if (params.wall_x_1 == WALL_TYPE_PBC)
                 {
-                    dx += box_dim.x;
+                    dx += box_dim[0];
                     active_blob_array[i]->pbc_count[0] -= 1;
                     check_move = 1;
                 }
             }
-            else if (com.x > box_dim.x)
+            else if (com[0] > box_dim[0])
             {
                 if (params.wall_x_2 == WALL_TYPE_PBC)
                 {
-                    dx -= box_dim.x;
+                    dx -= box_dim[0];
                     active_blob_array[i]->pbc_count[0] += 1;
                     check_move = 1;
                 }
             }
-            if (com.y < 0)
+            if (com[1] < 0)
             {
                 if (params.wall_y_1 == WALL_TYPE_PBC)
                 {
-                    dy += box_dim.y;
+                    dy += box_dim[1];
                     active_blob_array[i]->pbc_count[1] -= 1;
                     check_move = 1;
                 }
             }
-            else if (com.y > box_dim.y)
+            else if (com[1] > box_dim[1])
             {
                 if (params.wall_y_2 == WALL_TYPE_PBC)
                 {
-                    dy -= box_dim.y;
+                    dy -= box_dim[1];
                     active_blob_array[i]->pbc_count[1] += 1;
                     check_move = 1;
                 }
             }
-            if (com.z < 0)
+            if (com[2] < 0)
             {
                 if (params.wall_z_1 == WALL_TYPE_PBC)
                 {
-                    dz += box_dim.z;
+                    dz += box_dim[2];
                     active_blob_array[i]->pbc_count[2] -= 1;
                     check_move = 1;
                 }
             }
-            else if (com.z > box_dim.z)
+            else if (com[2] > box_dim[2])
             {
                 if (params.wall_z_2 == WALL_TYPE_PBC)
                 {
-                    dz -= box_dim.z;
+                    dz -= box_dim[2];
                     active_blob_array[i]->pbc_count[2] += 1;
                     check_move = 1;
                 }
@@ -2188,7 +2186,7 @@ int World::run()
             }
 
             // If Blob is near a hard wall, prevent it from moving further into it
-            active_blob_array[i]->enforce_box_boundaries(&box_dim);
+            active_blob_array[i]->enforce_box_boundaries(box_dim);
 
             // Set node forces to zero
             active_blob_array[i]->set_forces_to_zero();
@@ -2298,7 +2296,7 @@ int World::run()
         if (params.pbc_rod == 1)
         {
             for (int i = 0; i < params.num_rods; i++)
-                rod_pbc_wrap(rod_array[i], {(float)box_dim.x, (float)box_dim.y, (float)box_dim.z});
+                rod_pbc_wrap(rod_array[i], {(float)box_dim[0], (float)box_dim[1], (float)box_dim[2]});
         }
 
 #ifdef FFEA_PARALLEL_FUTURE
@@ -2496,10 +2494,10 @@ int World::change_kinetic_state(int blob_index, int target_state)
         int inversionCheck;
 
         // Get current nodes
-        vector3 **current_nodes = active_blob_array[blob_index]->get_actual_node_positions();
+        arr3 **current_nodes = active_blob_array[blob_index]->get_actual_node_positions();
 
         // Get target nodes
-        vector3 **target_nodes = blob_array[blob_index][target_conformation].get_actual_node_positions();
+        arr3 **target_nodes = blob_array[blob_index][target_conformation].get_actual_node_positions();
 
         // Apply map
         kinetic_map[blob_index][current_conformation][target_conformation].block_apply(current_nodes, target_nodes);
@@ -3092,7 +3090,7 @@ int World::read_and_build_system(vector<string> script_vector)
 
         // Build blob
         // Build conformations (structural data)
-        // vector3 *cent = new vector3;
+        // arr3 *cent = new arr3;
         for (j = 0; j < params.num_conformations[i]; ++j)
         {
             cout << "\tConfiguring blob " << i << " conformation " << j << "..." << endl;
@@ -3168,16 +3166,16 @@ int World::read_and_build_system(vector<string> script_vector)
                     blob_conf[i].centroid[0] *= blob_array[i][j].get_scale();
                     blob_conf[i].centroid[1] *= blob_array[i][j].get_scale();
                     blob_conf[i].centroid[2] *= blob_array[i][j].get_scale();
-                    vector3 dv = blob_array[i][j].position(blob_conf[i].centroid[0],
+                    arr3 dv = blob_array[i][j].position(blob_conf[i].centroid[0],
                                                            blob_conf[i].centroid[1], blob_conf[i].centroid[2]);
 
                     // if Blob has a number of beads, transform them too:
                     if (blob_array[i][j].get_num_beads() > 0)
-                        blob_array[i][j].position_beads(dv.x, dv.y, dv.z);
+                        blob_array[i][j].position_beads(dv[0], dv[1], dv[2]);
 
                     // transform the rod, too
                     // note to future FFEA authors: yes, you have to translate your stuff here as well
-                    //float shift_rod[3] = {(float)dv.x, (float)dv.y, (float)dv.z};
+                    //float shift_rod[3] = {(float)dv[0], (float)dv[1], (float)dv[2]};
                     //for (i = 0; i < params.num_rods; i++) {
                     //    rod_array[i]->translate_rod(rod_array[i]->current_r, shift_rod);
                     //    rod_array[i]->translate_rod(rod_array[i]->equil_r, shift_rod);
@@ -3947,42 +3945,42 @@ void World::print_kinetic_rates_to_screen(int type)
 }
 
 /* */
-void World::get_system_CoM(vector3 *system_CoM)
+void World::get_system_CoM(arr3 &system_CoM)
 {
-    system_CoM->x = 0;
-    system_CoM->y = 0;
-    system_CoM->z = 0;
+    system_CoM[0] = 0;
+    system_CoM[1] = 0;
+    system_CoM[2] = 0;
     scalar total_mass = 0;
     for (int i = 0; i < params.num_blobs; i++)
     {
-        vector3 com;
-        active_blob_array[i]->get_CoM(&com);
-        system_CoM->x += com.x * active_blob_array[i]->get_mass();
-        system_CoM->y += com.y * active_blob_array[i]->get_mass();
-        system_CoM->z += com.z * active_blob_array[i]->get_mass();
+        arr3 com;
+        active_blob_array[i]->get_CoM(com);
+        system_CoM[0] += com[0] * active_blob_array[i]->get_mass();
+        system_CoM[1] += com[1] * active_blob_array[i]->get_mass();
+        system_CoM[2] += com[2] * active_blob_array[i]->get_mass();
 
         total_mass += active_blob_array[i]->get_mass();
     }
-    system_CoM->x /= total_mass;
-    system_CoM->y /= total_mass;
-    system_CoM->z /= total_mass;
+    system_CoM[0] /= total_mass;
+    system_CoM[1] /= total_mass;
+    system_CoM[2] /= total_mass;
 }
 
 /* */
-void World::get_system_centroid(vector3 *centroid)
+void World::get_system_centroid(arr3 &centroid)
 {
     /** Blob centroid */
-    centroid->x = 0;
-    centroid->y = 0;
-    centroid->z = 0;
+    centroid[0] = 0;
+    centroid[1] = 0;
+    centroid[2] = 0;
     int total_num_nodes = 0;
     for (int i = 0; i < params.num_blobs; i++)
     {
-        vector3 cen;
-        active_blob_array[i]->get_centroid(&cen);
-        centroid->x += cen.x * active_blob_array[i]->get_num_nodes();
-        centroid->y += cen.y * active_blob_array[i]->get_num_nodes();
-        centroid->z += cen.z * active_blob_array[i]->get_num_nodes();
+        arr3 cen;
+        active_blob_array[i]->get_centroid(cen);
+        centroid[0] += cen[0] * active_blob_array[i]->get_num_nodes();
+        centroid[1] += cen[1] * active_blob_array[i]->get_num_nodes();
+        centroid[2] += cen[2] * active_blob_array[i]->get_num_nodes();
 
         total_num_nodes += active_blob_array[i]->get_num_nodes();
     }
@@ -3993,61 +3991,61 @@ void World::get_system_centroid(vector3 *centroid)
         float rod_centroid[3];
         rod_array[i]->get_centroid(rod_array[i]->current_r, rod_centroid);
         /** I'm leaving it like this and there's nothing you can do about it */
-        centroid->x += rod_centroid[0] * rod_array[i]->num_nodes;
-        centroid->y += rod_centroid[1] * rod_array[i]->num_nodes;
-        centroid->z += rod_centroid[2] * rod_array[i]->num_nodes;
+        centroid[0] += rod_centroid[0] * rod_array[i]->num_nodes;
+        centroid[1] += rod_centroid[1] * rod_array[i]->num_nodes;
+        centroid[2] += rod_centroid[2] * rod_array[i]->num_nodes;
         total_num_nodes += rod_array[i]->num_nodes;
     }
 
-    centroid->x /= total_num_nodes;
-    centroid->y /= total_num_nodes;
-    centroid->z /= total_num_nodes;
+    centroid[0] /= total_num_nodes;
+    centroid[1] /= total_num_nodes;
+    centroid[2] /= total_num_nodes;
 }
 
-void World::get_system_dimensions(vector3 *dimension)
+void World::get_system_dimensions(arr3 &dimension)
 {
-    dimension->x = 0;
-    dimension->y = 0;
-    dimension->z = 0;
+    dimension[0] = 0;
+    dimension[1] = 0;
+    dimension[2] = 0;
 
-    vector3 min, max;
-    min.x = INFINITY;
-    min.y = INFINITY;
-    min.z = INFINITY;
-    max.x = -1 * INFINITY;
-    max.y = -1 * INFINITY;
-    max.z = -1 * INFINITY;
+    arr3 min, max;
+    min[0] = INFINITY;
+    min[1] = INFINITY;
+    min[2] = INFINITY;
+    max[0] = -1 * INFINITY;
+    max[1] = -1 * INFINITY;
+    max[2] = -1 * INFINITY;
 
-    vector3 blob_min, blob_max;
+    arr3 blob_min, blob_max;
     for (int i = 0; i < params.num_blobs; i++)
     {
-        active_blob_array[i]->get_min_max(&blob_min, &blob_max);
-        if (blob_min.x < min.x)
+        active_blob_array[i]->get_min_max(blob_min, blob_max);
+        if (blob_min[0] < min[0])
         {
-            min.x = blob_min.x;
+            min[0] = blob_min[0];
         }
-        if (blob_min.y < min.y)
+        if (blob_min[1] < min[1])
         {
-            min.y = blob_min.y;
+            min[1] = blob_min[1];
         }
-        if (blob_min.z < min.z)
+        if (blob_min[2] < min[2])
         {
-            min.z = blob_min.z;
-        }
-
-        if (blob_max.x > max.x)
-        {
-            max.x = blob_max.x;
+            min[2] = blob_min[2];
         }
 
-        if (blob_max.y > max.y)
+        if (blob_max[0] > max[0])
         {
-            max.y = blob_max.y;
+            max[0] = blob_max[0];
         }
 
-        if (blob_max.z > max.z)
+        if (blob_max[1] > max[1])
         {
-            max.z = blob_max.z;
+            max[1] = blob_max[1];
+        }
+
+        if (blob_max[2] > max[2])
+        {
+            max[2] = blob_max[2];
         }
     }
 
@@ -4055,35 +4053,35 @@ void World::get_system_dimensions(vector3 *dimension)
     for (int i = 0; i < params.num_rods; i++)
     {
         rod_array[i]->get_min_max(rod_array[i]->current_r, rod_min, rod_max);
-        if (rod_max[0] > max.x)
+        if (rod_max[0] > max[0])
         {
-            max.x = rod_max[0];
+            max[0] = rod_max[0];
         }
-        if (rod_max[1] > max.y)
+        if (rod_max[1] > max[1])
         {
-            max.y = rod_max[1];
+            max[1] = rod_max[1];
         }
-        if (rod_max[2] > max.z)
+        if (rod_max[2] > max[2])
         {
-            max.z = rod_max[2];
+            max[2] = rod_max[2];
         }
-        if (rod_min[0] < min.x)
+        if (rod_min[0] < min[0])
         {
-            min.x = rod_min[0];
+            min[0] = rod_min[0];
         }
-        if (rod_min[1] < min.y)
+        if (rod_min[1] < min[1])
         {
-            min.y = rod_min[1];
+            min[1] = rod_min[1];
         }
-        if (rod_min[2] < min.z)
+        if (rod_min[2] < min[2])
         {
-            min.z = rod_min[2];
+            min[2] = rod_min[2];
         }
     }
 
-    dimension->x = max.x - min.x;
-    dimension->y = max.y - min.y;
-    dimension->z = max.z - min.z;
+    dimension[0] = max[0] - min[0];
+    dimension[1] = max[1] - min[1];
+    dimension[2] = max[2] - min[2];
 }
 
 int World::get_num_blobs()
@@ -4514,7 +4512,7 @@ void World::update_rod_steric_nbr_lists(rod::Rod *rod_a, rod::Rod *rod_b)
                 rod_a->steric_nbrs.at(elem_a),
                 rod_b->steric_nbrs.at(elem_b),
                 params.pbc_rod,
-                {(float)box_dim.x, (float)box_dim.y, (float)box_dim.z});
+                {(float)box_dim[0], (float)box_dim[1], (float)box_dim[2]});
         }
     }
 }
@@ -4563,7 +4561,7 @@ void World::update_rod_vdw_nbr_lists(rod::Rod *rod_a, rod::Rod *rod_b, SSINT_mat
                 rod_a->vdw_nbrs.at(elem_a),
                 rod_b->vdw_nbrs.at(elem_b),
                 params.pbc_rod,
-                {(float)box_dim.x, (float)box_dim.y, (float)box_dim.z},
+                {(float)box_dim[0], (float)box_dim[1], (float)box_dim[2]},
                 params.ssint_cutoff,
                 pmap["Emin"],
                 pmap["Rmin"]);
@@ -4642,20 +4640,20 @@ void World::activate_springs()
 int World::apply_springs()
 {
     scalar force_mag;
-    vector3 n1, n0, force0, force1, sep, sep_norm;
+    arr3 n1, n0, force0, force1, sep, sep_norm;
     for (int i = 0; i < num_springs; ++i)
     {
         if (spring_array[i].am_i_active == true)
         {
-            active_blob_array[spring_array[i].blob_index[1]]->get_node(spring_array[i].node_index[1], n1.data);
-            active_blob_array[spring_array[i].blob_index[0]]->get_node(spring_array[i].node_index[0], n0.data);
-            sep.x = n1.x - n0.x;
-            sep.y = n1.y - n0.y;
-            sep.z = n1.z - n0.z;
+            active_blob_array[spring_array[i].blob_index[1]]->get_node(spring_array[i].node_index[1], n1);
+            active_blob_array[spring_array[i].blob_index[0]]->get_node(spring_array[i].node_index[0], n0);
+            sep[0] = n1[0] - n0[0];
+            sep[1] = n1[1] - n0[1];
+            sep[2] = n1[2] - n0[2];
 
             try
             {
-                arr3Normalise2<scalar, arr3>(sep.data, sep_norm.data);
+                arr3Normalise2<scalar, arr3>(sep, sep_norm);
             }
             catch (int e)
             {
@@ -4663,9 +4661,9 @@ int World::apply_springs()
                 // If zero magnitude, we're ok
                 if (e == -1)
                 {
-                    sep_norm.x = 0.0;
-                    sep_norm.y = 0.0;
-                    sep_norm.z = 0.0;
+                    sep_norm[0] = 0.0;
+                    sep_norm[1] = 0.0;
+                    sep_norm[2] = 0.0;
                 }
                 else
                 {
@@ -4673,14 +4671,14 @@ int World::apply_springs()
                 }
             }
 
-            force_mag = spring_array[i].k * (mag<scalar, arr3>(sep.data) - spring_array[i].l);
-            force0.x = force_mag * sep_norm.x;
-            force0.y = force_mag * sep_norm.y;
-            force0.z = force_mag * sep_norm.z;
+            force_mag = spring_array[i].k * (mag<scalar, arr3>(sep) - spring_array[i].l);
+            force0[0] = force_mag * sep_norm[0];
+            force0[1] = force_mag * sep_norm[1];
+            force0[2] = force_mag * sep_norm[2];
 
-            force1.x = -1 * force_mag * sep_norm.x;
-            force1.y = -1 * force_mag * sep_norm.y;
-            force1.z = -1 * force_mag * sep_norm.z;
+            force1[0] = -1 * force_mag * sep_norm[0];
+            force1[1] = -1 * force_mag * sep_norm[1];
+            force1[2] = -1 * force_mag * sep_norm[2];
             active_blob_array[spring_array[i].blob_index[0]]->add_force_to_node(force0, spring_array[i].node_index[0]);
             active_blob_array[spring_array[i].blob_index[1]]->add_force_to_node(force1, spring_array[i].node_index[1]);
         }
@@ -4859,8 +4857,8 @@ void World::make_trajectory_from_eigenvector(string traj_out_fname, int blob_ind
     int i, j, from_index = 0, to_index = 0;
     scalar dx;
 
-    // Convert weird eigen thing into a nice vector3 list
-    vector<vector3> node_trans(active_blob_array[blob_index]->get_num_linear_nodes());
+    // Convert weird eigen thing into a nice arr3 list
+    vector<arr3> node_trans(active_blob_array[blob_index]->get_num_linear_nodes());
 
     // Open file
     FILE *fout;
@@ -4898,9 +4896,9 @@ void World::make_trajectory_from_eigenvector(string traj_out_fname, int blob_ind
         int num_linear_nodes = active_blob_array[blob_index]->get_num_linear_nodes();
         for (j = 0; j < num_linear_nodes; ++j)
         {
-            node_trans[j].x = evec[3 * j + 0] * dx;
-            node_trans[j].y = evec[3 * j + 1] * dx;
-            node_trans[j].z = evec[3 * j + 2] * dx;
+            node_trans[j][0] = evec[3 * j + 0] * dx;
+            node_trans[j][1] = evec[3 * j + 1] * dx;
+            node_trans[j][2] = evec[3 * j + 2] * dx;
         }
 
         // Translate all the nodes
@@ -5192,9 +5190,9 @@ void World::make_measurements()
     ssintenergy = 0.0;
     preCompenergy = 0.0;
     rmsd = 0.0;
-    vector3_set_zero(CoG);
+    arr3_set_zero(CoG);
 
-    vector3 bCoG;
+    arr3 bCoG;
 
     // Sum stuff from blobs
     for (i = 0; i < params.num_blobs; ++i)
@@ -5202,20 +5200,20 @@ void World::make_measurements()
         kineticenergy += active_blob_array[i]->get_kinetic_energy();
         strainenergy += active_blob_array[i]->get_strain_energy();
         rmsd += (active_blob_array[i]->get_rmsd() * active_blob_array[i]->get_rmsd()) * active_blob_array[i]->get_num_nodes();
-        active_blob_array[i]->get_stored_centroid(bCoG.data);
-        CoG.x += bCoG.x * active_blob_array[i]->get_num_nodes();
-        CoG.y += bCoG.y * active_blob_array[i]->get_num_nodes();
-        CoG.z += bCoG.z * active_blob_array[i]->get_num_nodes();
+        active_blob_array[i]->get_stored_centroid(bCoG);
+        CoG[0] += bCoG[0] * active_blob_array[i]->get_num_nodes();
+        CoG[1] += bCoG[1] * active_blob_array[i]->get_num_nodes();
+        CoG[2] += bCoG[2] * active_blob_array[i]->get_num_nodes();
 
         total_num_nodes += active_blob_array[i]->get_num_nodes();
     }
 
     // And divide by num_nodes
     rmsd = sqrt(rmsd / total_num_nodes);
-    arr3Resize<scalar, arr3>(1.0 / total_num_nodes, CoG.data);
+    arr3Resize<scalar, arr3>(1.0 / total_num_nodes, CoG);
 
     // Now global stuff
-    vector3 a, b, c;
+    arr3 a, b, c;
     if (params.calc_springs != 0)
     {
         for (i = 0; i < params.num_blobs; ++i)
@@ -5228,10 +5226,10 @@ void World::make_measurements()
 
         for (i = 0; i < num_springs; ++i)
         {
-            active_blob_array[spring_array[i].blob_index[0]]->get_node(spring_array[i].node_index[0], a.data);
-            active_blob_array[spring_array[i].blob_index[1]]->get_node(spring_array[i].node_index[1], b.data);
-            arr3arr3Substract<scalar, arr3>(a.data, b.data, c.data);
-            springfieldenergy[spring_array[i].blob_index[0]][spring_array[i].blob_index[1]] += 0.5 * spring_array[i].k * (mag<scalar, arr3>(c.data) - spring_array[i].l) * (mag<scalar, arr3>(c.data) - spring_array[i].l);
+            active_blob_array[spring_array[i].blob_index[0]]->get_node(spring_array[i].node_index[0], a);
+            active_blob_array[spring_array[i].blob_index[1]]->get_node(spring_array[i].node_index[1], b);
+            arr3arr3Substract<scalar, arr3>(a, b, c);
+            springfieldenergy[spring_array[i].blob_index[0]][spring_array[i].blob_index[1]] += 0.5 * spring_array[i].k * (mag<scalar, arr3>(c) - spring_array[i].l) * (mag<scalar, arr3>(c) - spring_array[i].l);
         }
 
         springenergy = get_spring_field_energy(-1, -1);
@@ -5258,7 +5256,7 @@ void World::write_measurements_to_file(FILE *fout, int step)
         fprintf(fout, "%-14.6e", kineticenergy * mesoDimensions::Energy);
     }
     fprintf(fout, "%-14.6e", strainenergy * mesoDimensions::Energy);
-    fprintf(fout, "%-14.6e%-14.6e%-14.6e", CoG.x * mesoDimensions::length, CoG.y * mesoDimensions::length, CoG.z * mesoDimensions::length);
+    fprintf(fout, "%-14.6e%-14.6e%-14.6e", CoG[0] * mesoDimensions::length, CoG[1] * mesoDimensions::length, CoG[2] * mesoDimensions::length);
     fprintf(fout, "%-14.6e", rmsd * mesoDimensions::length);
     if (params.calc_springs != 0)
     {
@@ -5395,7 +5393,7 @@ void World::calc_blob_corr_matrix(int num_blobs, scalar *blob_corr)
 {
 
     //calculates blob corrections for periodic interactions
-    vector3 com, com2;
+    arr3 com, com2;
     for (int i = 0; i < num_blobs; ++i)
     {
         //sets blob distance from itself to 0
@@ -5403,14 +5401,14 @@ void World::calc_blob_corr_matrix(int num_blobs, scalar *blob_corr)
         blob_corr[i * num_blobs * 3 + i * 3 + 1] = 0;
         blob_corr[i * num_blobs * 3 + i * 3 + 2] = 0;
 
-        active_blob_array[i]->get_stored_centroid(com.data);
+        active_blob_array[i]->get_stored_centroid(com);
         for (int j = i + 1; j < num_blobs; ++j)
         {
 
-            active_blob_array[j]->get_stored_centroid(com2.data);
-            blob_corr[i * num_blobs * 3 + j * 3] = box_dim.x * floor((com2.x - com.x + 0.5 * box_dim.x) / box_dim.x);
-            blob_corr[i * num_blobs * 3 + j * 3 + 1] = box_dim.y * floor((com2.y - com.y + 0.5 * box_dim.y) / box_dim.y);
-            blob_corr[i * num_blobs * 3 + j * 3 + 2] = box_dim.z * floor((com2.z - com.z + 0.5 * box_dim.z) / box_dim.z);
+            active_blob_array[j]->get_stored_centroid(com2);
+            blob_corr[i * num_blobs * 3 + j * 3] = box_dim[0] * floor((com2[0] - com[0] + 0.5 * box_dim[0]) / box_dim[0]);
+            blob_corr[i * num_blobs * 3 + j * 3 + 1] = box_dim[1] * floor((com2[1] - com[1] + 0.5 * box_dim[1]) / box_dim[1]);
+            blob_corr[i * num_blobs * 3 + j * 3 + 2] = box_dim[2] * floor((com2[2] - com[2] + 0.5 * box_dim[2]) / box_dim[2]);
 
             blob_corr[j * num_blobs * 3 + i * 3] = (-1) * blob_corr[i * num_blobs * 3 + j * 3];
             blob_corr[j * num_blobs * 3 + i * 3 + 1] = (-1) * blob_corr[i * num_blobs * 3 + j * 3 + 1];

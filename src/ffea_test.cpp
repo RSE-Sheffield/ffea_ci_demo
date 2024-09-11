@@ -184,7 +184,7 @@ int ffea_test::connection_test()
     for (int i = 0; i < 4; i++)
     {
         rod::print_array("Tetrahedron node",
-                         current_interface->connected_tet->n[i]->pos.data, 3);
+                         current_interface->connected_tet->n[i]->pos);
     }
     rod::print_array("attachment node position", attachment_node_pos, 3);
     rod::print_array("attachment node", attachment_node, 3);
@@ -201,23 +201,23 @@ int ffea_test::connection_test()
                     current_interface->deformed_tet_nodes);
 
     rod::print_array("connected tetrahedron node 0",
-                     current_interface->connected_tet->n[0]->pos.data, 3);
+                     current_interface->connected_tet->n[0]->pos);
     rod::print_array("connected tetrahedron node 1",
-                     current_interface->connected_tet->n[1]->pos.data, 3);
+                     current_interface->connected_tet->n[1]->pos);
     rod::print_array("connected tetrahedron node 2",
-                     current_interface->connected_tet->n[2]->pos.data, 3);
+                     current_interface->connected_tet->n[2]->pos);
     rod::print_array("connected tetrahedron node 3",
-                     current_interface->connected_tet->n[3]->pos.data, 3);
+                     current_interface->connected_tet->n[3]->pos);
 
     rod::print_array("rotation matrix", rotmat, 9);
     rod::print_array("Rotated tetrahedron node 1",
-                     current_interface->deformed_tet_nodes[0]->pos.data, 3);
+                     current_interface->deformed_tet_nodes[0]->pos);
     rod::print_array("Rotated tetrahedron node 2",
-                     current_interface->deformed_tet_nodes[1]->pos.data, 3);
+                     current_interface->deformed_tet_nodes[1]->pos);
     rod::print_array("Rotated tetrahedron node 3",
-                     current_interface->deformed_tet_nodes[2]->pos.data, 3);
+                     current_interface->deformed_tet_nodes[2]->pos);
     rod::print_array("Rotated tetrahedron node 4",
-                     current_interface->deformed_tet_nodes[3]->pos.data, 3);
+                     current_interface->deformed_tet_nodes[3]->pos);
 
     float new_attachment_node[3];
     float new_attachment_material_axis[3];
@@ -493,21 +493,21 @@ int ffea_test::identify_face()
         face_node_1[n] =
             current_interface
                 ->deformed_tet_nodes[current_interface->face_node_indices[0]]
-                ->pos.data[n];
+                ->pos[n];
     }
     vec3d(n)
     {
         face_node_2[n] =
             current_interface
                 ->deformed_tet_nodes[current_interface->face_node_indices[1]]
-                ->pos.data[n];
+                ->pos[n];
     }
     vec3d(n)
     {
         face_node_3[n] =
             current_interface
                 ->deformed_tet_nodes[current_interface->face_node_indices[2]]
-                ->pos.data[n];
+                ->pos[n];
     }
 
     current_interface->get_attachment_node(attachment_node, attachment_node_pos,
@@ -825,18 +825,18 @@ int ffea_test::jacobian_rotate()
         node_up[i] = new mesh_node();
     }
 
-    node_up[0]->pos.x = 72.138;
-    node_up[0]->pos.y = 42.9213;
-    node_up[0]->pos.z = 37.3931;
-    node_up[1]->pos.x = 83.2145;
-    node_up[1]->pos.y = 31.5663;
-    node_up[1]->pos.z = -19.2512;
-    node_up[2]->pos.x = 79.1497;
-    node_up[2]->pos.y = 57.1503;
-    node_up[2]->pos.z = -19.2512;
-    node_up[3]->pos.x = 58.1056;
-    node_up[3]->pos.y = 35.524;
-    node_up[3]->pos.z = -19.2512;
+    node_up[0]->pos[0] = 72.138;
+    node_up[0]->pos[1] = 42.9213;
+    node_up[0]->pos[2] = 37.3931;
+    node_up[1]->pos[0] = 83.2145;
+    node_up[1]->pos[1] = 31.5663;
+    node_up[1]->pos[2] = -19.2512;
+    node_up[2]->pos[0] = 79.1497;
+    node_up[2]->pos[1] = 57.1503;
+    node_up[2]->pos[2] = -19.2512;
+    node_up[3]->pos[0] = 58.1056;
+    node_up[3]->pos[1] = 35.524;
+    node_up[3]->pos[2] = -19.2512;
 
     mesh_node *node_forward[4];
     for (int i = 0; i < 4; i++)
@@ -844,18 +844,18 @@ int ffea_test::jacobian_rotate()
         node_forward[i] = new mesh_node();
     }
 
-    node_forward[0]->pos.x = 80.254;
-    node_forward[0]->pos.y = 42.904;
-    node_forward[0]->pos.z = 42.7413;
-    node_forward[1]->pos.x = 136.898;
-    node_forward[1]->pos.y = 31.6887;
-    node_forward[1]->pos.z = 53.9594;
-    node_forward[2]->pos.x = 136.898;
-    node_forward[2]->pos.y = 57.2197;
-    node_forward[2]->pos.z = 49.574;
-    node_forward[3]->pos.x = 136.898;
-    node_forward[3]->pos.y = 35.3313;
-    node_forward[3]->pos.z = 28.8028;
+    node_forward[0]->pos[0] = 80.254;
+    node_forward[0]->pos[1] = 42.904;
+    node_forward[0]->pos[2] = 42.7413;
+    node_forward[1]->pos[0] = 136.898;
+    node_forward[1]->pos[1] = 31.6887;
+    node_forward[1]->pos[2] = 53.9594;
+    node_forward[2]->pos[0] = 136.898;
+    node_forward[2]->pos[1] = 57.2197;
+    node_forward[2]->pos[2] = 49.574;
+    node_forward[3]->pos[0] = 136.898;
+    node_forward[3]->pos[1] = 35.3313;
+    node_forward[3]->pos[2] = 28.8028;
 
     // note: confirmed for same tetrahedron!
 
@@ -886,7 +886,7 @@ int ffea_test::connection_energy_3()
     rod::Rod_blob_interface *current_interface =
         world->rod_blob_interface_array[0];
 
-    current_interface->connected_tet->n[1]->pos.x -= 10.;
+    current_interface->connected_tet->n[1]->pos[0] -= 10.0;
 
     world->run();
 

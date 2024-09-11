@@ -41,9 +41,9 @@ int NearestNeighbourLinkedListCube::build_nearest_neighbour_lookup(scalar h) {
 
 	// Do we have the correct centroid?? We do now!
         //pool[i].obj->calc_area_normal_centroid();
-        int x = (int) floor(pool[i].obj->centroid.x / h);
-        int y = (int) floor(pool[i].obj->centroid.y / h);
-        int z = (int) floor(pool[i].obj->centroid.z / h);
+        int x = (int) floor(pool[i].obj->centroid[0] / h);
+        int y = (int) floor(pool[i].obj->centroid[1] / h);
+        int z = (int) floor(pool[i].obj->centroid[2] / h);
         /*
                                         // If face centroid is out of bounds of the box, add its node to the nearest cell on the edge
                                         // of the box. This is necessary in the case of PBC since an entire blob is moved only if its centre
@@ -94,9 +94,9 @@ int NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup_and_swap(s
        // Do we have the correct centroid?? We do now!
        // pool[i].obj->calc_area_normal_centroid();
 
-        int x = (int) floor(pool[i].obj->centroid.x / h);
-        int y = (int) floor(pool[i].obj->centroid.y / h);
-        int z = (int) floor(pool[i].obj->centroid.z / h);
+        int x = (int) floor(pool[i].obj->centroid[0] / h);
+        int y = (int) floor(pool[i].obj->centroid[1] / h);
+        int z = (int) floor(pool[i].obj->centroid[2] / h);
 
         // attempt to add the node to the cell
         if (add_node_to_stack_shadow(i, x, y, z) == FFEA_ERROR) {
@@ -127,13 +127,13 @@ int NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup(scalar h) 
        // Do we have the correct centroid?? We do now!
        // pool[i].obj->calc_area_normal_centroid();
 
-        int x = (int) floor(pool[i].obj->centroid.x / h);
-        int y = (int) floor(pool[i].obj->centroid.y / h);
-        int z = (int) floor(pool[i].obj->centroid.z / h);
+        int x = (int) floor(pool[i].obj->centroid[0] / h);
+        int y = (int) floor(pool[i].obj->centroid[1] / h);
+        int z = (int) floor(pool[i].obj->centroid[2] / h);
 
         // attempt to add the node to the cell
         if (add_node_to_stack_shadow(i, x, y, z) == FFEA_ERROR) {
-            FFEA_ERROR_MESSG("Error when trying to add node %d to nearest neighbour stack at (%d %d %d)\n", i, x, y, z);
+            FFEA_ERROR_MESSG("Error when trying to add node %d to nearest neighbour stack at (%d %d %d)\n", i, x, y, z)
         }
 
     }

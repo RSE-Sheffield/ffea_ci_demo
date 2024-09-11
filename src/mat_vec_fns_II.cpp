@@ -102,7 +102,8 @@ void getMissingPair(int in0, int in1, int &on0, int &on1) {
 ////////////////////////////////////////////////////
 /** Add vectors vecA and vecB into res. */
 /** res can also be vecA or vecB */
-template <class t_scalar, class brr3> void arr3arr3Add(arr3_view<t_scalar,brr3> vecA, arr3_view<t_scalar,brr3> vecB, arr3_view<t_scalar,brr3> res){
+template <class t_scalar, class brr3>
+void arr3arr3Add(arr3_view<t_scalar,brr3> vecA, arr3_view<t_scalar,brr3> vecB, arr3_view<t_scalar,brr3> res){
 
    for (int i=0; i<3; i++) {
      res[i] = vecA[i] + vecB[i];
@@ -114,7 +115,8 @@ template <class t_scalar, class brr3> void arr3arr3Add(arr3_view<t_scalar,brr3> 
 /** res can be either vecA or vecB */
 // void arr3arr3Substract(arr3 &vecA, arr3 &vecB, arr3 &res){
 // template <class brr3> void arr3arr3Substract(brr3 &vecA, brr3 &vecB, brr3 &res){
-template <class t_scalar, class brr3> void arr3arr3Substract(arr3_view<t_scalar,brr3> vecA, arr3_view<t_scalar,brr3> vecB, arr3_view<t_scalar,brr3> res){
+template <class t_scalar, class brr3>
+void arr3arr3Substract(arr3_view<t_scalar,brr3> vecA, arr3_view<t_scalar,brr3> vecB, arr3_view<t_scalar,brr3> res){
 
    for (int i=0; i<3; i++) {
      res[i] = vecA[i] - vecB[i];
@@ -124,7 +126,8 @@ template <class t_scalar, class brr3> void arr3arr3Substract(arr3_view<t_scalar,
 /** w = u x v */
 /**  (w != u) && (w != v) */
 // void arr3arr3VectorProduct(arr3 (&u), arr3 (&v), arr3 (&w)){
-template <class t_scalar, class brr3> void arr3arr3VectorProduct(arr3_view<t_scalar,brr3> u, arr3_view<t_scalar,brr3> v, arr3_view<t_scalar,brr3> w){
+template <class t_scalar, class brr3>
+void arr3arr3VectorProduct(arr3_view<t_scalar,brr3> u, arr3_view<t_scalar,brr3> v, arr3_view<t_scalar,brr3> w){
 
     w[0] = u[1]*v[2] - v[1]*u[2];
     w[1] = -u[0]*v[2] + v[0]*u[2];
@@ -135,7 +138,8 @@ template <class t_scalar, class brr3> void arr3arr3VectorProduct(arr3_view<t_sca
 
 /** return the dot product for arrays vecA and vecB */
 // scalar arr3arr3DotProduct(arr3 &vecA, arr3 &vecB) {
-template <class t_scalar, class brr3> t_scalar arr3arr3DotProduct(arr3_view<t_scalar,brr3> vecA, arr3_view<t_scalar,brr3> vecB) {
+template <class t_scalar, class brr3>
+t_scalar arr3arr3DotProduct(arr3_view<t_scalar,brr3> vecA, arr3_view<t_scalar,brr3> vecB) {
 
   t_scalar result = 0.0;
   for (int i=0; i<3; i++) {
@@ -146,7 +150,8 @@ template <class t_scalar, class brr3> t_scalar arr3arr3DotProduct(arr3_view<t_sc
 }
 
 /** Normalise vector arr3 e */
-template <class t_scalar, class brr3> void arr3Normalise(arr3_view<t_scalar,brr3> e){
+template <class t_scalar, class brr3>
+void arr3Normalise(arr3_view<t_scalar,brr3> e){
 
    t_scalar norm = 0.0;
    for (int i=0; i<3; i++) {
@@ -161,7 +166,8 @@ template <class t_scalar, class brr3> void arr3Normalise(arr3_view<t_scalar,brr3
 
 /** get the normalised vector of arr3 e into arr3 n */
 // template <class t_scalar, class brr3> void arr3Normalise2(brr3 &e, brr3 &n){
-template <class t_scalar, class brr3> void arr3Normalise2(arr3_view<t_scalar,brr3> e, arr3_view<t_scalar,brr3> n){
+template <class t_scalar, class brr3>
+void arr3Normalise2(arr3_view<t_scalar,brr3> e, arr3_view<t_scalar,brr3> n){
 
    t_scalar norm = 0.0;
    for (int i=0; i<3; i++) {
@@ -176,7 +182,8 @@ template <class t_scalar, class brr3> void arr3Normalise2(arr3_view<t_scalar,brr
 }
 
 /** resize vector u, given scalar f */
-template <class t_scalar, class brr3> void arr3Resize(t_scalar f, arr3_view<t_scalar,brr3> u){
+template <class t_scalar, class brr3>
+void arr3Resize(t_scalar f, arr3_view<t_scalar,brr3> u){
 
    for (int i=0; i<3; i++) {
       u[i] = f*u[i];
@@ -185,7 +192,8 @@ template <class t_scalar, class brr3> void arr3Resize(t_scalar f, arr3_view<t_sc
 }
 
 /** resize vector u into vector v, given scalar f */
-template <class t_scalar, class brr3> void arr3Resize2(t_scalar f, arr3_view<t_scalar,brr3> u, arr3_view<t_scalar,brr3> v){
+template <class t_scalar, class brr3>
+void arr3Resize2(t_scalar f, arr3_view<t_scalar,brr3> u, arr3_view<t_scalar,brr3> v){
 
    #pragma omp simd
    for (int i=0; i<3; i++) {
@@ -195,7 +203,8 @@ template <class t_scalar, class brr3> void arr3Resize2(t_scalar f, arr3_view<t_s
 }
 
 /** Given a scalar f, change v so that v += f*u */
-template <class t_scalar, class brr3> void arr3Resize3(t_scalar f, arr3_view<t_scalar,brr3> u, arr3_view<t_scalar,brr3> v){
+template <class t_scalar, class brr3>
+void arr3Resize3(t_scalar f, arr3_view<t_scalar,brr3> u, arr3_view<t_scalar,brr3> v){
 
    #pragma omp simd
    for (int i=0; i<3; i++) {
@@ -205,7 +214,8 @@ template <class t_scalar, class brr3> void arr3Resize3(t_scalar f, arr3_view<t_s
 
 
 /** cp arr3 u into arr3 v */ 
-template <class t_scalar, class brr3> void arr3Store(arr3_view<t_scalar,brr3> u, arr3_view<t_scalar,brr3> v){
+template <class t_scalar, class brr3>
+void arr3Store(arr3_view<t_scalar,brr3> u, arr3_view<t_scalar,brr3> v){
 
    #pragma omp simd
    for (int i=0; i<3; i++) {
@@ -215,7 +225,8 @@ template <class t_scalar, class brr3> void arr3Store(arr3_view<t_scalar,brr3> u,
 }
 
 /** return the distance from vecA to vecB */
-template <class t_scalar, class brr3> t_scalar arr3arr3Distance(arr3_view<t_scalar,brr3> vecA, arr3_view<t_scalar,brr3> vecB){
+template <class t_scalar, class brr3>
+t_scalar arr3arr3Distance(arr3_view<t_scalar,brr3> vecA, arr3_view<t_scalar,brr3> vecB){
  
     t_scalar d=0.0;
     for (int i=0; i<3; i++){ 
@@ -226,7 +237,8 @@ template <class t_scalar, class brr3> t_scalar arr3arr3Distance(arr3_view<t_scal
 
 
 /** Return the length of a vector v */
-template <class t_scalar, class brr3> t_scalar mag(arr3_view<t_scalar,brr3> v) {
+template <class t_scalar, class brr3>
+t_scalar mag(arr3_view<t_scalar,brr3> v) {
 
    t_scalar s=0.0;
    #pragma omp simd reduction(+:s)
@@ -239,7 +251,8 @@ template <class t_scalar, class brr3> t_scalar mag(arr3_view<t_scalar,brr3> v) {
 
 
 /** Return the squared length of a vector v */
-template <class t_scalar, class brr3> t_scalar mag2(arr3_view<t_scalar,brr3> v) {
+template <class t_scalar, class brr3>
+t_scalar mag2(arr3_view<t_scalar,brr3> v) {
 
    t_scalar s=0.0;
    for (int i=0; i<3; i++) {
@@ -250,7 +263,8 @@ template <class t_scalar, class brr3> t_scalar mag2(arr3_view<t_scalar,brr3> v) 
 }
 
 
-template <class brr3> void arr3Initialise(brr3 &v){
+template <class brr3>
+void arr3Initialise(brr3 &v){
 
     for (int i=0; i<3; i++) {
       v[i] = ffea_const::zero;
@@ -258,7 +272,8 @@ template <class brr3> void arr3Initialise(brr3 &v){
 
 }
 
-template <class t_scalar, class brr3> t_scalar detByRows(arr3_view<t_scalar,brr3> a, arr3_view<t_scalar,brr3> b, arr3_view<t_scalar,brr3> c){
+template <class t_scalar, class brr3>
+t_scalar detByRows(arr3_view<t_scalar,brr3> a, arr3_view<t_scalar,brr3> b, arr3_view<t_scalar,brr3> c){
 
   t_scalar det = 0;
   det  = a[0] * (b[1] * c[2] - b[2] * c[1]);
@@ -268,7 +283,8 @@ template <class t_scalar, class brr3> t_scalar detByRows(arr3_view<t_scalar,brr3
 
 }
 
-template <class t_scalar, class brr3> t_scalar detByCols(arr3_view<t_scalar,brr3> a, arr3_view<t_scalar,brr3> b, arr3_view<t_scalar,brr3> c){
+template <class t_scalar, class brr3>
+t_scalar detByCols(arr3_view<t_scalar,brr3> a, arr3_view<t_scalar,brr3> b, arr3_view<t_scalar,brr3> c){
 
   t_scalar det = 0;
   det  = a[0] * (b[1] * c[2] - b[2] * c[1]);
@@ -629,23 +645,24 @@ template <class t_scalar, class brr3> void intersectingPointToLine(arr3_view<t_s
 }
 
 
-template <class t_scalar, class brr3> void intersectingPointToLine(vector3 &p0, arr3_view<t_scalar,brr3> p1, arr3_view<t_scalar,brr3> p2p1, arr3_view<t_scalar,brr3> p3) {
+template <class t_scalar, class brr3>
+void intersectingPointToLine(arr3 &p0, arr3_view<t_scalar,brr3> p1, arr3_view<t_scalar,brr3> p2p1, arr3_view<t_scalar,brr3> p3) {
 
    brr3 p0p1, cp3p0, v2, v1v2;
    t_scalar c;
    
    // arr3arr3Substract<t_scalar,brr3>(p2, p1, p2p1);
    // arr3arr3Substract<t_scalar,brr3>(p0, p1, p0p1);
-   p0p1[0] = p0.x - p1[0]; 
-   p0p1[1] = p0.y - p1[1]; 
-   p0p1[2] = p0.z - p1[2]; 
+   p0p1[0] = p0[0] - p1[0];
+   p0p1[1] = p0[1] - p1[1];
+   p0p1[2] = p0[2] - p1[2];
    arr3arr3VectorProduct<t_scalar,brr3>(p0p1, p2p1, v2);
    // CHECK! if the cross product is null, then distance is zero, and p3 is p0 itself.
    if (mag<t_scalar,brr3>(v2) < ffea_const::threeErr) {
      // arr3Store(p0, p3); 
-     p3[0] = p0.x;
-     p3[1] = p0.y;
-     p3[2] = p0.z;
+     p3[0] = p0[0];
+     p3[1] = p0[1];
+     p3[2] = p0[2];
      return;
    } 
    // get cp3p0, the vector to (or from) to the line p2p1:
@@ -658,9 +675,9 @@ template <class t_scalar, class brr3> void intersectingPointToLine(vector3 &p0, 
 
    // and finally calculate the intersection point: 
    arr3Resize<t_scalar,brr3>(c, cp3p0); 
-   p3[0] = p0.x + cp3p0[0]; 
-   p3[1] = p0.y + cp3p0[1]; 
-   p3[2] = p0.z + cp3p0[2]; 
+   p3[0] = p0[0] + cp3p0[0];
+   p3[1] = p0[1] + cp3p0[1];
+   p3[2] = p0[2] + cp3p0[2];
 
    /*
    // CHECKS START HERE! // 
@@ -765,56 +782,44 @@ template <class t_scalar, class brr3, class brr4> void getLocalCoordinatesForLin
 
 
 ///////////////// SECTION 3 ////////////////////
-/// Transition functions from vector3 to arr3 // 
+/// Transition functions from arr3 to arr3 // 
 ////////////////////////////////////////////////
-template <class brr3> void vec3Vec3SubsToArr3(vector3 &u, vector3 &v, brr3 (&w)){
-
-    w[0] = u.x - v.x;
-    w[1] = u.y - v.y;
-    w[2] = u.z - v.z;
-
+template <class brr3> void vec3Vec3SubsToArr3(arr3 &u, arr3 &v, brr3 &w){
+    w[0] = u[0] - v[0];
+    w[1] = u[1] - v[1];
+    w[2] = u[2] - v[2];
 }
 
-void vec3Arr3SubsToArr3(vector3 &u, arr3 (&v), arr3 (&w)){
-
-    w[0] = u.x - v[0];
-    w[1] = u.y - v[1];
-    w[2] = u.z - v[2];
-
+void vec3Arr3SubsToArr3(arr3 &u, arr3 &v, arr3 &w){
+    w[0] = u[0] - v[0];
+    w[1] = u[1] - v[1];
+    w[2] = u[2] - v[2];
 }
 
-void arr3Vec3SubsToArr3(arr3 (&u), vector3 &v, arr3 (&w)){
-
-    w[0] = u[0] - v.x;
-    w[1] = u[1] - v.y;
-    w[2] = u[2] - v.z;
-
+void arr3Vec3SubsToArr3(arr3 &u, arr3 &v, arr3 &w){
+    w[0] = u[0] - v[0];
+    w[1] = u[1] - v[1];
+    w[2] = u[2] - v[2];
 }
 
-void vec3Arr3AddToArr3(vector3 &u, arr3 (&v), arr3 (&w)){
-
-    w[0] = u.x + v[0];
-    w[1] = u.y + v[1];
-    w[2] = u.z + v[2];
-
+void vec3Arr3AddToArr3(arr3 &u, arr3 &v, arr3 &w){
+    w[0] = u[0] + v[0];
+    w[1] = u[1] + v[1];
+    w[2] = u[2] + v[2];
 }
 
-void vec3ResizeToArr3(scalar f, vector3 &u, arr3 (&v)){
-
-    v[0] = f*u.x;
-    v[1] = f*u.y;
-    v[2] = f*u.z;
-
+void vec3ResizeToArr3(scalar f, arr3 &u, arr3 &v){
+    v[0] = f*u[0];
+    v[1] = f*u[1];
+    v[2] = f*u[2];
 }
 
-scalar vec3Arr3DotProduct(vector3 &u, arr3 &v) {
-
+scalar vec3Arr3DotProduct(arr3 &u, arr3 &v) {
      scalar s;
-     s = u.x * v[0];
-     s += u.y * v[1];
-     s += u.z * v[2];
+     s = u[0] * v[0];
+     s += u[1] * v[1];
+     s += u[2] * v[2];
      return s;
-
 }
 
 
@@ -912,7 +917,7 @@ template bool intersectionPoint<scalar,arr3>(arr3 &ip, arr3 &e1, arr3 &e2, arr3 
 // template void intersectingPointToLine<scalar, arr3>(arr3 &p0, arr3 &p1, arr3 &p2, arr3 &p3);
 template void intersectingPointToLine<scalar, arr3>(arr3_view<scalar, arr3> p0, arr3_view<scalar,arr3> p1, arr3_view<scalar,arr3> p2p1, arr3_view<scalar,arr3> p3);
 
-template void intersectingPointToLine<scalar, arr3>(vector3 &p0, arr3_view<scalar,arr3> p1, arr3_view<scalar,arr3> p2p1, arr3_view<scalar,arr3> p3);
+template void intersectingPointToLine<scalar, arr3>(arr3 &p0, arr3_view<scalar,arr3> p1, arr3_view<scalar,arr3> p2p1, arr3_view<scalar,arr3> p3);
 
 
 template scalar distanceFromPointToLine<scalar,arr3>(arr3_view<scalar, arr3> p0, arr3_view<scalar, arr3> p1, arr3_view<scalar, arr3> p2);
@@ -924,7 +929,7 @@ template void getTetrahedraCM<arr3>(arr3 &p1, arr3 &p2, arr3 &p3, arr3 &p4, arr3
 template void getLocalCoordinatesForLinTet<scalar,arr3,arr4>(arr3_view<scalar,arr3> t0, arr3_view<scalar,arr3> t1, arr3_view<scalar,arr3> t2, arr3_view<scalar,arr3> t3, arr3_view<scalar,arr3> p, arr4 &phi);
 
    //////////////     
-template void vec3Vec3SubsToArr3<arr3>(vector3 &u, vector3 &v, arr3 (&w));
+template void vec3Vec3SubsToArr3<arr3>(arr3 &u, arr3 &v, arr3 (&w));
 
 
 
@@ -945,11 +950,11 @@ template bool isPointInFace<geoscalar,grr3>(grr3 &ip, grr3 &p1, grr3 &p2, grr3 &
 template bool intersectionPoint<geoscalar,grr3>(grr3 &(ip), grr3 (&e1), grr3 (&e2), grr3 (&tet)[4], int f1, int f2, int f3);
 template bool intersectionPoint<geoscalar,grr3>(grr3 &ip, grr3 &e1, grr3 &e2, grr3 &f1, grr3 &f2, grr3 &f3);
 template void intersectingPointToLine<geoscalar, grr3>(arr3_view<geoscalar, grr3> p0, arr3_view<geoscalar,grr3> p1, arr3_view<geoscalar,grr3> p2p1, arr3_view<geoscalar,grr3> p3);
-template void intersectingPointToLine<geoscalar, grr3>(vector3 &p0, arr3_view<geoscalar,grr3> p1, arr3_view<geoscalar,grr3> p2p1, arr3_view<geoscalar,grr3> p3);
+template void intersectingPointToLine<geoscalar, grr3>(arr3 &p0, arr3_view<geoscalar,grr3> p1, arr3_view<geoscalar,grr3> p2p1, arr3_view<geoscalar,grr3> p3);
 template geoscalar distanceFromPointToLine<geoscalar,grr3>(arr3_view<geoscalar, grr3> p0, arr3_view<geoscalar, grr3> p1, arr3_view<geoscalar, grr3> p2);
 template geoscalar getTetrahedraVolume<geoscalar,grr3>(arr3_view<geoscalar,grr3> p0, arr3_view<geoscalar,grr3> p1, arr3_view<geoscalar,grr3> p2, arr3_view<geoscalar,grr3> p3);
 template void getTetrahedraCM<grr3>(grr3 &p1, grr3 &p2, grr3 &p3, grr3 &p4, grr3 &c);
 template void getLocalCoordinatesForLinTet<geoscalar,grr3,grr4>(arr3_view<geoscalar,grr3> t0, arr3_view<geoscalar,grr3> t1, arr3_view<geoscalar,grr3> t2, arr3_view<geoscalar,grr3> t3, arr3_view<geoscalar,grr3> p, grr4 &phi);
-template void vec3Vec3SubsToArr3<grr3>(vector3 &u, vector3 &v, grr3 (&w));
+template void vec3Vec3SubsToArr3<grr3>(arr3 &u, arr3 &v, grr3 (&w));
 #endif 
 

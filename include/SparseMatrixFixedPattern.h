@@ -48,17 +48,17 @@ public:
     /** Applies this matrix to the given vector 'in', writing the result to 'result' */
     void apply(scalar *in, scalar *result);
 
-    /** Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'vector3's */
-    void apply(vector3 *in, vector3 *result);
+    /** Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'arr3's */
+    void apply(arr3 *in, arr3 *result);
 
-    /** Applies each matrix element to vector i.e. each vector3 acts as a scalar */
-    void block_apply(vector3 *in, vector3 *result);
+    /** Applies each matrix element to vector i.e. each arr3 acts as a scalar */
+    void block_apply(arr3 *in, arr3 *result);
     
-    /** Applies this matrix to the give vector 'in', writing the result to 'result'. 'in' is made of '*vector3's */
-    void block_apply(vector3 **in, vector3 **result);
+    /** Applies this matrix to the give vector 'in', writing the result to 'result'. 'in' is made of '*arr3's */
+    void block_apply(arr3 **in, arr3 **result);
 
     /** Applies matrix to vector in and leaves result in in */
-    void block_apply(vector3 **in);
+    void block_apply(arr3 **in);
 
      /** Applies this matrix to the given sparse matrix 'in', and returns a new sparse matrix */
     SparseMatrixFixedPattern * apply(SparseMatrixFixedPattern *in);
@@ -70,7 +70,7 @@ public:
     void print_dense();
 
     /** Prints dense matrix out to file for analysis. I suggest only letting this function run once (step = 1?) */
-    void print_dense_to_file(vector3 *a);
+    void print_dense_to_file(arr3 *a);
 
     void print_row_column();
 

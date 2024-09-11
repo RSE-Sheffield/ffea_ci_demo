@@ -48,7 +48,7 @@ public:
     int init(int num_nodes, int num_elements, mesh_node *node, tetra_element_linear *elem, SimulationParams *params, int num_pinned_nodes, int *pinned_nodes_list, set<int> bsite_pinned_node_list);
 
     /** Applies conjugate gradient with a Jacobi preconditioner to solve the system Mx = f */
-    int solve(vector3 *x);
+    int solve(arr3 *x);
 
     /** Applies the mass matrix to the given vector, 'in', putting the result in 'result'*/
     void apply_matrix(scalar *in, scalar *result);
@@ -81,17 +81,17 @@ private:
     scalar *preconditioner;
 
     /** Work vectors */
-    vector3 *d, *r, *q, *s, *f;
+    arr3 *d, *r, *q, *s, *f;
 
     /* */
-    scalar conjugate_gradient_residual_assume_x_zero(vector3 *b);
+    scalar conjugate_gradient_residual_assume_x_zero(arr3 *b);
 
     /* */
     scalar parallel_sparse_matrix_apply();
 
-    void parallel_vector_add_self(vector3 *v1, scalar a, vector3 *v2, int vec_size);
+    void parallel_vector_add_self(arr3 *v1, scalar a, arr3 *v2, int vec_size);
 
-    void parallel_vector_add(vector3 *v1, scalar a, vector3 *v2, int vec_size);
+    void parallel_vector_add(arr3 *v1, scalar a, arr3 *v2, int vec_size);
 
     /* */
     scalar parallel_apply_preconditioner();

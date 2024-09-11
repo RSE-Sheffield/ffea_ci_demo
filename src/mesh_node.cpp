@@ -28,23 +28,19 @@
 
 #include "mesh_node.h"
 
+#include <cstring>
+
 /*
  * Structure for a mesh_node: the points FEM meshes are built from.
  */
 mesh_node::mesh_node() {
     num_element_contributors = 0;
     force_contributions = nullptr;
-    pos.x = 0;
-    pos.y = 0;
-    pos.z = 0;
-    vel.x = 0;
-    vel.y = 0;
-    vel.z = 0;
+    memset(&pos, 0, sizeof(arr3));
+    memset(&vel, 0, sizeof(arr3));
     phi = 0;
     index = 0;
-    pos_0.x = 0;
-    pos_0.y = 0;
-    pos_0.z = 0;
+    memset(&pos_0, 0, sizeof(arr3));
     stokes_radius = 0;
     stokes_drag = 0;
     linear = false;
@@ -52,17 +48,11 @@ mesh_node::mesh_node() {
 
 mesh_node::~mesh_node() {
     delete[] force_contributions;
-    pos.x = 0;
-    pos.y = 0;
-    pos.z = 0;
-    vel.x = 0;
-    vel.y = 0;
-    vel.z = 0;
+    memset(&pos, 0, sizeof(arr3));
+    memset(&vel, 0, sizeof(arr3));
     phi = 0;
     index = 0;
-    pos_0.x = 0;
-    pos_0.y = 0;
-    pos_0.z = 0;
+    memset(&pos_0, 0, sizeof(arr3));
     num_element_contributors = 0;
     stokes_radius = 0;
     stokes_drag = 0;
@@ -72,26 +62,26 @@ mesh_node::~mesh_node() {
 void mesh_node::move(int direction, scalar dx) {
 	switch(direction) {
 		case(0):
-			pos.x += dx;
+			pos[0] += dx;
 			break;
 		case(1):
-			pos.y += dx;
+			pos[1] += dx;
 			break;
 		case(2):
-			pos.z += dx;
+			pos[2] += dx;
 			break;
 	}
 }
 
 void mesh_node::set_pos(scalar x, scalar y, scalar z) {
-	pos.x = x;
-	pos.y = y;
-	pos.z = z;
+	pos[0] = x;
+	pos[1] = y;
+	pos[2] = z;
 }
 
 void mesh_node::print() {
-    printf("pos: %e %e %e\n", pos.x, pos.y, pos.z);
-    printf("vel: %e %e %e\n", vel.x, vel.y, vel.z);
+    printf("pos: %e %e %e\n", pos[0], pos[1], pos[2]);
+    printf("vel: %e %e %e\n", vel[0], vel[1], vel[2]);
 }
 
 void mesh_node::set_linear() {

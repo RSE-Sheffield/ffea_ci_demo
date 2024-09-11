@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
      // 3rd Check - Calculate if there is any tetrahedra intersecting:
      checks = 0;
      i_vol = 0; 
-     scalar tet1[4][3], tet2[4][3];
+     arr3 tet1[4], tet2[4];
      for (int i=0; i<b1.num_elements; i++){ 
        // set up tetrahedron 1:
        for (int nn = 0; nn<4; nn++) {

@@ -123,13 +123,13 @@ public:
     void print_kinetic_rates_to_screen(int type);
 
     /* */
-    void get_system_CoM(vector3 *system_CoM);
+    void get_system_CoM(arr3 &system_CoM);
 
     /* */
-    void get_system_centroid(vector3 *centroid);
+    void get_system_centroid(arr3 &centroid);
 
     /* */
-    void get_system_dimensions(vector3 *dimenstion_vector);
+    void get_system_dimensions(arr3 &dimenstion_vector);
 
     /* */
     int enm(int *blob_index, int num_modes);
@@ -225,11 +225,11 @@ private:
     //@}
 
     /** Momenta */
-    vector3 L;
+    arr3 L;
 
     //@{
     /** Geometries */
-    vector3 CoM, CoG;
+    arr3 CoM, CoG;
     scalar rmsd;
     //@}
 
@@ -280,7 +280,7 @@ private:
     PreComp_solver pc_solver;
 
 
-    vector3 box_dim;
+    arr3 box_dim;
 
     long long step_initial;
 

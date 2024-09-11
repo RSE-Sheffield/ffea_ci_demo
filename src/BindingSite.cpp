@@ -124,7 +124,7 @@ BindingSite::BindingSite() {
 	num_faces = 0;
 	site_type = -1;
 	faces.clear();
-	vector3_set_zero(centroid);
+	arr3_set_zero(centroid);
 	area = 0.0;
 	characteristic_length = 0.0;
 }
@@ -133,7 +133,7 @@ BindingSite::~BindingSite() {
 	num_faces = 0;
 	site_type = -1;
 	faces.clear();
-	vector3_set_zero(centroid);
+	arr3_set_zero(centroid);
 	area = 0.0;
 	characteristic_length = 0.0;
 }
@@ -168,21 +168,20 @@ void BindingSite::add_face(Face *aface) {
 
 void BindingSite::get_centroid(arr3 &v) {
 	
-   arr3Store<scalar,arr3>(centroid.data, v);
+   arr3Store<scalar,arr3>(centroid, v);
 }
 
 void BindingSite::calculate_centroid() {
 	
-	vector3_set_zero(centroid);
-	vector3 *face_centroid;
+	arr3_set_zero(centroid);
 	vector<Face*>::iterator it;
 	for(it = faces.begin(); it != faces.end(); ++it) {
-		face_centroid = (*it)->get_centroid();
-		centroid.x += face_centroid->x;
-		centroid.y += face_centroid->y;
-		centroid.z += face_centroid->z;
+		arr3 &face_centroid = (*it)->get_centroid();
+		centroid[0] += face_centroid[0];
+		centroid[1] += face_centroid[1];
+		centroid[2] += face_centroid[2];
 	}
-	arr3Resize<scalar,arr3>(1.0/num_faces, centroid.data);
+	arr3Resize<scalar,arr3>(1.0/num_faces, centroid);
 }
 
 set<int> BindingSite::get_nodes() {
@@ -227,15 +226,15 @@ bool BindingSite::sites_in_range(BindingSite a, BindingSite b) {
 
 	// Calculate separation and see if less than sum of characteristic length scales / radii
 	scalar separation;
-	vector3 a_cent, b_cent;
+	arr3 a_cent, b_cent;
 	a.calculate_characteristic_length();
 	b.calculate_characteristic_length();
 
 	a.calculate_centroid();
 	b.calculate_centroid();
-	a.get_centroid(a_cent.data);
-	b.get_centroid(b_cent.data);
-	separation = sqrt(pow(a_cent.x - b_cent.x, 2) + pow(a_cent.y - b_cent.y, 2) + pow(a_cent.z - b_cent.z, 2));
+	a.get_centroid(a_cent);
+	b.get_centroid(b_cent);
+	separation = sqrt(pow(a_cent[0] - b_cent[0], 2) + pow(a_cent[1] - b_cent[1], 2) + pow(a_cent[2] - b_cent[2], 2));
 	//cout << "Separation = " << separation << ", Limiting distance = " << a.get_characteristic_length() + b.get_characteristic_length() << endl;
 	//cout << "Char length a = " << a.get_characteristic_length() << ", Char length b = " << b.get_characteristic_length() << endl;
 	if(separation < a.get_characteristic_length() + b.get_characteristic_length()) {
