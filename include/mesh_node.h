@@ -62,7 +62,7 @@ public:
     /** An array of pointers to contributions to the total force on this node. There should be one
      * contribution from each element this node is a part of (so the length will be num_element_contributors).
      */
-    arr3 **force_contributions;
+    std::vector<arr3 *>force_contributions;
 
     /** Required for some general matrix constructions in which we need to know this node's 'index' in the node vector */
     int index;

@@ -31,9 +31,9 @@
 #include "SparsityPattern.h"
 #include "ConnectivityTypes.h"
 
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
 #include <set>
+#include <memory>
 #include <omp.h>
 #include <algorithm>  // std::find
 #include <Eigen/Sparse>
@@ -114,12 +114,12 @@ public:
      * substitution) and 1 for iterative (preconditioned gonjugate gradient).
      * Also takes the simulation parameters and the array of RNGs (for multiprocessor runs).
      */
-    int config(const int blob_index, const int conformation_index, string node_filename, 
-             string topology_filename, string surface_filename, string material_params_filename,
-             string stokes_filename, string ssint_filename, string pin_filename, 
-             string binding_filename, string beads_filename, scalar scale, scalar calc_compress,
-             scalar compress, int linear_solver, int blob_state, SimulationParams *params,
-             PreComp_params *pc_params, SSINT_matrix *ssint_matrix,
+    int config(const int blob_index, const int conformation_index, const string& node_filename,
+               const string& topology_filename, const string& surface_filename, const string& material_params_filename,
+               const string& stokes_filename, const string& ssint_filename, const string& pin_filename,
+               const string& binding_filename, const string& beads_filename, scalar scale, scalar calc_compress,
+             scalar compress, int linear_solver, int blob_state, const SimulationParams &params,
+             const PreComp_params &pc_params, SSINT_matrix *ssint_matrix,
              BindingSite_matrix *binding_matrix, RngStream rng[]);
     int init();
 
@@ -284,17 +284,17 @@ public:
     void get_bead_position(int i, arr3 &v);
 
     /** get the pointer to "bead_type"  [precomp] */
-    int *get_bead_type_ptr();
+    std::vector<int> &get_bead_types();
 
     /** get_bead_type [precomp] */
-    int get_bead_type(int i);
+    int get_bead_type(int i) const;
 
     /**
      * @brief returns the list of nodes where bead i should be assigned to.
      *
      * @ingroup FMM
      **/
-    vector<int> get_bead_assignment(int i);
+    std::vector<int> &get_bead_assignment(int i);
 
 
     scalar get_ssint_area();
@@ -329,13 +329,13 @@ public:
     
     void get_node_0(int index, arr3 &v);
 
-    void copy_node_positions(arr3 *nodes);
+    void copy_node_positions(std::vector<arr3*> &nodes);
 
-    arr3 ** get_actual_node_positions();
+    std::vector<arr3*> &get_actual_node_positions();
 
-    void set_node_positions(arr3 *node_pos);
+    void set_node_positions(const std::vector<arr3*> &node_pos);
 
-    void add_force_to_node(arr3 f, int index);
+    void add_force_to_node(const arr3& f, int index);
 
     // void zero_vdw_bb_measurement_data(); // DEPRECATED
 
@@ -416,6 +416,8 @@ public:
     int get_num_beads();
     bool is_using_beads();
 
+    int getNumBindingSites();
+
     scalar get_rmsd();
 
     int get_linear_solver();
@@ -441,10 +443,6 @@ public:
     int blob_index;
     int conformation_index, previous_conformation_index;
     int state_index, previous_state_index;
-
-    /** Binding sites must be known publicly */
-    int num_binding_sites;
-    BindingSite *binding_site;
 
     /*
      *
@@ -473,33 +471,17 @@ public:
 
 private:
 
-    /** Total number of nodes in Blob */
-    int num_nodes;
-
-    /** Total number of elements in Blob */
-    int num_elements;
-
     /** Total number of surface elements in Blob */
     int num_surface_elements;
 
     /** Total number of interior elements in Blob */
     int num_interior_elements;
 
-    /** Total number of faces on Blob surface */
-    int num_surface_faces;
-
     /** Total number of nodes on Blob surface */
     int num_surface_nodes;
 
     /** Total number of nodes on Blob interior */
     int num_interior_nodes;
-
-    /** Number of 'pinned' nodes (nodes which are not able to move, removing degrees of freedom from system) */
-    int num_pinned_nodes;
-
-    /** Amount of interacting beads within this Blob
-      *   will be zero after info is loaded into PreComp_solver */
-    int num_beads;
 
     /** Number of ctforces to be applied to this Blob */
     int num_l_ctf;
@@ -508,7 +490,7 @@ private:
     int num_slsets_ctf; ///< number of surface sets, corresponding to the length of the ctf_sl_forces, num_slsurf_ctf array
 
     /** Number of faces in every surface set: */
-    int *ctf_slsurf_ndx;
+    std::vector<int> ctf_slsurf_ndx;
 
     /** Whether this Blob is DYNAMIC (movable; dynamics simulated) or STATIC (fixed; no simulation of dynamics; Blob is a perfectly solid object fixed in space)*/
     int blob_state;
@@ -517,65 +499,65 @@ private:
     scalar mass;
 
     /** Total ssint energy between blobs */
-    scalar ssint_bb_energy{};
+    //scalar ssint_bb_energy{};
 
     /** Array of nodes */
-    mesh_node *node;
+    std::vector<mesh_node> node;
 
     /** Array of node positions only */
-    arr3 **node_position;
+    std::vector<arr3 *> node_position;
 
     /** Array of elements */
-    tetra_element_linear *elem;
+    std::vector<tetra_element_linear> elem;
 
     /** Array of surface faces */
-    Face *surface;
+    std::vector<Face> surface;
 
     /** List of fixed ('pinned') nodes */
-    int *pinned_nodes_list;
+    std::vector<int> pinned_nodes_list;
 
     /** Additional pinned node list for binding processes */
     set<int> bsite_pinned_nodes_list;
 
+    // Interacting beads within this blob, not tracked beyond PreComp_solver
     /** Array with bead positions xyzxyzxyz.... [precomp]
       *   will be nullptr after info is loaded into PreComp_solver */
-    scalar *bead_position{};
+    std::vector<arr3> bead_position;
 
     /** 2D vector with the set of nodes where every bead should be assigned to.
       *   It will be removed after PreComp_solver is initialised [precomp] */
-    vector <vector<int>> bead_assignment;
+    std::vector<std::vector<int>> bead_assignment;
 
     /** Array with bead types [precomp]
-      *   will be nullptr after info is loaded into PreComp_solver */
-
-    int *bead_type{};
+      *   will be empty after info is loaded into PreComp_solver */
+    std::vector<int> bead_type;
 
     /** Array with the nodes having linear ctforces assigned */
-    int *ctf_l_nodes;
+    std::vector<int> ctf_l_nodes;
     /** Array with the nodes having rotational ctforces assigned */
-    int *ctf_r_nodes;
+    std::vector<int> ctf_r_nodes;
     /** Array with the faces having linear ctforces assigned */
-    int *ctf_sl_faces;
+    std::vector<int> ctf_sl_faces;
     /** array with the number of faces in every surface set. */
-    int *ctf_sl_surfsize;
+    std::vector<int> ctf_sl_surfsize;
 
     /** Array with the linear ctforces: FxFyFzFxFyFz...,
       * being Fx, Fy, Fz the components of the force */
-    scalar *ctf_l_forces;
+    std::vector<scalar> ctf_l_forces;
     /** Array with the magnitude of the rotational ctforces: FFF..., */
-    scalar *ctf_r_forces;
+    std::vector<scalar> ctf_r_forces;
     /** Array with the rotational axis (given with point + unit vector)
       *  for ctforces: XYZxyzXYZxyzFxFyFz...,
       *  or BlobConfNodeBlobConfNode,BlobConfNodeBlobConfNode,...
       *  if using two nodes to define the axis.  */
-    scalar *ctf_r_axis;
+    std::vector<scalar> ctf_r_axis;
     /** Array with the type of rotation force, 2 chars per node:
       *  where the first one can be n or p, depending of the axis defined by nodes or points
       *   and the second one can be f or t, depending on applying ctforce or cttorque.*/
-    char *ctf_r_type;
+    std::vector<char> ctf_r_type;
     /** Array with the linear surface ctforces: FxFyFzFxFyFz...,
       * being Fx, Fy, Fz the components of the force */
-    scalar *ctf_sl_forces;
+    std::vector<scalar> ctf_sl_forces;
 
     /** Strings of all the files that contain input data: */
     string s_node_filename, s_topology_filename, s_surface_filename, 
@@ -589,9 +571,9 @@ private:
     /** Compression stuff: */
     scalar calc_compress{}, compress{}; 
 
-    /** A pointer to a class containing simulation parameters, such as the time step, dt */
-    SimulationParams *params{};
-    PreComp_params *pc_params{};
+    /** Class containing simulation parameters, such as the time step, dt */
+    SimulationParams params;
+    PreComp_params pc_params;
 
     /** A pointer to the same binding matrix configured in World */ 
     BindingSite_matrix *binding_matrix{};
@@ -603,7 +585,7 @@ private:
      * or ConjugateGradientSolver). The Solver solves the equation Mx = f where M is the
      * mass matrix of this Blob and f is the force vector.
      */
-    Solver *solver;
+    std::unique_ptr<Solver> solver;
 
     /** Remember what type of solver we are using */
     int linear_solver;
@@ -621,7 +603,7 @@ private:
     bool beads_on_blob;
 
     /** The Blob force vector (an array of the force on every node) */
-    arr3 *force;
+    std::vector<arr3> force;
 
     /** The array of random number generators (needed for parallel runs) */
     RngStream *rng;
@@ -640,16 +622,16 @@ private:
     scalar rmsd{};
     //@}
 
-    CG_solver *poisson_solver;
-    SparseMatrixFixedPattern *poisson_surface_matrix;
-    SparseMatrixFixedPattern *poisson_interior_matrix;
-    scalar *phi_Omega;
-    scalar *phi_Gamma;
-    scalar *q;
-    scalar *nodal_q;
-    scalar *poisson_rhs;
+    std::unique_ptr<CG_solver> poisson_solver;
+    std::shared_ptr<SparseMatrixFixedPattern> poisson_surface_matrix;
+    std::shared_ptr<SparseMatrixFixedPattern> poisson_interior_matrix;
+    std::vector<scalar> phi_Omega;
+    std::vector<scalar> phi_Gamma;
+    std::vector<scalar> q;
+    //std::vector<scalar> nodal_q;
+    std::vector<scalar> poisson_rhs;
 
-    int *num_contributing_faces;
+    std::vector<int> num_contributing_faces;
 
     connectivity_entry *element_connectivity_table{};
 
@@ -657,12 +639,13 @@ private:
      * Mass Matrix
      * @see build_mass_matrix()
      */
-    SparseMatrixFixedPattern *M{};
+    std::shared_ptr<SparseMatrixFixedPattern> M;
 
-
+    std::vector<BindingSite> binding_site;
+    
     /*
      */
-    scalar *toBePrinted_nodes; 
+    std::vector<scalar> toBePrinted_nodes; 
 
     /**
      * Opens and reads the given 'ffea node file', extracting all the nodes for this Blob.
@@ -679,13 +662,13 @@ private:
     /**
      * Opens and reads the given 'ffea surface file', extracting all the faces for this Blob.
      */
-    int load_surface(const char *surface_filename, SimulationParams* params);
+    int load_surface(const char *surface_filename);
 
 
     /**
      * Opens and reads the given 'ffea surface file', extracting all the faces for this Blob, ignoring topology.
      */
-    int load_surface_no_topology(const char *surface_filename, SimulationParams *params);
+    int load_surface_no_topology(const char *surface_filename);
 
     /**
      * Opens and reads the given 'ffea material params file', extracting the material parameters for each element.
@@ -706,13 +689,13 @@ private:
     /**
      * Opens and reads the given 'ffea beads file', extracting all the beads types and positions and for this Blob.
      */
-    int load_beads(const char *beads_filename, PreComp_params *pc_params, scalar scale);
+    int load_beads(const char *beads_filename, scalar scale);
 
 
     /**
      * Opens and reads the given 'ffea ctforces file', and assigns the constant forces onto nodes for this Blob.
      */
-    int load_ctforces(string ctforces_fname);
+    int load_ctforces(const string& ctforces_fname);
 
 
     /**

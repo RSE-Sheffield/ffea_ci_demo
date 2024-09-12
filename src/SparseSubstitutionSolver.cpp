@@ -47,10 +47,9 @@ SparseSubstitutionSolver::~SparseSubstitutionSolver() {
     U = nullptr;
 }
 
-int SparseSubstitutionSolver::init(int num_nodes, int num_elements, mesh_node *node, tetra_element_linear *elem, SimulationParams *params, int num_pinned_nodes, int *pinned_nodes_list, set<int> bsite_pinned_node_list) {
-
+int SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) {
     // Mass matrix will have as many rows as there are nodes in the mesh
-    num_rows = num_nodes;
+    num_rows = node.size();
 
     printf("Allocating memory for mass matrix...\n");
     scalar *mass = new(std::nothrow) scalar[num_rows * num_rows];
@@ -69,18 +68,18 @@ int SparseSubstitutionSolver::init(int num_nodes, int num_elements, mesh_node *n
     // if it is, then only a 1 on the diagonal corresponding to that node should
     // be placed (no off diagonal), effectively taking this node out of the equation
     // and therefore meaning the force on it should always be zero.
-    std::vector<int> is_pinned(num_nodes);
-    for (int i = 0; i < num_nodes; i++) {
+    std::vector<int> is_pinned(node.size());
+    for (int i = 0; i < node.size(); i++) {
         is_pinned[i] = 0;
     }
-    for (int i = 0; i < num_pinned_nodes; i++) {
+    for (int i = 0; i < pinned_nodes_list.size(); ++i) {
         is_pinned[pinned_nodes_list[i]] = 1;
     }
 
     // build the matrix
     printf("Building the mass matrix...\n");
     int ni, nj;
-    for (int n = 0; n < num_elements; n++) {
+    for (int n = 0; n < elem.size(); n++) {
         // add mass matrix for this element
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
@@ -195,7 +194,7 @@ int SparseSubstitutionSolver::init(int num_nodes, int num_elements, mesh_node *n
     return FFEA_OK;
 }
 
-int SparseSubstitutionSolver::solve(arr3 *x) {
+int SparseSubstitutionSolver::solve(std::vector<arr3> &x) {
     int i, j, index;
 
     // Forward substitution step Ly = b :

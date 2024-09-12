@@ -35,11 +35,11 @@ World::World()
     blob_array = nullptr;
     rod_array = nullptr;
     spring_array = nullptr;
-    kinetic_map = nullptr;
-    kinetic_return_map = nullptr;
-    kinetic_state = nullptr;
-    kinetic_rate = nullptr;
-    kinetic_base_rate = nullptr;
+    kinetic_map = {};
+    kinetic_return_map = {};
+    kinetic_state = {};
+    kinetic_rate = {};
+    kinetic_base_rate = {};
     num_springs = 0;
     mass_in_system = false;
     num_threads = 1;
@@ -98,19 +98,13 @@ World::~World()
     num_springs = 0;
 
     mass_in_system = false;
-
-    delete[] kinetic_map;
-    kinetic_map = nullptr;
-
-    delete[] kinetic_return_map;
-    kinetic_return_map = nullptr;
-
-    delete[] kinetic_state;
-    kinetic_state = nullptr;
-    delete[] kinetic_rate;
-    kinetic_rate = nullptr;
-    delete[] kinetic_base_rate;
-    kinetic_base_rate = nullptr;
+    
+    kinetic_map.clear();
+    kinetic_return_map.clear();
+    
+    kinetic_state.clear();
+    kinetic_rate.clear();
+    kinetic_base_rate.clear();
 
     delete[] phi_Gamma;
     phi_Gamma = nullptr;
@@ -251,37 +245,28 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         }
 
         // A 3D matrix describing the switching rates for each blob i.e. kinetic_rate[blob_index][from_conf][to_conf]
-        kinetic_rate = new scalar **[params.num_blobs];
-        kinetic_base_rate = new scalar **[params.num_blobs];
+        kinetic_rate = std::vector<std::vector<std::vector<scalar>>>(params.num_blobs);
+        kinetic_base_rate = std::vector<std::vector<std::vector<scalar>>>(params.num_blobs);
 
-        // A 3D matrix holding the position maps enabline the switch from one conformation to another i.e. kinetic_map[blob_index][from_conf][to_conf]
-        kinetic_map = new SparseMatrixFixedPattern **[params.num_blobs];
+        // A 3D matrix holding the position maps enabling the switch from one conformation to another i.e. kinetic_map[blob_index][from_conf][to_conf]
+        kinetic_map = std::vector<std::vector<std::vector<std::shared_ptr<SparseMatrixFixedPattern>>>>(params.num_blobs);
 
         // A 3D matrix holding pointers to the products of the above maps to make an 'identity' map i.e.:
         //kinetic_double_map[blob_index][conf_index][via_conf_index] = kinetic_map[blob_index][via_conf_index][conf_index] * kinetic_map[blob_index][conf_index][via_conf_index]
         // Used to compare energies between conformers before actually switching
-        kinetic_return_map = new SparseMatrixFixedPattern ***[params.num_blobs];
+        kinetic_return_map = std::vector<std::vector<std::vector<std::shared_ptr<SparseMatrixFixedPattern>>>>(params.num_blobs);
 
         // A 2D matrix holding the information about the 'num_states' kinetic states for each blob
-        kinetic_state = new KineticState *[params.num_blobs];
+        kinetic_state = std::vector<std::vector<KineticState>>(params.num_blobs);
 
         // Assign all memory
-        for (i = 0; i < params.num_blobs; ++i)
-        {
-            kinetic_map[i] = new SparseMatrixFixedPattern *[params.num_conformations[i]];
-            kinetic_return_map[i] = new SparseMatrixFixedPattern **[params.num_conformations[i]];
-
-            if (params.num_conformations[i] == 1)
-            {
-                kinetic_map[i] = nullptr;
-                kinetic_return_map[i] = nullptr;
-            }
-            else
-            {
-                for (j = 0; j < params.num_conformations[i]; ++j)
-                {
-                    kinetic_map[i][j] = new SparseMatrixFixedPattern[params.num_conformations[i]];
-                    kinetic_return_map[i][j] = new SparseMatrixFixedPattern *[params.num_conformations[i]];
+        for (i = 0; i < params.num_blobs; ++i) {
+            if (params.num_conformations[i] != 1) {
+                kinetic_map[i] = std::vector<std::vector<std::shared_ptr<SparseMatrixFixedPattern>>>(params.num_conformations[i]);
+                kinetic_return_map[i] = std::vector<std::vector<std::shared_ptr<SparseMatrixFixedPattern>>>(params.num_conformations[i]);
+                for (j = 0; j < params.num_conformations[i]; ++j) {
+                    kinetic_map[i][j] = std::vector<std::shared_ptr<SparseMatrixFixedPattern>>(params.num_conformations[i], nullptr);
+                    kinetic_return_map[i][j] = std::vector<std::shared_ptr<SparseMatrixFixedPattern>>(params.num_conformations[i], nullptr);
                 }
             }
         }
@@ -2494,13 +2479,13 @@ int World::change_kinetic_state(int blob_index, int target_state)
         int inversionCheck;
 
         // Get current nodes
-        arr3 **current_nodes = active_blob_array[blob_index]->get_actual_node_positions();
+        std::vector<arr3 *> current_nodes = active_blob_array[blob_index]->get_actual_node_positions();
 
         // Get target nodes
-        arr3 **target_nodes = blob_array[blob_index][target_conformation].get_actual_node_positions();
+        std::vector<arr3*> target_nodes = blob_array[blob_index][target_conformation].get_actual_node_positions();
 
         // Apply map
-        kinetic_map[blob_index][current_conformation][target_conformation].block_apply(current_nodes, target_nodes);
+        kinetic_map[blob_index][current_conformation][target_conformation]->block_apply(current_nodes, target_nodes);
 
         // Check inversion
         inversionCheck = blob_array[blob_index][target_conformation].check_inversion();
@@ -3098,7 +3083,7 @@ int World::read_and_build_system(vector<string> script_vector)
             if (blob_array[i][j].config(i, j, nodes[j], topology[j], surface[j],
                                         material[j], stokes[j], ssint[j], pin[j], binding[j],
                                         beads[j], scale, calc_compress, compress, solver,
-                                        motion_state[j], &params, &pc_params, &ssint_matrix,
+                                        motion_state[j], params, pc_params, &ssint_matrix,
                                         &binding_matrix, rng) == FFEA_ERROR)
             {
                 FFEA_ERROR_MESSG("\tError when trying to pre-initialise Blob %d, conformation %d.\n", i, j);
@@ -3411,9 +3396,9 @@ int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, ve
         num_entries = atoi(string_vec.at(string_vec.size() - 1).c_str());
 
         // Create some memory for the matrix stuff
-        scalar *entries = new scalar[num_entries];
-        int *key = new int[num_rows + 1];
-        int *col_index = new int[num_entries];
+        std::vector<scalar> entries = std::vector<scalar>(num_entries);
+        std::vector<int> key = std::vector<int>(num_rows + 1);
+        std::vector<int> col_index = std::vector<int>(num_entries);
 
         // Get 'map:'
         getline(fin, buf_string);
@@ -3450,7 +3435,8 @@ int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, ve
         fin.close();
 
         // Create sparse matrix
-        kinetic_map[blob_index][map_from[i]][map_to[i]].init(num_rows, num_entries, entries, key, col_index);
+        // Use of std::move() here moves the local scope entry/key into the method (converts them to rval)
+        kinetic_map[blob_index][map_from[i]][map_to[i]]->init(num_rows, entries, std::move(key), col_index);
     }
 
     return FFEA_OK;
@@ -3462,23 +3448,20 @@ int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, ve
  * 'return_maps', which are used for energy calculations and comparisons
  * */
 
-int World::build_kinetic_identity_maps()
-{
-
-    int i, j, k;
-
+int World::build_kinetic_identity_maps() {  
     // For each blob, build map_ij*map_ji and map_ji*map_ij so we can compare energies using only the conserved modes. Well clever this, Oliver Harlen's idea.
     // He didn't write this though!
-
-    for (i = 0; i < params.num_blobs; ++i)
-    {
-        for (j = 0; j < params.num_conformations[i]; ++j)
-        {
-            for (k = j + 1; k < params.num_conformations[i]; ++k)
-            {
-
-                kinetic_return_map[i][j][k] = kinetic_map[i][k][j].apply(&kinetic_map[i][j][k]);
-                kinetic_return_map[i][k][j] = kinetic_map[i][j][k].apply(&kinetic_map[i][k][j]);
+    for (int i = 0; i < params.num_blobs; ++i) {
+        for (int j = 0; j < params.num_conformations[i]; ++j) {
+            for (int k = j + 1; k < params.num_conformations[i]; ++k) {
+                if (!kinetic_map[i][j][k]) {
+                    printf("Kinetic map not setup right! 1");
+                }
+                if (!kinetic_map[i][k][j]) {
+                    printf("Kinetic map not setup right! 2");
+                }
+                kinetic_return_map[i][j][k] = kinetic_map[i][k][j]->apply(kinetic_map[i][j][k]);
+                kinetic_return_map[i][k][j] = kinetic_map[i][j][k]->apply(kinetic_map[i][k][j]);
             }
         }
     }
@@ -3548,7 +3531,7 @@ int World::calculate_kinetic_rates()
                 target_type = kinetic_state[i][j].get_target_bsite_type();
 
                 // Scan all sites on this blob
-                for (base_bsindex = 0; base_bsindex < active_blob_array[i]->num_binding_sites; ++base_bsindex)
+                for (base_bsindex = 0; base_bsindex < active_blob_array[i]->getNumBindingSites(); ++base_bsindex)
                 {
                     base_site = active_blob_array[i]->get_binding_site(base_bsindex);
 
@@ -3569,7 +3552,7 @@ int World::calculate_kinetic_rates()
                         }
 
                         // Scan all sites on this blob too
-                        for (target_bsindex = 0; target_bsindex < active_blob_array[other_blob_index]->num_binding_sites; ++target_bsindex)
+                        for (target_bsindex = 0; target_bsindex < active_blob_array[other_blob_index]->getNumBindingSites(); ++target_bsindex)
                         {
 
                             target_site = active_blob_array[other_blob_index]->get_binding_site(target_bsindex);
@@ -3590,7 +3573,7 @@ int World::calculate_kinetic_rates()
 
                                 // And return from this crazy loop
                                 other_blob_index = params.num_blobs;
-                                base_bsindex = active_blob_array[i]->num_binding_sites;
+                                base_bsindex = active_blob_array[i]->getNumBindingSites();
                                 break;
                             }
                         }
@@ -3684,8 +3667,7 @@ int World::load_kinetic_states(string states_fname, int blob_index)
     // Load a default, single state
     if (states_fname == "")
     {
-
-        kinetic_state[blob_index] = new KineticState[1];
+        kinetic_state[blob_index] = std::vector<KineticState>(1);
         kinetic_state[blob_index][0].init();
 
         return FFEA_OK;
@@ -3727,7 +3709,7 @@ int World::load_kinetic_states(string states_fname, int blob_index)
     getline(fin, buf_string);
 
     // Create state objects
-    kinetic_state[blob_index] = new KineticState[num_states];
+    kinetic_state[blob_index] = std::vector<KineticState>(num_states);
 
     // Get actual states (each line varies)
     for (i = 0; i < num_states; ++i)
@@ -3820,11 +3802,11 @@ int World::load_kinetic_rates(string rates_fname, int blob_index)
     {
 
         // Create rates matrix
-        kinetic_rate[blob_index] = new scalar *[1];
-        kinetic_base_rate[blob_index] = new scalar *[1];
+        kinetic_rate[blob_index] = std::vector<std::vector<scalar>>(1);
+        kinetic_base_rate[blob_index] = std::vector<std::vector<scalar>>(1);
 
-        kinetic_rate[blob_index][0] = new scalar[1];
-        kinetic_base_rate[blob_index][0] = new scalar[1];
+        kinetic_rate[blob_index][0] = std::vector<scalar>(1);
+        kinetic_base_rate[blob_index][0] = std::vector<scalar>(1);
 
         kinetic_rate[blob_index][0][0] = 1.0;
         kinetic_base_rate[blob_index][0][0] = 1.0;
@@ -3853,12 +3835,12 @@ int World::load_kinetic_rates(string rates_fname, int blob_index)
     crap = fgets(buf, 255, fin);
 
     // Create rates matrix
-    kinetic_rate[blob_index] = new scalar *[num_states];
-    kinetic_base_rate[blob_index] = new scalar *[num_states];
+    kinetic_rate[blob_index] = std::vector<std::vector<scalar>>(num_states);
+    kinetic_base_rate[blob_index] = std::vector<std::vector<scalar>>(num_states);
     for (i = 0; i < num_states; ++i)
     {
-        kinetic_rate[blob_index][i] = new scalar[num_states];
-        kinetic_base_rate[blob_index][i] = new scalar[num_states];
+        kinetic_rate[blob_index][i] = std::vector<scalar>(num_states);
+        kinetic_base_rate[blob_index][i] = std::vector<scalar>(num_states);
     }
 
     scalar total_prob;

@@ -24,6 +24,8 @@
 #ifndef SPARSEMATRIXTYPES_H_INCLUDED
 #define SPARSEMATRIXTYPES_H_INCLUDED
 
+#include <vector>
+
 #include "mat_vec_types.h"
 #include "FFEA_return_codes.h"
 
@@ -48,8 +50,7 @@ public:
     int get_num_sources();
 
 private:
-    int num_sources;
-    scalar **sources;
+    std::vector<scalar *> sources;
 };
 
 #endif

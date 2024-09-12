@@ -63,14 +63,14 @@ void tetra_element_linear::calculate_K_alpha() {
     K_alpha.build(n, dielectric);
 }
 
-void tetra_element_linear::construct_element_mass_matrix(MassMatrixQuadratic *M_alpha) {
+void tetra_element_linear::construct_element_mass_matrix(MassMatrixQuadratic &M_alpha) {
     // Build the element mass matrix corresponding to this element
-    M_alpha->build(n);
+    M_alpha.build(n);
 }
 
-void tetra_element_linear::construct_element_mass_matrix(MassMatrixLinear *M_alpha) {
+void tetra_element_linear::construct_element_mass_matrix(MassMatrixLinear &M_alpha) {
     // Build the element mass matrix corresponding to this element
-    M_alpha->build(rho, vol_0);
+    M_alpha.build(rho, vol_0);
 }
 
 void tetra_element_linear::add_K_alpha(scalar *K, int num_nodes) {
@@ -414,8 +414,8 @@ void tetra_element_linear::add_bulk_elastic_stress(matrix3 stress) {
  * to the given 12-vector du.
  *
  */
-void tetra_element_linear::add_fluctuating_stress(SimulationParams *params, RngStream rng[], matrix3 stress, int thread_id) {
-    scalar c = sqrt((24 * params->kT) / (vol * params->dt));
+void tetra_element_linear::add_fluctuating_stress(const SimulationParams &params, RngStream rng[], matrix3 stress, int thread_id) {
+    scalar c = sqrt((24 * params.kT) / (vol * params.dt));
 
     // Bulk fluctuation term
     scalar bf = sqrt(B) * RAND(-.5, .5);

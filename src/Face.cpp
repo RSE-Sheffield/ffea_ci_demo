@@ -70,7 +70,7 @@ Face::~Face() {
     daddy_blob = nullptr;
 }
 
-int Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, SecondOrderFunctions::stu centroid_stu, Blob *daddy_blob, SimulationParams *params) {
+int Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, SecondOrderFunctions::stu centroid_stu, Blob *daddy_blob, const SimulationParams &params) {
 
     this->index = index;
     this->e = e;
@@ -86,7 +86,7 @@ int Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1,
     this->centroid_stu.t = centroid_stu.t;
     this->centroid_stu.u = centroid_stu.u;
 
-    this->num_blobs = params->num_blobs;
+    this->num_blobs = params.num_blobs;
     // vdw_bb_force = new(std::nothrow) arr3[num_blobs]; // DEPRECATED
     // vdw_bb_energy = new(std::nothrow) scalar[num_blobs]; // DEPRECATED
     // vdw_bb_interaction_flag = new bool[num_blobs]; // DEPRECATED
@@ -108,7 +108,7 @@ int Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1,
     return FFEA_OK;
 }
 
-int Face::init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, Blob *daddy_blob, SimulationParams *params) {
+int Face::init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, Blob *daddy_blob, const SimulationParams &params) {
 
     this->index = index;
     this->e = nullptr;
@@ -124,7 +124,7 @@ int Face::init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node
     this->centroid_stu.t = 0;
     this->centroid_stu.u = 0;
 
-    this->num_blobs = params->num_blobs;
+    this->num_blobs = params.num_blobs;
     // vdw_bb_force = new(std::nothrow) arr3[num_blobs]; // DEPRECATED
     // vdw_bb_energy = new(std::nothrow) scalar[num_blobs]; // DEPRECATED
     // vdw_bb_interaction_flag = new bool[num_blobs]; // DEPRECATED

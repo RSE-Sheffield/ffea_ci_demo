@@ -30,21 +30,10 @@
  *	Email: bsrctb@leeds.ac.uk
  */
 
-#include <iostream>
-#include <omp.h>
-#include <cstdlib>
 
-#include "FFEA_return_codes.h"
 #include "FFEA_user_info.h"
-#include "mat_vec_types.h"
-#include "mesh_node.h"
-#include "Blob.h"
-#include "Face.h"
-#include "SimulationParams.h"
-#include "Solver.h"
-#include "SparseSubstitutionSolver.h"
 #include "World.h"
-#include "rod_interactions.h"
+
 
 
 // ffea_test allows you to build unit tests in FFEA that can be accessed via a

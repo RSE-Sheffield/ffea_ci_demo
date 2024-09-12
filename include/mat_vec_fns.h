@@ -24,8 +24,9 @@
 #ifndef MAT_VEC_FNS_H_INCLUDED
 #define MAT_VEC_FNS_H_INCLUDED
 
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
+#include <vector>
 
 #include "mat_vec_types.h"
 
@@ -65,9 +66,9 @@ void mat4_set_zero(matrix4 A);
 
 void arr3_set_zero(arr3 &v);
 
-void vec3_add_to_scaled(arr3 *v1, arr3 *v2, scalar a, int vec_size);
+void vec3_add_to_scaled(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a, int vec_size);
 
-void vec3_scale_and_add(arr3 *v1, arr3 *v2, scalar a, int vec_size);
+void vec3_scale_and_add(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a, int vec_size);
 
 void vec12_set_zero(vector12 v);
 

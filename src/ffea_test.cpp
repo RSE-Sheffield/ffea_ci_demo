@@ -30,7 +30,23 @@
  *	Email: bsrctb@leeds.ac.uk
  */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include "ffea_test.h"
+
+#include <omp.h>
+#include <cstdlib>
+
+#include "FFEA_return_codes.h"
+#include "mat_vec_types.h"
+#include "mesh_node.h"
+#include "Blob.h"
+#include "Face.h"
+#include "SimulationParams.h"
+#include "Solver.h"
+#include "SparseSubstitutionSolver.h"
+#include "rod_interactions.h"
 
 int ffea_test::do_ffea_test(std::string filename)
 {

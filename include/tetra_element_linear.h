@@ -198,8 +198,8 @@ public:
     /** @brief Calc the diffusion matrix for this element */
     void calculate_K_alpha();
 
-    void construct_element_mass_matrix(MassMatrixQuadratic *M_alpha);
-    void construct_element_mass_matrix(MassMatrixLinear *M_alpha);
+    void construct_element_mass_matrix(MassMatrixQuadratic &M_alpha);
+    void construct_element_mass_matrix(MassMatrixLinear &M_alpha);
 
     void add_K_alpha(scalar *K, int num_nodes);
 
@@ -261,7 +261,6 @@ public:
      *
      */
     void add_bulk_elastic_stress(matrix3 stress);
-    void add_bulk_elastic_stress_OLD(matrix3 stress);
 
     /** @brief
      * Given the shape function derivatives, the element volume and a random number generator, this
@@ -270,7 +269,7 @@ public:
      * to the given 12-vector du.
      *
      */
-    void add_fluctuating_stress(SimulationParams *params, RngStream rng[], matrix3 stress, int thread_id);
+    void add_fluctuating_stress(const SimulationParams &params, RngStream rng[], matrix3 stress, int thread_id);
 
     /** @brief
      * Applies the given stress tensor to the shape function derivatives to get the contribution to du

@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <cstring>
 #include <string>
-#include <time.h>
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -153,14 +153,14 @@ private:
     rod::Rod_blob_interface **rod_blob_interface_array;
 
     /** @brief Maps for kinetic switching of conformations */
-    SparseMatrixFixedPattern ***kinetic_map;
-    SparseMatrixFixedPattern ****kinetic_return_map;
+    std::vector<std::vector<std::vector<std::shared_ptr<SparseMatrixFixedPattern>>>> kinetic_map;
+    std::vector<std::vector<std::vector<std::shared_ptr<SparseMatrixFixedPattern>>>> kinetic_return_map;
 
     //@{
     /** @brief Kinetic State and Rate objects */
-    KineticState **kinetic_state;
-    scalar ***kinetic_rate;
-    scalar ***kinetic_base_rate;
+    std::vector<std::vector<KineticState>> kinetic_state;
+    std::vector<std::vector<std::vector<scalar>>> kinetic_rate;
+    std::vector<std::vector<std::vector<scalar>>> kinetic_base_rate;
     //@}
 
     /** @brief An array of springs which connect nodes if necessary */

@@ -35,7 +35,7 @@
  */
 mesh_node::mesh_node() {
     num_element_contributors = 0;
-    force_contributions = nullptr;
+    force_contributions = {};
     memset(&pos, 0, sizeof(arr3));
     memset(&vel, 0, sizeof(arr3));
     phi = 0;
@@ -47,7 +47,7 @@ mesh_node::mesh_node() {
 }
 
 mesh_node::~mesh_node() {
-    delete[] force_contributions;
+    force_contributions.clear();
     memset(&pos, 0, sizeof(arr3));
     memset(&vel, 0, sizeof(arr3));
     phi = 0;

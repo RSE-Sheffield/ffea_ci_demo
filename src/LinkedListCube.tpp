@@ -156,15 +156,13 @@ LinkedListNode<T> * LinkedListCube<T>::get_from_pool(int i) {
 /* */
 template <class T>
 void LinkedListCube<T>::clear() {
-    int i;
-
     // Clear the grid
     #pragma omp simd
-    for (i = 0; i < N_x * N_y * N_z; i++)
+    for (int i = 0; i < N_x * N_y * N_z; i++)
         root[i] = NULL;
 
     // Clear the pool
-    for (i = 0; i < max_num_nodes_in_pool; i++) {
+    for (int i = 0; i < max_num_nodes_in_pool; i++) {
         pool[i].next = NULL;
 	//pool[i].obj = NULL;
     }
@@ -173,33 +171,26 @@ void LinkedListCube<T>::clear() {
 /* */
 template <class T>
 void LinkedListCube<T>::clear_layer(int l) {
-
 	if (l == 1) {
-
 		// Clear the grid
 		for (int i = 0; i < N_x * N_y * N_z; i++) {
 			root1[i] = NULL;
 		}
-
 		// Clear the pool
 		for (int i = 0; i < max_num_nodes_in_pool; i++) {
 			pool1[i].next = NULL;
 		//	pool1[i].obj = NULL;
 		}
-
 	} else if (l == 2) {
-
 		// Clear the grid
 		for (int i = 0; i < N_x * N_y * N_z; i++) {
 			root2[i] = NULL;
 		}
-
 		// Clear the pool
 		for (int i = 0; i < max_num_nodes_in_pool; i++) {
 			pool2[i].next = NULL;
 		//	pool2[i].obj = NULL;
 		}
-
 	}
 }
 
@@ -207,9 +198,7 @@ void LinkedListCube<T>::clear_layer(int l) {
 /* */
 template <class T>
 void LinkedListCube<T>::clear_shadow_layer() {
-
-    clear_layer(shadow_layer); 
-
+    clear_layer(shadow_layer);
 }
 
 /* */

@@ -230,13 +230,13 @@ void arr3_set_zero(arr3 &v) {
 
 /*
  *
-void vec3_scale(arr3 *v, scalar scale) {
+void vec3_scale(std::vector<arr3> &v, scalar scale) {
 	v->x *= scale;
 	v->y *= scale;
 	v->z *= scale;
 }
 
-void vec3_scale2(arr3 *v1, arr3 *v2, scalar scale) {
+void vec3_scale2(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar scale) {
 	v2->x = scale*v1->x;
 	v2->y = scale*v1->y;
 	v2->z = scale*v1->z;
@@ -247,7 +247,7 @@ void vec3_scale2(arr3 *v1, arr3 *v2, scalar scale) {
 /*
  *
  */
-void vec3_add_to_scaled(arr3 *v1, arr3 *v2, scalar a, int vec_size) {
+void vec3_add_to_scaled(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a, int vec_size) {
     int i;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) private(i) shared(v1, v2, a, vec_size)
@@ -262,7 +262,7 @@ void vec3_add_to_scaled(arr3 *v1, arr3 *v2, scalar a, int vec_size) {
 /*
  *
  */
-void vec3_scale_and_add(arr3 *v1, arr3 *v2, scalar a, int vec_size) {
+void vec3_scale_and_add(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a, int vec_size) {
     int i;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) private(i) shared(v1, v2, a, vec_size)

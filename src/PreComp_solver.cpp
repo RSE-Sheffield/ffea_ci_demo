@@ -322,7 +322,7 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
      vector<vector<int>> sorting_pattern; 
      // store the bead types: 
      n = blob_array[i][0].get_num_beads();
-     memcpy(&b_types[m], blob_array[i][0].get_bead_type_ptr(), n*sizeof(int));
+     memcpy(&b_types[m], blob_array[i][0].get_bead_types().data(), n * sizeof(int));
 
      // for each bead within this blob (remember that we only deal with conf 0):
      for (int j=0; j < n; j++) {

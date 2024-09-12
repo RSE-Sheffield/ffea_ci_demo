@@ -33,6 +33,9 @@
 // development, and will eventually be fixed, but please keep it in mind.
 // Comments will clarify where appropriate.
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include "rod_blob_interface.h" 
 
 namespace rod{

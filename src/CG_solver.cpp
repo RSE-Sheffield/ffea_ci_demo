@@ -27,28 +27,22 @@ CG_solver::CG_solver() {
     N = 0;
     tol = 0;
     max_num_iterations = 0;
-    inv_M = nullptr;
-    d = nullptr;
-    r = nullptr;
-    q = nullptr;
-    s = nullptr;
+    inv_M = {};
+    d = {};
+    r = {};
+    q = {};
+    s = {};
 }
 
 CG_solver::~CG_solver() {
-    delete[] inv_M;
-    delete[] d;
-    delete[] r;
-    delete[] q;
-    delete[] s;
-
     N = 0;
     tol = 0;
     max_num_iterations = 0;
-    inv_M = nullptr;
-    d = nullptr;
-    r = nullptr;
-    q = nullptr;
-    s = nullptr;
+    inv_M.clear();
+    d.clear();
+    r.clear();
+    q.clear();
+    s.clear();
 }
 
 int CG_solver::init(int N, scalar tol, int max_num_iterations) {
@@ -57,28 +51,20 @@ int CG_solver::init(int N, scalar tol, int max_num_iterations) {
     this->max_num_iterations = max_num_iterations;
 
     // Allocate all required memory
-    inv_M = new(std::nothrow) scalar[N];
-    d = new(std::nothrow) scalar[N];
-    r = new(std::nothrow) scalar[N];
-    q = new(std::nothrow) scalar[N];
-    s = new(std::nothrow) scalar[N];
-
-    // Check that memory has been allocated
-    if (!inv_M || !d || !r || !q || !s) {
+    try {
+        inv_M = std::vector<scalar>(N, 0);
+        d = std::vector<scalar>(N, 0);
+        r = std::vector<scalar>(N, 0);
+        q = std::vector<scalar>(N, 0);
+        s = std::vector<scalar>(N, 0);
+    } catch(std::bad_alloc &) {
         FFEA_ERROR_MESSG("While initialising CG_solver, could not allocate memory for vectors.\n");
     }
-
-    // Initialise all vectors to zero
-    zero(inv_M);
-    zero(d);
-    zero(r);
-    zero(q);
-    zero(s);
 
     return FFEA_OK;
 }
 
-int CG_solver::solve(SparseMatrixFixedPattern *A, scalar *x, scalar *b) {
+int CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b) {
     // Get the preconditioner matrix (inverse of the matrix diagonal)
     A->calc_inverse_diagonal(inv_M);
 
@@ -113,7 +99,7 @@ int CG_solver::solve(SparseMatrixFixedPattern *A, scalar *x, scalar *b) {
     FFEA_ERROR_MESSG("CG_solver: Could not converge after %d iterations.\n\tEither epsilon or max_iterations_cg are set too low, or something went wrong with the simulation.\n", max_num_iterations);
 }
 
-int CG_solver::solve(SparseMatrixFixedPattern *A, scalar *x, scalar *b, int num_iterations) {
+int CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b, int num_iterations) {
     // Get the preconditioner matrix (inverse of the matrix diagonal)
     A->calc_inverse_diagonal(inv_M);
 
@@ -123,7 +109,6 @@ int CG_solver::solve(SparseMatrixFixedPattern *A, scalar *x, scalar *b, int num_
     delta_new = conjugate_gradient_residual(A, x, b);
 
     for (int i = 0; i < num_iterations; i++) {
-
         // q = A * d
         A->apply(d, q);
 
@@ -136,13 +121,12 @@ int CG_solver::solve(SparseMatrixFixedPattern *A, scalar *x, scalar *b, int num_
         delta_new = parallel_apply_preconditioner();
 
         parallel_vector_add(d, (delta_new / delta_old), s);
-
     }
 
     return FFEA_OK;
 }
 
-scalar CG_solver::conjugate_gradient_residual(SparseMatrixFixedPattern *A, scalar *x, scalar *b) {
+scalar CG_solver::conjugate_gradient_residual(std::shared_ptr<SparseMatrixFixedPattern> &A, const std::vector<scalar> &x, const std::vector<scalar> &b) {
     // Ax
     A->apply(x, r);
 
@@ -172,7 +156,7 @@ scalar CG_solver::residual2() {
     return r2;
 }
 
-void CG_solver::parallel_vector_add_self(scalar *v1, scalar a, scalar *v2) {
+void CG_solver::parallel_vector_add_self(std::vector<scalar> &v1, scalar a, const std::vector<scalar> &v2) {
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) shared(v1, a, v2)
 #endif
@@ -181,7 +165,7 @@ void CG_solver::parallel_vector_add_self(scalar *v1, scalar a, scalar *v2) {
     }
 }
 
-void CG_solver::parallel_vector_add(scalar *v1, scalar a, scalar *v2) {
+void CG_solver::parallel_vector_add(std::vector<scalar> &v1, scalar a, const std::vector<scalar> &v2) {
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) shared(v1, a, v2)
 #endif
@@ -203,13 +187,7 @@ scalar CG_solver::parallel_apply_preconditioner() {
     return delta_new;
 }
 
-void CG_solver::zero(scalar *v) {
-    for (int i = 0; i < N; i++) {
-        v[i] = 0;
-    }
-}
-
-scalar CG_solver::dot(scalar *a, scalar *b) {
+scalar CG_solver::dot(const std::vector<scalar> &a, const std::vector<scalar> &b) {
     scalar result = 0;
     for (int i = 0; i < N; i++) {
         result += a[i] * b[i];
