@@ -64,7 +64,7 @@ namespace rod
     Generate a random number between A and B, given an array of RngStream
     objects, and the id of the RngStream objects to be used.
     */
-    float random_number(float A, float B, RngStream rng[], int thread_id)
+    float random_number(float A, float B, std::vector<RngStream> &rng, int thread_id)
     {
         return ((A) + ((B) - (A)) * (rng[thread_id].RandU01()));
     }
@@ -195,7 +195,7 @@ namespace rod
     interactions between neighbouring elements. The third loop (nodes) uses energies
     to compute dynamics and applies those dynamics to the position arrays.
     */
-    Rod Rod::do_timestep(RngStream rng[])
+    Rod Rod::do_timestep(std::shared_ptr<std::vector<RngStream>> &rng)
     {
 
         // if there is a rod-blob interface, this will avoid doing dynamics
@@ -445,10 +445,10 @@ namespace rod
 
             if (this->calc_noise == 1)
             {
-                x_noise = get_noise(timestep, kT, translational_friction, random_number(-0.5, 0.5, rng, thread_id));
-                y_noise = get_noise(timestep, kT, translational_friction, random_number(-0.5, 0.5, rng, thread_id));
-                z_noise = get_noise(timestep, kT, translational_friction, random_number(-0.5, 0.5, rng, thread_id));
-                twist_noise = get_noise(timestep, kT, rotational_friction, random_number(-0.5, 0.5, rng, thread_id));
+                x_noise = get_noise(timestep, kT, translational_friction, random_number(-0.5, 0.5, *rng, thread_id));
+                y_noise = get_noise(timestep, kT, translational_friction, random_number(-0.5, 0.5, *rng, thread_id));
+                z_noise = get_noise(timestep, kT, translational_friction, random_number(-0.5, 0.5, *rng, thread_id));
+                twist_noise = get_noise(timestep, kT, rotational_friction, random_number(-0.5, 0.5, *rng, thread_id));
             }
 
             // Sum our energies and use them to compute the force
@@ -1136,7 +1136,7 @@ namespace rod
     arbitrary 1e-7 seconds and does not save the trajectory from the
     equilibration.
     */
-    Rod Rod::equilibrate_rod(RngStream rng[])
+    Rod Rod::equilibrate_rod(std::shared_ptr<std::vector<RngStream>> &rng)
     {
         int no_steps = 1e-7 / timestep; // this is arbitrary
         for (int i = 0; i < no_steps; i++)

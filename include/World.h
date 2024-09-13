@@ -179,16 +179,16 @@ private:
     int num_threads;
 
     /** @brief An array of pointers to random number generators (for use in parallel) */
-    RngStream *rng;
+    std::shared_ptr<std::vector<RngStream>> rng;
 
     /** @brief A pointer to an array of arrays, containing the seeds of the different RNGStreams */
-    unsigned long **Seeds;
+    std::vector<std::array<uint32_t, 6>> Seeds;
 
     /** @brief The number of seeds stored in Seeds. */
     int num_seeds;
 
     /** @brief An array of pointers to random number generators for use in kinetics */
-    RngStream *kinetic_rng;
+    std::unique_ptr<RngStream> kinetic_rng;
 
     /** @brief Parameters being used for this simulation */
     SimulationParams params;

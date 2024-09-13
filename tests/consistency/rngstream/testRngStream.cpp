@@ -38,6 +38,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <array>
 #include "RngStream.h"
 using namespace std;
 
@@ -96,8 +97,8 @@ int main ()
       sum3 += g3.RandU01 ();
    sum += sum3 / 10000.0;
 
-   unsigned long germe[6] = { 1, 1, 1, 1, 1, 1 };
-   RngStream::SetPackageSeed (germe);
+   std::array<uint32_t, 6> germe = { 1, 1, 1, 1, 1, 1 };
+   RngStream::SetPackageSeed (germe.data());
 
    RngStream gar[4] = { "Poisson", "Laplace", "Galois", "Cantor" };
    for  (i = 0; i < 4; i++)

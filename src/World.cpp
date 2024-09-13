@@ -43,7 +43,7 @@ World::World()
     num_springs = 0;
     mass_in_system = false;
     num_threads = 1;
-    rng = nullptr;
+    rng = {};
     phi_Gamma = nullptr;
     total_num_surface_faces = 0;
     box_dim[0] = 0;
@@ -57,7 +57,7 @@ World::World()
     kinetics_out = nullptr;
     checkpoint_out = nullptr;
     vdw_solver = nullptr;
-    Seeds = nullptr;
+    Seeds = {};
     num_seeds = 0;
     blob_corr = nullptr;
 
@@ -78,8 +78,7 @@ World::World()
 
 World::~World()
 {
-    delete[] rng;
-    rng = nullptr;
+    rng.reset();
     num_threads = 0;
 
     for (int i = 0; i < params.num_blobs; ++i)
@@ -110,13 +109,8 @@ World::~World()
     phi_Gamma = nullptr;
 
     delete[] blob_corr;
-
-    for (int i = 0; i < num_seeds; i++)
-    {
-        delete[] Seeds[i];
-    }
-    delete[] Seeds;
-    Seeds = nullptr;
+    
+    Seeds.clear();
     num_seeds = 0;
 
     total_num_surface_faces = 0;
@@ -302,24 +296,20 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         num_seeds = num_threads;
         if (params.calc_kinetics == 1)
             num_seeds += 1;
-        Seeds = new unsigned long *[num_seeds];
-        for (int i = 0; i < num_seeds; i++)
-        {
-            Seeds[i] = new unsigned long[6];
-        }
+        Seeds = std::vector<std::array<uint32_t, 6>>(num_seeds);
         // RNG.2 - Initialise the package:
         // We need one rng for each thread, to avoid concurrency problems,
         // so generate an array of instances of RngStreams:
         // We first initialize the six seeds that RngStream needs:
-        unsigned long sixseed[6];
-        unsigned long twoMax[2] = {4294967087, 4294944443}; // these are max values for RngStream
+        std::array<uint32_t, 6> sixseed = {};
+        uint32_t twoMax[2] = {4294967087, 4294944443}; // these are max values for RngStream
         srand(params.rng_seed);
         for (int i = 0; i < 6; i++)
         {
             sixseed[i] = (rand() + rand()) % twoMax[i / 3];
         }
         // now initialise the package:
-        RngStream::SetPackageSeed(sixseed);
+        RngStream::SetPackageSeed(sixseed.data());
         if (userInfo::verblevel > 1)
         {
             cout << "RngStream initialised using: ";
@@ -330,19 +320,16 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             cout << endl;
         }
         // RNG.3 - initialise the rngs related to the fluctuating stress, and noise.
-        rng = new RngStream[num_threads];
-        if (userInfo::verblevel > 2)
-        {
-            for (int ni = 0; ni < num_threads; ni++)
-            {
+        rng = std::make_shared<std::vector<RngStream>>(num_threads);
+        if (userInfo::verblevel > 2) {
+            for (int ni = 0; ni < num_threads; ni++) {
                 cout << "RNG[" << ni << "] initial state:" << endl;
-                rng[ni].WriteState();
+                (*rng)[ni].WriteState();
             }
         }
         // RNG.4 - and optionally initialise an extra Stream for kinetics.
-        if (params.calc_kinetics == 1)
-        {
-            kinetic_rng = new RngStream;
+        if (params.calc_kinetics == 1) {
+            kinetic_rng = std::make_unique<RngStream>();
             cout << "RngStream for kinetics created with initial state:" << endl;
             kinetic_rng->WriteState();
         }
@@ -389,11 +376,9 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         num_seeds = max(num_active_rng, num_seeds_read);
 
         // Allocate Seeds:
-        Seeds = new unsigned long *[num_seeds];
-        for (int i = 0; i < num_seeds; ++i)
-        {
-            Seeds[i] = new unsigned long[6];
-            fill_n(Seeds[i], 6, 0); // fill the array with zeroes.
+        Seeds = std::vector<std::array<uint32_t, 6>>(num_seeds);
+        for (int i = 0; i < num_seeds; ++i) {
+            Seeds[i].fill(0); // fill the array with zeroes.
         }
         // RNG.1.4 - get Seeds :
         int cnt_seeds = 0;
@@ -449,19 +434,18 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         // RNG.2 - AND initialise rng:
         // RNG.2.1 - first the package and, and rng[0],
         cout << "To be initialised by: " << Seeds[0][0] << " " << Seeds[0][1] << " " << Seeds[0][2] << " " << Seeds[0][3] << " " << Seeds[0][4] << " " << Seeds[0][5] << endl;
-        RngStream::SetPackageSeed(Seeds[0]);
-        rng = new RngStream[num_threads];
+        RngStream::SetPackageSeed(Seeds[0].data());
+        rng = std::make_shared<std::vector<RngStream>>(num_threads);
         // RNG.2.2 - and now the rest of them: rng[1:]:
-        for (int i = 1; i < (min(num_threads, num_stress_seeds_read)); i++)
-        {
-            rng[i].SetSeed(Seeds[i]);
+        for (int i = 1; i < (min(num_threads, num_stress_seeds_read)); ++i) {
+            (*rng)[i].SetSeed(Seeds[i].data());
         }
         if (userInfo::verblevel > 2)
         {
             for (int ni = 0; ni < num_threads; ni++)
             {
                 cout << "RNG[" << ni << "] initial state:" << endl;
-                rng[ni].WriteState();
+                (*rng)[ni].WriteState();
             }
         }
         // if num_threads == num_threads in all the previous runs, it was that easy.
@@ -472,8 +456,8 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         // RNG.2.3 - if kinetics, initialise the last one!
         if (params.calc_kinetics == 1)
         {
-            kinetic_rng = new RngStream;
-            kinetic_rng->SetSeed(Seeds[num_seeds_read - 1]);
+            kinetic_rng = std::make_unique<RngStream>();
+            kinetic_rng->SetSeed(Seeds[num_seeds_read - 1].data());
         }
     }
 
@@ -2474,12 +2458,11 @@ int World::change_kinetic_state(int blob_index, int target_state)
     // If we do, how do we change?
     if (kinetic_state[blob_index][current_state].get_conformation_index() != kinetic_state[blob_index][target_state].get_conformation_index())
     {
-
         // Conformation change!
         int inversionCheck;
 
         // Get current nodes
-        std::vector<arr3 *> current_nodes = active_blob_array[blob_index]->get_actual_node_positions();
+        std::vector<arr3*> current_nodes = active_blob_array[blob_index]->get_actual_node_positions();
 
         // Get target nodes
         std::vector<arr3*> target_nodes = blob_array[blob_index][target_conformation].get_actual_node_positions();
@@ -5120,12 +5103,12 @@ void World::print_checkpoints()
         thermal_seeds -= 1;
     fprintf(checkpoint_out, "RNGStreams dedicated to the thermal stress: %d\n", thermal_seeds);
     //cout << "hi" << endl << flush;
-    unsigned long state[6];
+    std::array<uint32_t, 6> state;
     // First save the state of the running threads:
     for (int i = 0; i < num_threads; i++)
     {
-        rng[i].GetState(state);
-        fprintf(checkpoint_out, "%lu %lu %lu %lu %lu %lu\n", state[0], state[1], state[2],
+        (*rng)[i].GetState(state.data());
+        fprintf(checkpoint_out, "%u %u %u %u %u %u\n", state[0], state[1], state[2],
                 state[3], state[4], state[5]);
         //for(int j = 0; j < 6; ++j) {
         // cout << " " << state[j];
@@ -5138,7 +5121,7 @@ void World::print_checkpoints()
     //cout << oldThreads << " " << thermal_seeds << " " << num_threads << endl << flush;
     for (int i = 0; i < oldThreads; i++)
     {
-        fprintf(checkpoint_out, "%lu %lu %lu %lu %lu %lu\n", Seeds[i + num_threads][0],
+        fprintf(checkpoint_out, "%u %u %u %u %u %u\n", Seeds[i + num_threads][0],
                 Seeds[i + num_threads][1], Seeds[i + num_threads][2], Seeds[i + num_threads][3],
                 Seeds[i + num_threads][4], Seeds[i + num_threads][5]);
         // for(int j = 0; j < 6; ++j) {
@@ -5151,8 +5134,8 @@ void World::print_checkpoints()
     if (params.calc_kinetics)
     {
         fprintf(checkpoint_out, "RNGStream dedicated to the kinetics:\n");
-        kinetic_rng->GetState(state);
-        fprintf(checkpoint_out, "%lu %lu %lu %lu %lu %lu\n", state[0], state[1], state[2],
+        kinetic_rng->GetState(state.data());
+        fprintf(checkpoint_out, "%u %u %u %u %u %u\n", state[0], state[1], state[2],
                 state[3], state[4], state[5]);
     }
     //cout << "hi" << endl << flush;

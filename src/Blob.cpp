@@ -64,7 +64,6 @@ Blob::Blob() {
     springs_on_blob = false;
     beads_on_blob = false;
     force = {};
-    rng = nullptr;
     poisson_solver.reset();
     phi_Omega = {};
     phi_Gamma = {};
@@ -157,7 +156,7 @@ Blob::~Blob() {
     num_interior_nodes = 0;
     blob_state = FFEA_BLOB_IS_STATIC;
     mass = 0;
-    rng = nullptr;
+    rng.reset();
     bsite_pinned_nodes_list.clear();
 
     toBePrinted_nodes.clear();
@@ -175,7 +174,7 @@ int Blob::config(const int blob_index, const int conformation_index, const strin
                  const string& binding_filename, const string& beads_filename, scalar scale, scalar calc_compress,
                  scalar compress, int linear_solver, int blob_state, const SimulationParams &params,
                  const PreComp_params &pc_params, SSINT_matrix *ssint_matrix,
-                 BindingSite_matrix *binding_matrix, RngStream rng[]){
+                 BindingSite_matrix *binding_matrix, std::shared_ptr<std::vector<RngStream>> &rng){
 
     // Which blob and conformation am i?
     this->blob_index = blob_index;
@@ -1197,7 +1196,6 @@ int Blob::read_nodes_from_file(FILE *trajectory_out) {
 }
 
 int Blob::calculate_deformation() {
-
     int num_inversions = 0;
     matrix3 J;
     for (int n = 0; n < elem.size(); n++) {
@@ -1223,11 +1221,9 @@ int Blob::calculate_deformation() {
     } else {
         return FFEA_OK;
     }
-
 }
 
 scalar Blob::calc_volume() {
-
     scalar volume = 0.0;
     for(int i = 0; i < elem.size(); ++i) {
         volume += elem[i].calc_volume();
@@ -1236,7 +1232,6 @@ scalar Blob::calc_volume() {
 }
 
 scalar Blob::calculate_strain_energy() {
-
     int n;
     scalar C, detF, strain_energy = 0.0;
     calculate_deformation();
@@ -1252,7 +1247,6 @@ scalar Blob::calculate_strain_energy() {
 }
 
 void Blob::make_measurements() {
-
     int n, i, j;
     scalar kenergy, senergy;
     arr3 total_ssint_xz_force;
@@ -2141,7 +2135,7 @@ scalar Blob::get_scale() {
 }
 
 scalar Blob::get_RandU01() {
-    return rng->RandU01();
+    return (*rng)[0].RandU01();
 }
 
 int Blob::get_num_linear_nodes() {

@@ -120,7 +120,7 @@ public:
                const string& binding_filename, const string& beads_filename, scalar scale, scalar calc_compress,
              scalar compress, int linear_solver, int blob_state, const SimulationParams &params,
              const PreComp_params &pc_params, SSINT_matrix *ssint_matrix,
-             BindingSite_matrix *binding_matrix, RngStream rng[]);
+             BindingSite_matrix *binding_matrix, std::shared_ptr<std::vector<RngStream>> &rng);
     int init();
 
     /**
@@ -606,7 +606,7 @@ private:
     std::vector<arr3> force;
 
     /** The array of random number generators (needed for parallel runs) */
-    RngStream *rng;
+    std::shared_ptr<std::vector<RngStream>> rng;
 
     //@{
     /** Energies */
