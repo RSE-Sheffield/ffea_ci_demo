@@ -25,14 +25,12 @@
 
 SparseMatrixUnknownPattern::SparseMatrixUnknownPattern() {
     num_rows = 0;
-    row = nullptr;
-    diagonal = nullptr;
 }
 
 SparseMatrixUnknownPattern::~SparseMatrixUnknownPattern() {
     num_rows = 0;
-    delete[] row;
-    delete[] diagonal;
+    row.clear();
+    diagonal.clear();
 }
 
 int SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_for_row_vectors) {
@@ -40,9 +38,9 @@ int SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_fo
     this->num_rows = num_rows;
 
     // Allocate the array of row vectors
-    row = new(std::nothrow) vector<sparse_entry>[num_rows];
-
-    if (!row) {
+    try {
+        row = vector<vector<sparse_entry>>(num_rows);
+    } catch(std::bad_alloc &) {
         return FFEA_ERROR;
     }
 
@@ -52,9 +50,9 @@ int SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_fo
     }
 
     // Allocate the array for the diagonal elements (which are treated differently)
-    diagonal = new(std::nothrow) scalar[num_rows];
-
-    if (!diagonal) {
+    try {
+        diagonal = vector<scalar>(num_rows);
+    } catch(std::bad_alloc &) {
         return FFEA_ERROR;
     }
 
@@ -75,7 +73,7 @@ void SparseMatrixUnknownPattern::set_diagonal_element(int row_index, scalar val)
     diagonal[row_index] = val;
 }
 
-void SparseMatrixUnknownPattern::calc_inverse_diagonal(scalar *inv_D) {
+void SparseMatrixUnknownPattern::calc_inverse_diagonal(std::vector<scalar> &inv_D) {
     for (int i = 0; i < num_rows; i++) {
         inv_D[i] = 1.0 / diagonal[i];
     }
@@ -89,7 +87,7 @@ void SparseMatrixUnknownPattern::zero() {
 }
 
 /* Applies this matrix to the given vector 'in', writing the result to 'result' */
-void SparseMatrixUnknownPattern::apply(scalar *in, scalar *result) {
+void SparseMatrixUnknownPattern::apply(const std::vector<scalar> &in, std::vector<scalar> &result) {
     for (int i = 0; i < num_rows; i++) {
         result[i] = diagonal[i] * in[i];
         int row_size = row[i].size();

@@ -31,6 +31,7 @@
 using std::cout;
 using std::endl;
 
+// Also defined in tetra_element_linear.h/SecondOrderFunctions.h
 #define NUM_NODES_QUADRATIC_TET 10
 
 class BlobLite {

@@ -39,9 +39,9 @@ public:
 
     int init(int N, scalar tol, int max_num_iterations);
 
-    int solve(SparseMatrixUnknownPattern *A, scalar *x, scalar *b);
+    int solve(SparseMatrixUnknownPattern *A, std::vector<scalar> &x, std::vector<scalar> &b);
 
-    int solve(SparseMatrixUnknownPattern *A, scalar *x, scalar *b, int num_iterations);
+    int solve(SparseMatrixUnknownPattern *A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations);
 
 private:
 
@@ -55,39 +55,39 @@ private:
     int max_num_iterations;
 
     /// The inverse of the preconditioner matrix
-    scalar *inv_M;
+    std::vector<scalar> inv_M;
 
     //@{
     /// The residual vectors
-    scalar *r, *r_hat;
+    std::vector<scalar> r, r_hat;
     //@}
 
     //@{
     /// Other necessary vectors
-    scalar *p, *p_hat, *q, *s, *s_hat, *t;
+    std::vector<scalar> p, p_hat, q, s, s_hat, t;
     //@}
 
     /** Calculates the residual vector, r, for the matrix equation Ax = b. Specifically, r = b - Ax. */
-    void get_residual_vector(scalar *r, scalar *b, SparseMatrixUnknownPattern *A, scalar *x, int N);
+    void get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, SparseMatrixUnknownPattern *A, std::vector<scalar> &x, int N);
 
     /** Copies the contents of vector b into vector a (a <- b) */
-    void copy_vector(scalar *a, scalar *b, int N);
+    void copy_vector(std::vector<scalar> &a, const std::vector<scalar> &b, int N);
 
     /** Returns the dot product of vectors a and b, of length N */
-    scalar dot(scalar *a, scalar *b, int N);
+    scalar dot(const std::vector<scalar> &a, const std::vector<scalar> &b, int N);
 
     /** Calculates y = Mx for diagonal matrix and vectors of dimension N */
-    void apply_diagonal_matrix(scalar *y, scalar *M, scalar *x, int N);
+    void apply_diagonal_matrix(std::vector<scalar> &y, const std::vector<scalar> &M, const std::vector<scalar> &x, int N);
 
     /** Sets the given vector (length N) to zero */
-    void zero(scalar *x, int N);
+    void zero(std::vector<scalar> &x, int N);
 
     /** Carries out the operation x = y + c*z, where c is a scalar, and x, y and z are vectors of length N. */
-    void scalar_vector_add(scalar *x, scalar *y, scalar c, scalar *z, int N);
+    void scalar_vector_add(std::vector<scalar> &x, const std::vector<scalar> &y, scalar c, const std::vector<scalar> &z, int N);
 
     /** Carries out the operation w = x + a * (y + b * z) */
     // p = r + beta(p - omega * v)
-    void complicated_machine(scalar *w, scalar *x, scalar a, scalar *y, scalar b, scalar *z, int N);
+    void complicated_machine(std::vector<scalar> &w, const std::vector<scalar> &x, scalar a, const std::vector<scalar> &y, scalar b, const std::vector<scalar> &z, int N);
 };
 
 #endif

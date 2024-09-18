@@ -34,9 +34,10 @@ tetra_element_linear::tetra_element_linear() {
     G = 0;
     E = 0;
     dielectric = 0;
-    for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
-        n[i] = nullptr;
-    }
+    // Not sure equivalent now switched to std::array
+    //for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
+    //    n[i] = nullptr;
+    //}
 
     //			node_phi[0] = 0; node_phi[1] = 0; node_phi[2] = 0; node_phi[3] = 0;
     vol_0 = 0;
@@ -74,8 +75,8 @@ void tetra_element_linear::construct_element_mass_matrix(MassMatrixLinear &M_alp
 }
 
 void tetra_element_linear::add_K_alpha(scalar *K, int num_nodes) {
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
+    for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
+        for (int j = 0; j < NUM_NODES_QUADRATIC_TET; j++) {
             K[n[i]->index * num_nodes + n[j]->index] += K_alpha.get_K_alpha_value(i, j);
         }
     }
@@ -83,7 +84,7 @@ void tetra_element_linear::add_K_alpha(scalar *K, int num_nodes) {
 
 /* Returns the gradient of the potential at the given (s,t,u) position in the element */
 void tetra_element_linear::get_grad_phi_at_stu(arr3 &grad_phi, scalar s, scalar t, scalar u) {
-    arr3 grad_psi[NUM_NODES_QUADRATIC_TET];
+    std::array<arr3, NUM_NODES_QUADRATIC_TET> grad_psi = {};
 
     SecondOrderFunctions::abcd J_coeff[3][3];
     SecondOrderFunctions::calc_jacobian_column_coefficients(n, J_coeff);
@@ -140,16 +141,11 @@ void tetra_element_linear::calculate_electrostatic_forces() {
     };
 
     SecondOrderFunctions::abcd J_coeff[3][3];
-    arr3 grad_psi[NUM_NODES_QUADRATIC_TET];
-    scalar psi[NUM_NODES_QUADRATIC_TET];
-    arr3 force[NUM_NODES_QUADRATIC_TET];
+    std::array<arr3, NUM_NODES_QUADRATIC_TET> grad_psi = {};
+    std::array<scalar, NUM_NODES_QUADRATIC_TET> psi = {};
+    std::array<arr3, NUM_NODES_QUADRATIC_TET> force = {};
     arr3 grad_phi_here;
-
-    for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
-        force[i][0] = 0;
-        force[i][1] = 0;
-        force[i][2] = 0;
-    }
+    
 
     SecondOrderFunctions::calc_jacobian_column_coefficients(n, J_coeff);
 

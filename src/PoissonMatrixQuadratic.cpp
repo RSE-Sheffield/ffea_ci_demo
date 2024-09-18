@@ -49,7 +49,7 @@ scalar * PoissonMatrixQuadratic::get_K_alpha_mem_loc(int i, int j) {
 }
 
 /*  */
-void PoissonMatrixQuadratic::build(mesh_node *n[10], scalar epsilon) {
+void PoissonMatrixQuadratic::build(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n, scalar epsilon) {
     const struct tetrahedron_gauss_point gauss_points[NUM_TET_GAUSS_QUAD_POINTS] ={
         // Weight, eta1, eta2, eta3, eta4
         {0.317460317460317450e-2,
@@ -83,7 +83,7 @@ void PoissonMatrixQuadratic::build(mesh_node *n[10], scalar epsilon) {
     };
 
     SecondOrderFunctions::abcd J_coeff[3][3];
-    arr3 grad_psi[10];
+    std::array<arr3, NUM_NODES_QUADRATIC_TET> grad_psi = {};
 
     SecondOrderFunctions::calc_jacobian_column_coefficients(n, J_coeff);
 
@@ -145,7 +145,7 @@ scalar PoissonMatrixQuadratic::get_K_alpha_value(int i, int j) {
 }
 
 /* */
-void PoissonMatrixQuadratic::add_grad_dot_products(arr3 grad_psi[10], scalar det_J, scalar weight) {
+void PoissonMatrixQuadratic::add_grad_dot_products(std::array<arr3, NUM_NODES_QUADRATIC_TET> &grad_psi, scalar det_J, scalar weight) {
     int c = 0;
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j <= i; j++) {

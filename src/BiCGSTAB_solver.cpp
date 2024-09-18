@@ -27,38 +27,18 @@ BiCGSTAB_solver::BiCGSTAB_solver() {
     N = 0;
     tol = 0;
     max_num_iterations = 0;
-
-    inv_M = nullptr;
-    r = nullptr;
-    r_hat = nullptr;
-    p = nullptr;
-    p_hat = nullptr;
-    q = nullptr;
-    s = nullptr;
-    s_hat = nullptr;
-    t = nullptr;
 }
 
 BiCGSTAB_solver::~BiCGSTAB_solver() {
-    delete[] inv_M;
-    delete[] r;
-    delete[] r_hat;
-    delete[] p;
-    delete[] p_hat;
-    delete[] q;
-    delete[] s;
-    delete[] s_hat;
-    delete[] t;
-
-    inv_M = nullptr;
-    r = nullptr;
-    r_hat = nullptr;
-    p = nullptr;
-    p_hat = nullptr;
-    q = nullptr;
-    s = nullptr;
-    s_hat = nullptr;
-    t = nullptr;
+    inv_M.clear();
+    r.clear();
+    r_hat.clear();
+    p.clear();
+    p_hat.clear();
+    q.clear();
+    s.clear();
+    s_hat.clear();
+    t.clear();
 
     N = 0;
     tol = 0;
@@ -71,36 +51,24 @@ int BiCGSTAB_solver::init(int N, scalar tol, int max_num_iterations) {
     this->max_num_iterations = max_num_iterations;
 
     // Allocate all required memory
-    inv_M = new(std::nothrow) scalar[N];
-    r = new(std::nothrow) scalar[N];
-    r_hat = new(std::nothrow) scalar[N];
-    p = new(std::nothrow) scalar[N];
-    p_hat = new(std::nothrow) scalar[N];
-    q = new(std::nothrow) scalar[N];
-    s = new(std::nothrow) scalar[N];
-    s_hat = new(std::nothrow) scalar[N];
-    t = new(std::nothrow) scalar[N];
-
-    // Check that memory has been allocated
-    if (!inv_M || !r || !r_hat || !p || !p_hat || !q || !s || !s_hat || !t) {
+    try {
+        inv_M = std::vector<scalar>(N, 0);
+        r = std::vector<scalar>(N, 0);
+        r_hat = std::vector<scalar>(N, 0);
+        p = std::vector<scalar>(N, 0);
+        p_hat = std::vector<scalar>(N, 0);
+        q = std::vector<scalar>(N, 0);
+        s = std::vector<scalar>(N, 0);
+        s_hat = std::vector<scalar>(N, 0);
+        t = std::vector<scalar>(N, 0);
+    } catch (std::bad_alloc &) {
         FFEA_ERROR_MESSG("While initialising BiCGSTAB_solver, could not allocate memory for vectors.\n");
     }
-
-    // Initialise all vectors to zero
-    zero(inv_M, N);
-    zero(r, N);
-    zero(r_hat, N);
-    zero(p, N);
-    zero(p_hat, N);
-    zero(q, N);
-    zero(s, N);
-    zero(s_hat, N);
-    zero(t, N);
 
     return FFEA_OK;
 }
 
-int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, scalar *x, scalar *b) {
+int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern* A, std::vector<scalar> &x, std::vector<scalar> &b) {
     scalar rho_last = 1, alpha = 1, omega = 1, rho, beta;
 
     // Get the inverse of the diagonal of the matrix to use as a preconditioner
@@ -174,7 +142,7 @@ int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, scalar *x, scalar *b) 
     FFEA_ERROR_MESSG("Bi-Conjugate Gradient Stabilised solver could not converge in max_num_iterations.\n");
 }
 
-int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, scalar *x, scalar *b, int num_iterations) {
+int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations) {
     scalar rho_last = 1, alpha = 1, omega = 1, rho, beta;
 
     // Get the inverse of the diagonal of the matrix to use as a preconditioner
@@ -242,59 +210,52 @@ int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, scalar *x, scalar *b, 
     return FFEA_OK;
 }
 
-void BiCGSTAB_solver::get_residual_vector(scalar *r, scalar *b, SparseMatrixUnknownPattern *A, scalar *x, int N) {
+void BiCGSTAB_solver::get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, SparseMatrixUnknownPattern *A, std::vector<scalar> &x, const int N) {
     // Ax
     A->apply(x, r);
 
     // r = b - Ax
-    int i;
-    for (i = 0; i < N; i++)
+    for (int i = 0; i < N; i++)
         r[i] = b[i] - r[i];
 }
 
 /* Copies the contents of vector b into vector a (a <- b) */
-void BiCGSTAB_solver::copy_vector(scalar *a, scalar *b, int N) {
-    int i;
-    for (i = 0; i < N; i++)
+void BiCGSTAB_solver::copy_vector(std::vector<scalar> &a, const std::vector<scalar> &b, const int N) {
+    for (int i = 0; i < N; i++)
         a[i] = b[i];
 }
 
 /* Returns the dot product of vectors a and b, of length N */
-scalar BiCGSTAB_solver::dot(scalar *a, scalar *b, int N) {
+scalar BiCGSTAB_solver::dot(const std::vector<scalar> &a, const std::vector<scalar> &b, const int N) {
     scalar result = 0;
-    int i;
-    for (i = 0; i < N; i++)
+    for (int i = 0; i < N; i++)
         result += a[i] * b[i];
 
     return result;
 }
 
 /* Calculates y = Mx for diagonal matrix and vectors of dimension N */
-void BiCGSTAB_solver::apply_diagonal_matrix(scalar *y, scalar *M, scalar *x, int N) {
-    int i;
-    for (i = 0; i < N; i++)
+inline void BiCGSTAB_solver::apply_diagonal_matrix(std::vector<scalar> &y, const std::vector<scalar> &M, const std::vector<scalar> &x, const int N) {
+    for (int i = 0; i < N; i++)
         y[i] = M[i] * x[i];
 }
 
 /* Sets the given vector (length N) to zero */
-void BiCGSTAB_solver::zero(scalar *x, int N) {
-    int i;
-    for (i = 0; i < N; i++)
+void BiCGSTAB_solver::zero(std::vector<scalar> &x, const int N) {
+    for (int i = 0; i < N; i++)
         x[i] = 0;
 }
 
 /* Carries out the operation x = y + c*z, where c is a scalar, and x, y and z are vectors of length N. */
-void BiCGSTAB_solver::scalar_vector_add(scalar *x, scalar *y, scalar c, scalar *z, int N) {
-    int i;
-    for (i = 0; i < N; i++)
+void BiCGSTAB_solver::scalar_vector_add(std::vector<scalar> &x, const std::vector<scalar> &y, scalar c, const std::vector<scalar> &z, const int N) {
+    for (int i = 0; i < N; i++)
         x[i] = y[i] + c * z[i];
 }
 
 /* Carries out the operation w = x + a * (y + b * z) */
 // p = r + beta(p - omega * v)
 
-void BiCGSTAB_solver::complicated_machine(scalar *w, scalar *x, scalar a, scalar *y, scalar b, scalar *z, int N) {
-    int i;
-    for (i = 0; i < N; i++)
+void BiCGSTAB_solver::complicated_machine(std::vector<scalar> &w, const std::vector<scalar> &x, scalar a, const std::vector<scalar> &y, scalar b, const std::vector<scalar> &z, const int N) {
+    for (int i = 0; i < N; i++)
         w[i] = x[i] + a * (y[i] + b * z[i]);
 }

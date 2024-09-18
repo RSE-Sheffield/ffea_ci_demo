@@ -60,7 +60,7 @@ void get_tri_norm(float node0[3], float node1[3], float node2[3], OUT float tri_
 /**
  For an array of 9 tet_nodes (defined in  object defined in mesh_node.cpp/mesh_node.h) populate a 1-D array with the 3x3 Jacobian of the shape functions. 
 */
-void get_jacobian(mesh_node **tet_nodes, OUT float J[9]){
+void get_jacobian(std::array<mesh_node*, NUM_NODES_LINEAR_TET> &tet_nodes, OUT float J[9]){
     J[0] = tet_nodes[1]->pos[0] - tet_nodes[0]->pos[0];
     J[1] = tet_nodes[1]->pos[1] - tet_nodes[0]->pos[1];
     J[2] = tet_nodes[1]->pos[2] - tet_nodes[0]->pos[2];
@@ -178,7 +178,7 @@ void transpose_3x3(float in[9], OUT float transposed[9]){
  Where \f$ \mathbf{F} \f$ is the gradient deformation matrix, \f$ \mathbf{J'} \f$ is the Jacobian of the new deformed tetrahedron, and \f$ \mathbf{J} \f$ is the Jacobian of the undeformed one.
  Note: this is mostly the same as the one in tetra_element_linear.cpp, but that one is a member function that operates on member variables of tetra_element_linear, whereas this one is a pure function (and uses the same floats and 1-d arrays as the rest of the rod stuff).
 */
-void get_gradient_deformation(float J_inv_0[9], mesh_node**nodes_curr, OUT float transposed_gradient_deformation_3x3[9]){
+void get_gradient_deformation(float J_inv_0[9], std::array<mesh_node*, NUM_NODES_LINEAR_TET> &nodes_curr, OUT float transposed_gradient_deformation_3x3[9]){
     if(dbg_print){std::cout << " Gradient deformation is occuring.\n";}
     if(dbg_print){std::cout << "  Getting jacobian...\n";}
     //float J_before[9];
@@ -286,7 +286,7 @@ void construct_euler_rotation_matrix(float a, float b, float g, float rotmat[9])
 /**
  Rotate a tetrahedron (given by an array of mesh_node objects) by a 3x3 rotation matrix (given as a 1-d array of floats) about its centroid. Populates a new mesh_node object. Note that this function is not used in the main simulation loop, it is only used in the rod_blob_interface unit test.
 */
-void rotate_tet(float rotmat[9], mesh_node **nodes, OUT mesh_node **rotated_nodes){
+void rotate_tet(float rotmat[9], std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &nodes, OUT std::array<mesh_node*, NUM_NODES_LINEAR_TET>&rotated_nodes){
     
     //print_array("connected tetrahedron node 0", nodes[0]->pos.data, 3);
     //print_array("connected tetrahedron node 1", nodes[1]->pos.data, 3);

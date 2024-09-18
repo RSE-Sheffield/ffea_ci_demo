@@ -47,7 +47,7 @@ scalar * MassMatrixQuadratic::get_M_alpha_mem_loc(int i, int j) {
     return &(M_alpha[c]);
 }
 
-void MassMatrixQuadratic::build(mesh_node *n[10]) {
+void MassMatrixQuadratic::build(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n) {
     struct tetrahedron_gauss_point gauss_points[NUM_TET_GAUSS_QUAD_POINTS] ={
         // Weight, eta1, eta2, eta3, eta4
         {0.317460317460317450e-2,
@@ -81,7 +81,7 @@ void MassMatrixQuadratic::build(mesh_node *n[10]) {
     };
 
     SecondOrderFunctions::abcd J_coeff[3][3];
-    scalar psi[10];
+    std::array<scalar, NUM_NODES_QUADRATIC_TET> psi = {};
 
     SecondOrderFunctions::calc_jacobian_column_coefficients(n, J_coeff);
 
@@ -139,9 +139,9 @@ scalar MassMatrixQuadratic::get_M_alpha_value(int i, int j) {
     return M_alpha[c];
 }
 
-void MassMatrixQuadratic::add_psi_dot_products(scalar psi[10], scalar det_J, scalar weight) {
+void MassMatrixQuadratic::add_psi_dot_products(std::array<scalar, NUM_NODES_QUADRATIC_TET> &psi, scalar det_J, scalar weight) {
     int c = 0;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
         for (int j = 0; j <= i; j++) {
             M_alpha[c] += det_J * weight * psi[i] * psi[j];
             c++;

@@ -47,7 +47,7 @@ public:
 
     scalar * get_K_alpha_mem_loc(int i, int j);
 
-    void build(mesh_node *n[10], scalar epsilon);
+    void build(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n, scalar epsilon);
 
     scalar get_K_alpha_value(int i, int j);
 
@@ -59,7 +59,7 @@ private:
         scalar eta[4];
     };
 
-    void add_grad_dot_products(arr3 grad_psi[10], scalar det_J, scalar weight);
+    void add_grad_dot_products(std::array<arr3, NUM_NODES_QUADRATIC_TET> &grad_psi, scalar det_J, scalar weight);
 
     scalar grad_dot(arr3 &grad_psi_i, arr3 &grad_psi_j);
 

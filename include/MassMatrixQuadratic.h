@@ -38,7 +38,7 @@ public:
 
     scalar * get_M_alpha_mem_loc(int i, int j);
 
-    void build(mesh_node *n[10]);
+    void build(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n);
 
     scalar get_M_alpha_value(int i, int j);
     void print_details();
@@ -50,7 +50,7 @@ private:
         scalar eta[4];
     };
 
-    void add_psi_dot_products(scalar psi[10], scalar det_J, scalar weight);
+    void add_psi_dot_products(std::array<scalar, NUM_NODES_QUADRATIC_TET> &psi, scalar det_J, scalar weight);
 
     void zero();
 };

@@ -43,6 +43,7 @@
 class Blob;
 
 #define NUM_NODES_LINEAR_TET 4
+// Also defined in BlobLite.h/SecondOrderFunctions.h
 #define NUM_NODES_QUADRATIC_TET 10
 
 /*
@@ -148,7 +149,7 @@ public:
     scalar mass;
 
     /** @brief A quadratic tetrahedron has 10 nodes. Keep pointers to the actual memory location of the nodes. */
-    mesh_node *n[NUM_NODES_QUADRATIC_TET];
+    std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> n;
 
     /** @brief The 12-vector containing the shape function derivatives for this element */
     vector12 dpsi;
@@ -162,7 +163,7 @@ public:
     PoissonMatrixQuadratic K_alpha;
 
     /** @brief Store the contribution from this element to the force on each of its four nodes */
-    arr3 node_force[NUM_NODES_QUADRATIC_TET];
+    std::array<arr3, NUM_NODES_QUADRATIC_TET> node_force;
 
     /** @brief The rest volume of this element */
     scalar vol_0;
@@ -329,7 +330,7 @@ private:
 
     struct tetrahedron_gauss_point {
         scalar W;
-        scalar eta[4];
+        std::array<scalar, 4> eta;
     };
 
 };

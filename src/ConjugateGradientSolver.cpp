@@ -63,18 +63,14 @@ int ConjugateGradientSolver::init(std::vector<mesh_node> &node, std::vector<tetr
     this->epsilon2 = params.epsilon2;
     this->i_max = params.max_iterations_cg;
 
-    printf("\t\tAttempting to allocate %d scalars for mass_LU...\n", num_rows * num_rows);
-    scalar *mass_LU = new(std::nothrow) scalar[num_rows * num_rows];
-    if (!mass_LU) {
+    printf("\t\tAttempting to allocate and zero %d scalars for mass_LU...\n", num_rows * num_rows);
+    std::vector<scalar> mass_LU;
+    try {
+        mass_LU = std::vector<scalar>(num_rows * num_rows, 0);
+    } catch(std::bad_alloc &) {
         FFEA_ERROR_MESSG("Could not allocate mass_LU\n");
     }
     printf("\t\t...success.\n");
-
-    printf("\t\tZeroing...\n");
-    for (int i = 0; i < num_rows * num_rows; i++) {
-        mass_LU[i] = 0;
-    }
-    printf("\t\t...done\n");
 
     // Create a temporary lookup for checking if a node is 'pinned' or not.
     // if it is, then only a 1 on the diagonal corresponding to that node should
@@ -195,8 +191,6 @@ int ConjugateGradientSolver::init(std::vector<mesh_node> &node, std::vector<tetr
     } catch (std::bad_alloc &) {
         FFEA_ERROR_MESSG(" Failed to create the work vectors necessary for ConjugateGradientSolver\n");
     }
-
-    delete[] mass_LU;
 
     return FFEA_OK;
 }

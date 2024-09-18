@@ -34,17 +34,15 @@ World::World()
     // Initialise everything to zero
     blob_array = nullptr;
     rod_array = nullptr;
-    spring_array = nullptr;
+    spring_array = {};
     kinetic_map = {};
     kinetic_return_map = {};
     kinetic_state = {};
     kinetic_rate = {};
     kinetic_base_rate = {};
-    num_springs = 0;
     mass_in_system = false;
     num_threads = 1;
     rng = {};
-    phi_Gamma = nullptr;
     total_num_surface_faces = 0;
     box_dim[0] = 0;
     box_dim[1] = 0;
@@ -60,13 +58,11 @@ World::World()
     Seeds = {};
     num_seeds = 0;
     blob_corr = nullptr;
-
-    ffeareader = nullptr;
-    systemreader = nullptr;
+    
     kineticenergy = 0.0;
     strainenergy = 0.0;
     springenergy = 0.0;
-    springfieldenergy = nullptr;
+    springfieldenergy = {};
     ssintenergy = 0.0;
     preCompenergy = 0.0;
 
@@ -91,10 +87,8 @@ World::~World()
     active_blob_array = nullptr;
     delete[] rod_array;
     rod_array = nullptr;
-
-    delete[] spring_array;
-    spring_array = nullptr;
-    num_springs = 0;
+    
+    spring_array.clear();
 
     mass_in_system = false;
     
@@ -104,9 +98,8 @@ World::~World()
     kinetic_state.clear();
     kinetic_rate.clear();
     kinetic_base_rate.clear();
-
-    delete[] phi_Gamma;
-    phi_Gamma = nullptr;
+    
+    phi_Gamma.clear();
 
     delete[] blob_corr;
     
@@ -145,19 +138,13 @@ World::~World()
     detailed_meas_out = nullptr;
     kinetics_out = nullptr;
 
-    delete vdw_solver;
-    vdw_solver = nullptr;
-
-    delete ffeareader;
-    delete systemreader;
-    ffeareader = nullptr;
-    systemreader = nullptr;
+    vdw_solver.reset();
+    
     kineticenergy = 0.0;
     strainenergy = 0.0;
     springenergy = 0.0;
 
-    delete[] springfieldenergy;
-    springfieldenergy = nullptr;
+    springfieldenergy.clear();
 
     ssintenergy = 0.0;
     preCompenergy = 0.0;
@@ -189,7 +176,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
     int i, j, k;
 
     string buf_string;
-    ffeareader = new FFEA_input_reader();
+    FFEA_input_reader ffeareader = FFEA_input_reader();
 #ifdef USE_MPI
     double st, et;
 
@@ -198,7 +185,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
 
     // Copy entire script into string
     vector<string> script_vector;
-    if (ffeareader->file_to_lines(FFEA_script_filename, &script_vector) == FFEA_ERROR)
+    if (ffeareader.file_to_lines(FFEA_script_filename, &script_vector) == FFEA_ERROR)
     {
         return FFEA_ERROR;
     }
@@ -1020,13 +1007,13 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
     if (params.calc_ssint == 1 || params.calc_steric == 1)
     {
         if (params.ssint_type == "lennard-jones")
-            vdw_solver = new (std::nothrow) VdW_solver();
+            vdw_solver = std::make_unique<VdW_solver>();
         else if (params.ssint_type == "steric")
-            vdw_solver = new (std::nothrow) Steric_solver();
+            vdw_solver = std::make_unique<Steric_solver>();
         else if (params.ssint_type == "ljsteric")
-            vdw_solver = new (std::nothrow) LJSteric_solver();
+            vdw_solver = std::make_unique<LJSteric_solver>();
         else if (params.ssint_type == "gensoft")
-            vdw_solver = new (std::nothrow) GenSoftSSINT_solver();
+            vdw_solver = std::make_unique<GenSoftSSINT_solver>();
 
         if (!vdw_solver)
             FFEA_ERROR_MESSG("World::init failed to initialise the ssint_solver.\n");
@@ -1127,17 +1114,9 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         nonsymmetric_solver.init(total_num_surface_faces, params.epsilon2, params.max_iterations_cg);
 
         // Allocate memory for surface potential vector
-        phi_Gamma = new scalar[total_num_surface_faces];
-        for (i = 0; i < total_num_surface_faces; i++)
-            phi_Gamma[i] = 0;
-
-        work_vec = new scalar[total_num_surface_faces];
-        for (i = 0; i < total_num_surface_faces; i++)
-            work_vec[i] = 0;
-
-        J_Gamma = new scalar[total_num_surface_faces];
-        for (i = 0; i < total_num_surface_faces; i++)
-            J_Gamma[i] = 0;
+        phi_Gamma = std::vector<scalar>(total_num_surface_faces, 0);
+        work_vec = std::vector<scalar>(total_num_surface_faces, 0);
+        J_Gamma = std::vector<scalar>(total_num_surface_faces, 0);
     }
 
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
@@ -2535,7 +2514,7 @@ int World::read_and_build_system(vector<string> script_vector)
 
     // READ and parse more
     // Reading variables
-    systemreader = new FFEA_input_reader();
+    FFEA_input_reader systemreader = FFEA_input_reader();
     int i, j;
     string lrvalue[2]; //, maplvalue[2];
     vector<string> blob_vector, interactions_vector, conformation_vector, kinetics_vector, map_vector, spring_vector;
@@ -2555,7 +2534,7 @@ int World::read_and_build_system(vector<string> script_vector)
     // Get interactions vector first, for later use
     if ((params.calc_preComp == 1) || (params.calc_springs == 1) || (params.calc_ctforces == 1))
     {
-        if (systemreader->extract_block("interactions", 0, script_vector, &interactions_vector) == FFEA_ERROR)
+        if (systemreader.extract_block("interactions", 0, script_vector, &interactions_vector) == FFEA_ERROR)
             return FFEA_ERROR;
     }
 
@@ -2565,14 +2544,14 @@ int World::read_and_build_system(vector<string> script_vector)
     if (params.calc_preComp == 1)
     {
         vector<string> precomp_vector;
-        if (systemreader->extract_block("precomp", 0, interactions_vector, &precomp_vector) == FFEA_ERROR)
+        if (systemreader.extract_block("precomp", 0, interactions_vector, &precomp_vector) == FFEA_ERROR)
         {
             return FFEA_ERROR;
         }
 
         for (i = 0; i < precomp_vector.size(); i++)
         {
-            systemreader->parse_tag(precomp_vector[i], lrvalue);
+            systemreader.parse_tag(precomp_vector[i], lrvalue);
             if (lrvalue[0] == "types")
             {
                 lrvalue[1] = boost::erase_last_copy(boost::erase_first_copy(lrvalue[1], "("), ")");
@@ -2582,7 +2561,7 @@ int World::read_and_build_system(vector<string> script_vector)
                     FFEA_ERROR_MESSG("Invalid value for 'types' in <precomp> section\n");
                     return FFEA_ERROR;
                 }
-                systemreader->split_string(lrvalue[1], pc_params.types, ",");
+                systemreader.split_string(lrvalue[1], pc_params.types, ",");
             }
             else if (lrvalue[0] == "inputData")
             {
@@ -2607,7 +2586,7 @@ int World::read_and_build_system(vector<string> script_vector)
     if (params.calc_ctforces == 1)
     {
         vector<string> ctforces_vector;
-        if (systemreader->extract_block("ctforces", 0, interactions_vector, &ctforces_vector) == FFEA_ERROR)
+        if (systemreader.extract_block("ctforces", 0, interactions_vector, &ctforces_vector) == FFEA_ERROR)
         {
             return FFEA_ERROR;
         }
@@ -2616,7 +2595,7 @@ int World::read_and_build_system(vector<string> script_vector)
             FFEA_ERROR_MESSG("only a single field is allowed in <ctforces> block\n");
             return FFEA_ERROR;
         }
-        systemreader->parse_tag(ctforces_vector[0], lrvalue);
+        systemreader.parse_tag(ctforces_vector[0], lrvalue);
         if (lrvalue[0] == "ctforces_fname")
         {
             fs::path auxpath = params.FFEA_script_path / lrvalue[1];
@@ -2636,7 +2615,7 @@ int World::read_and_build_system(vector<string> script_vector)
 
     if (params.calc_springs == 1)
     {
-        if (systemreader->extract_block("springs", 0, interactions_vector, &spring_vector) == FFEA_ERROR)
+        if (systemreader.extract_block("springs", 0, interactions_vector, &spring_vector) == FFEA_ERROR)
             return FFEA_ERROR;
 
         if (spring_vector.size() > 1)
@@ -2647,7 +2626,7 @@ int World::read_and_build_system(vector<string> script_vector)
         }
         else if (spring_vector.size() == 1)
         {
-            systemreader->parse_tag(spring_vector.at(0), lrvalue);
+            systemreader.parse_tag(spring_vector.at(0), lrvalue);
             fs::path auxpath = params.FFEA_script_path / lrvalue[1];
             params.springs_fname = auxpath.string();
         }
@@ -2684,7 +2663,7 @@ int World::read_and_build_system(vector<string> script_vector)
         blob_conf[i].set_rotation = 0;
 
         // Get blob data
-        if (systemreader->extract_block("blob", i, script_vector, &blob_vector) == FFEA_ERROR)
+        if (systemreader.extract_block("blob", i, script_vector, &blob_vector) == FFEA_ERROR)
             return FFEA_ERROR;
 
         // Read all conformations
@@ -2696,7 +2675,7 @@ int World::read_and_build_system(vector<string> script_vector)
         {
 
             // Get conformation data
-            int read_conf_err = systemreader->extract_block("conformation", j, blob_vector, &conformation_vector, enforce_conf_blocks);
+            int read_conf_err = systemreader.extract_block("conformation", j, blob_vector, &conformation_vector, enforce_conf_blocks);
             if (read_conf_err == FFEA_ERROR)
             {
                 if (enforce_conf_blocks == true)
@@ -2719,7 +2698,7 @@ int World::read_and_build_system(vector<string> script_vector)
             // Parse conformation data
             for (it = conformation_vector.begin(); it != conformation_vector.end(); ++it)
             {
-                systemreader->parse_tag(*it, lrvalue);
+                systemreader.parse_tag(*it, lrvalue);
 
                 // Assign if possible
                 if (lrvalue[0] == "motion_state")
@@ -2885,7 +2864,7 @@ int World::read_and_build_system(vector<string> script_vector)
         {
 
             // Get kinetic data
-            if (systemreader->extract_block("kinetics", 0, blob_vector, &kinetics_vector) == FFEA_ERROR)
+            if (systemreader.extract_block("kinetics", 0, blob_vector, &kinetics_vector) == FFEA_ERROR)
                 return FFEA_ERROR;
 
             // Get map info if necessary
@@ -2893,13 +2872,13 @@ int World::read_and_build_system(vector<string> script_vector)
             {
 
                 // Get map data
-                if (systemreader->extract_block("maps", 0, kinetics_vector, &map_vector) == FFEA_ERROR)
+                if (systemreader.extract_block("maps", 0, kinetics_vector, &map_vector) == FFEA_ERROR)
                     return FFEA_ERROR;
 
                 // Parse map data
                 for (it = map_vector.begin(); it != map_vector.end(); ++it)
                 {
-                    systemreader->parse_map_tag(*it, map_indices, &map_fname);
+                    systemreader.parse_map_tag(*it, map_indices, &map_fname);
                     blob_conf[i].maps.push_back(map_fname);
                     blob_conf[i].maps_conf_index_from.push_back(map_indices[0]);
                     blob_conf[i].maps_conf_index_to.push_back(map_indices[1]);
@@ -2919,7 +2898,7 @@ int World::read_and_build_system(vector<string> script_vector)
             {
                 for (it = kinetics_vector.begin(); it != kinetics_vector.end(); ++it)
                 {
-                    systemreader->parse_tag(*it, lrvalue);
+                    systemreader.parse_tag(*it, lrvalue);
                     if (lrvalue[0] == "maps" || lrvalue[0] == "/maps")
                     {
                         continue;
@@ -2958,7 +2937,7 @@ int World::read_and_build_system(vector<string> script_vector)
 
         for (it = blob_vector.begin(); it != blob_vector.end(); ++it)
         {
-            systemreader->parse_tag(*it, lrvalue);
+            systemreader.parse_tag(*it, lrvalue);
 
             if (lrvalue[0] == "conformation" || lrvalue[0] == "/conformation" || lrvalue[0] == "kinetics" || lrvalue[0] == "/kinetics" || lrvalue[0] == "maps" || lrvalue[0] == "/maps")
             {
@@ -3012,14 +2991,14 @@ int World::read_and_build_system(vector<string> script_vector)
                 blob_conf[i].set_centroid = 1;
                 lrvalue[1] = boost::erase_last_copy(boost::erase_first_copy(lrvalue[1], "("), ")");
                 boost::trim(lrvalue[1]);
-                systemreader->split_string(lrvalue[1], blob_conf[i].centroid, ",", 3);
+                systemreader.split_string(lrvalue[1], blob_conf[i].centroid, ",", 3);
             }
             else if (lrvalue[0] == "velocity")
             {
                 blob_conf[i].set_velocity = 1;
                 lrvalue[1] = boost::erase_last_copy(boost::erase_first_copy(lrvalue[1], "("), ")");
                 boost::trim(lrvalue[1]);
-                systemreader->split_string(lrvalue[1], blob_conf[i].velocity, ",", 3);
+                systemreader.split_string(lrvalue[1], blob_conf[i].velocity, ",", 3);
                 for (int ivt = 0; ivt < 3; ivt++)
                 {
                     blob_conf[i].velocity[ivt] /= mesoDimensions::velocity;
@@ -3030,7 +3009,7 @@ int World::read_and_build_system(vector<string> script_vector)
                 blob_conf[i].set_rotation = 1;
                 lrvalue[1] = boost::erase_last_copy(boost::erase_first_copy(lrvalue[1], "("), ")");
                 boost::trim(lrvalue[1]);
-                if (systemreader->split_string(lrvalue[1], blob_conf[i].rotation, ",", 9) == 3)
+                if (systemreader.split_string(lrvalue[1], blob_conf[i].rotation, ",", 9) == 3)
                 {
                     blob_conf[i].rotation_type = 0;
                 }
@@ -4083,6 +4062,7 @@ int World::load_springs(const char *fname)
     }
 
     // read in the number of springs in the file
+    int num_springs;
     if (fscanf(in, "num_springs %d\n", &num_springs) != 1)
     {
         fclose(in);
@@ -4091,7 +4071,7 @@ int World::load_springs(const char *fname)
     printf("\t\tNumber of springs = %d\n", num_springs);
 
     // Allocate memory for springs
-    spring_array = new Spring[num_springs];
+    spring_array = std::vector<Spring>(num_springs);
 
     // Read in next line
     crap = fscanf(in, "springs:\n");
@@ -4163,17 +4143,17 @@ int World::load_springs(const char *fname)
     fclose(in);
 
     // Inititalise the energy array (move to a solver in the future, like the ssint)
-    springfieldenergy = new scalar *[params.num_blobs];
+    springfieldenergy = std::vector<std::vector<scalar>>(params.num_blobs);
     for (i = 0; i < params.num_blobs; ++i)
     {
-        springfieldenergy[i] = new scalar[params.num_blobs];
+        springfieldenergy[i] = std::vector<scalar>(params.num_blobs);
     }
     printf("\t\tRead %d springs from %s\n", num_springs, fname);
     activate_springs();
     return 0;
 }
 
-rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> block, int interface_id, FFEA_input_reader *systemreader, rod::Rod **rod_array, Blob **blob_array)
+rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> block, int interface_id, FFEA_input_reader &systemreader, rod::Rod **rod_array, Blob **blob_array)
 {
 
     string tag_out[2];
@@ -4197,7 +4177,7 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
     for (auto &tag_str : block)
     {
 
-        systemreader->parse_tag(tag_str, tag_out);
+        systemreader.parse_tag(tag_str, tag_out);
 
         // Are we in a <coupling> block?
         //if (tag_out[0] == "blob"){rod_parent = false;}
@@ -4224,11 +4204,11 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
                 ends_at_rod = false;
             }
             vector<string> sub_block;
-            systemreader->extract_block("coupling", interface_id, block, &sub_block, true);
+            systemreader.extract_block("coupling", interface_id, block, &sub_block, true);
             string sub_tag_out[2];
             for (auto &sub_tag_str : sub_block)
             {
-                systemreader->parse_tag(sub_tag_str, sub_tag_out);
+                systemreader.parse_tag(sub_tag_str, sub_tag_out);
                 if ((sub_tag_out[0] == "rod_id"))
                 {
                     rod_id = stof(sub_tag_out[1]);
@@ -4249,7 +4229,7 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
                 if (sub_tag_out[0] == "blob_node_ids")
                 {
                     sub_tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(sub_tag_out[1], "("), ")");
-                    systemreader->split_string(sub_tag_out[1], blob_node_ids, ",", 3);
+                    systemreader.split_string(sub_tag_out[1], blob_node_ids, ",", 3);
                 }
 
                 if ((sub_tag_out[0] == "order"))
@@ -4261,7 +4241,7 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
                 {
                     scalar rotation_scalar[3];
                     sub_tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(sub_tag_out[1], "("), ")");
-                    systemreader->split_string(sub_tag_out[1], rotation_scalar, ",", 3);
+                    systemreader.split_string(sub_tag_out[1], rotation_scalar, ",", 3);
                     std::transform(rotation_scalar, rotation_scalar + 3, rotation, [](scalar in) {return static_cast<float>(in);});
                 }
 
@@ -4269,7 +4249,7 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
                 {
                     scalar node_weighting_scalar[3];
                     sub_tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(sub_tag_out[1], "("), ")");
-                    systemreader->split_string(sub_tag_out[1], node_weighting_scalar, ",", 3);
+                    systemreader.split_string(sub_tag_out[1], node_weighting_scalar, ",", 3);
                     std::cout << "node weighting = [" << node_weighting_scalar[0] << ", " << node_weighting_scalar[1] << ", " << node_weighting_scalar[2] << "\n";
                     std::transform(node_weighting_scalar, node_weighting_scalar + 3, node_weighting, [](scalar in) {return static_cast<float>(in); });
                 }
@@ -4303,7 +4283,7 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
 // this can be used, we need a way to get the number of rods specified
 // in the file, so we can allocate an array for their pointers and know
 // what block_ids to assign.
-rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_reader *systemreader)
+rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_reader &systemreader)
 {
 
     // Find trajectory file
@@ -4314,7 +4294,7 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
     bool restart = false;
     for (auto &tag_str : block)
     {
-        systemreader->parse_tag(tag_str, tag_out);
+        systemreader.parse_tag(tag_str, tag_out);
         if (tag_out[0] == "input")
         {
             rod_block_no += 1;
@@ -4329,7 +4309,7 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
     rod_block_no = -1;
     for (auto &tag_str : block)
     {
-        systemreader->parse_tag(tag_str, tag_out);
+        systemreader.parse_tag(tag_str, tag_out);
         if (tag_out[0] == "output")
         {
             rod_block_no += 1;
@@ -4365,7 +4345,7 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
     int coupling_counter = 0;
     for (auto &tag_str : block)
     {
-        systemreader->parse_tag(tag_str, tag_out);
+        systemreader.parse_tag(tag_str, tag_out);
 
         // Are we in a <rod> block?
         if (tag_out[0] == "blob")
@@ -4403,7 +4383,7 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
             scalar centroid_pos[3];
             float converted_centroid[3];
             tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(tag_out[1], "("), ")");
-            systemreader->split_string(tag_out[1], centroid_pos, ",", 3);
+            systemreader.split_string(tag_out[1], centroid_pos, ",", 3);
             // convert to floats
             std::transform(centroid_pos, centroid_pos + 3, converted_centroid, [](scalar in) {return static_cast<float>(in);});
             // set centroid
@@ -4417,7 +4397,7 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
             // get centroid and convert it to array
             scalar rotation[3];
             tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(tag_out[1], "("), ")");
-            systemreader->split_string(tag_out[1], rotation, ",", 3);
+            systemreader.split_string(tag_out[1], rotation, ",", 3);
             // convert to floats
             float converted_rotation[3];
             std::transform(rotation, rotation + 3, converted_rotation, [](scalar in) {return static_cast<float>(in);});
@@ -4587,7 +4567,7 @@ void World::rod_box_length_check(rod::Rod *current_rod, std::vector<float> dim)
 
 void World::activate_springs()
 {
-    for (int i = 0; i < num_springs; ++i)
+    for (int i = 0; i < spring_array.size(); ++i)
     {
 
         // If both ends of spring are active molecules, activate! This could probably be done more quickly with pointers if necessary in future
@@ -4606,7 +4586,7 @@ int World::apply_springs()
 {
     scalar force_mag;
     arr3 n1, n0, force0, force1, sep, sep_norm;
-    for (int i = 0; i < num_springs; ++i)
+    for (int i = 0; i < spring_array.size(); ++i)
     {
         if (spring_array[i].am_i_active == true)
         {
@@ -5189,7 +5169,7 @@ void World::make_measurements()
             }
         }
 
-        for (i = 0; i < num_springs; ++i)
+        for (i = 0; i < spring_array.size(); ++i)
         {
             active_blob_array[spring_array[i].blob_index[0]]->get_node(spring_array[i].node_index[0], a);
             active_blob_array[spring_array[i].blob_index[1]]->get_node(spring_array[i].node_index[1], b);

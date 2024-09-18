@@ -43,12 +43,12 @@ namespace rod {
 // functions go here
 
 void get_tri_norm(float node0[3], float node1[3], float node2[3], OUT float tri_norm[3]);
-void get_jacobian(mesh_node **tet_nodes, OUT float J[9]);
+void get_jacobian(std::array<mesh_node*, NUM_NODES_LINEAR_TET> &tet_nodes, OUT float J[9]);
 void float_3x3_invert(float m[9], OUT float m_inv[9]);
-void get_gradient_deformation(float J_inv_0[9], mesh_node**nodes_curr, OUT float gradient_deformation_3x3[9]);
+void get_gradient_deformation(float J_inv_0[9], std::array<mesh_node*, NUM_NODES_LINEAR_TET> &nodes_curr, OUT float gradient_deformation_3x3[9]);
 void QR_decompose_gram_schmidt(float matrix_3x3[9], OUT float Q[9], float R[9]);
 void construct_euler_rotation_matrix(float a, float b, float g, float rotmat[9]);
-void rotate_tet(float rotmat[9], mesh_node **nodes, OUT mesh_node **rotated_nodes);
+void rotate_tet(float rotmat[9], std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &nodes, OUT std::array<mesh_node*, NUM_NODES_LINEAR_TET> &rotated_nodes);
 void get_euler_angles(float rm[9], OUT float euler_angles[3]);
 void get_rotation_matrix_from_euler(float euler_angles[3], OUT float rm[9]);
 bool array_equal(float arr1[3], float arr2[3]);
@@ -81,7 +81,7 @@ struct Rod_blob_interface
     //float tet_origin_equil[3];
     float edge_vecs[3][3];
     //float edge_vecs_equil[3][3];
-    mesh_node* deformed_tet_nodes[4]; // used for calculating the jacobian
+    std::array<mesh_node*, 4> deformed_tet_nodes; // used for calculating the jacobian
     int face_node_indices[3];
     float J_inv_0[9]; // equilibrium jacobian of the attachment node
     

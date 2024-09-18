@@ -44,19 +44,19 @@ public:
 
     void set_diagonal_element(int row_index, scalar val);
 
-    void calc_inverse_diagonal(scalar *inv_D);
+    void calc_inverse_diagonal(std::vector<scalar> &inv_D);
 
     void zero();
 
     /** Applies this matrix to the given vector 'in', writing the result to 'result' */
-    void apply(scalar *in, scalar *result);
+    void apply(const std::vector<scalar>& in, std::vector<scalar>& result);
 
     void print();
 
 private:
     int num_rows;
-    vector<sparse_entry> *row;
-    scalar *diagonal;
+    vector<vector<sparse_entry>> row;
+    vector<scalar> diagonal;
 };
 
 #endif

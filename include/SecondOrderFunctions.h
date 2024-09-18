@@ -45,6 +45,10 @@
 #define DT_BY_DZ 7
 #define DU_BY_DZ 8
 
+// Also defined in tetra_element_linear.h/BlobLite.h
+#ifndef NUM_NODES_QUADRATIC_TET
+#define NUM_NODES_QUADRATIC_TET 10
+#endif
 
 #include "mesh_node.h"
 
@@ -71,7 +75,7 @@ namespace SecondOrderFunctions {
         {0, .5, .5}
     }; 
 
-    static void calc_psi(scalar psi[10], scalar s, scalar t, scalar u) {
+    static void calc_psi(std::array<scalar, NUM_NODES_QUADRATIC_TET> &psi, scalar s, scalar t, scalar u) {
         scalar r = 1 - s - t - u;
         psi[0] = (2 * r - 1) * r;
         psi[1] = (2 * s - 1) * s;
@@ -85,7 +89,7 @@ namespace SecondOrderFunctions {
         psi[9] = 4 * t * u;
     } 
 
-     static void calc_grad_psi(arr3 grad_psi[10], scalar s, scalar t, scalar u, scalar J_inv[9]) {
+     static void calc_grad_psi(std::array<arr3, NUM_NODES_QUADRATIC_TET> &grad_psi, scalar s, scalar t, scalar u, scalar J_inv[9]) {
         scalar dpsi1_by_dstu = 4 * (s + t + u) - 3;
         grad_psi[GRAD_PSI_1][0] = dpsi1_by_dstu * (J_inv[DS_BY_DX] + J_inv[DT_BY_DX] + J_inv[DU_BY_DX]);
         grad_psi[GRAD_PSI_1][1] = dpsi1_by_dstu * (J_inv[DS_BY_DY] + J_inv[DT_BY_DY] + J_inv[DU_BY_DY]);
@@ -144,7 +148,7 @@ namespace SecondOrderFunctions {
     } 
 
   /** Construct jacobian column coefficients */ 
-  static void calc_jacobian_column_coefficients(mesh_node *n[10], abcd J_coeff[3][3]) {
+  static void calc_jacobian_column_coefficients(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n, abcd J_coeff[3][3]) {
         // dx/ds
         J_coeff[0][0].a = 4 * (n[0]->pos[0] + n[1]->pos[0] - 2 * n[4]->pos[0]);
         J_coeff[0][0].b = 4 * (n[0]->pos[0] - n[4]->pos[0] - n[5]->pos[0] + n[7]->pos[0]);

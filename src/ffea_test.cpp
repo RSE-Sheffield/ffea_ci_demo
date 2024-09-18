@@ -835,7 +835,7 @@ int ffea_test::connection_energy_2()
 
 int ffea_test::jacobian_rotate()
 {
-    mesh_node *node_up[4];
+    std::array<mesh_node*, NUM_NODES_LINEAR_TET> node_up = {};
     for (int i = 0; i < 4; i++)
     {
         node_up[i] = new mesh_node();
@@ -854,7 +854,7 @@ int ffea_test::jacobian_rotate()
     node_up[3]->pos[1] = 35.524;
     node_up[3]->pos[2] = -19.2512;
 
-    mesh_node *node_forward[4];
+    std::array<mesh_node*, NUM_NODES_LINEAR_TET> node_forward = {};;
     for (int i = 0; i < 4; i++)
     {
         node_forward[i] = new mesh_node();
