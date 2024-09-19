@@ -43,12 +43,12 @@ namespace rod
         int elem_id_nbr;
         float radius_self;
         float radius_nbr;
-        float contact_self[3];
-        float contact_nbr[3];
-        float c_ab[3];
-        float img_shift[3];
-        float r_self[3];
-        float r_nbr[3];
+        std::array<float, 3> contact_self;
+        std::array<float, 3> contact_nbr;
+        std::array<float, 3> c_ab;
+        std::array<float, 3> img_shift;
+        std::array<float, 3> r_self;
+        std::array<float, 3> r_nbr;
         float epsilon;
         float sigma;
         float r_min;
@@ -61,11 +61,11 @@ namespace rod
             int elem_id_b,
             float radius_a,
             float radius_b,
-            float c_a[3],
-            float c_b[3],
-            float shift[3],
-            float r_a[3],
-            float r_b[3]);
+            const std::array<float, 3> &c_a,
+            const std::array<float, 3> &c_b,
+            const std::array<float, 3> &shift,
+            const std::array<float, 3> &r_a,
+            const std::array<float, 3> &r_b);
 
         InteractionData(
             int rod_id_a,
@@ -74,77 +74,78 @@ namespace rod
             int elem_id_b,
             float radius_a,
             float radius_b,
-            float c_a[3],
-            float c_b[3],
-            float shift[3],
-            float r_a[3],
-            float r_b[3],
+            const float3 &c_a,
+            const float3&c_b,
+            const float3&shift,
+            const float3&r_a,
+            const float3&r_b,
             float eps,
             float sig);
 
-        bool elements_intersect();
+        bool elements_intersect() const;
     };
 
 
     // previously: snap_to_nodes
     void finite_length_correction(
-        float (&c)[3],
-        float r[3],
-        float p[3]);
+        float3 &c,
+        const float3 &r,
+        const float3 &p);
 
     void finite_length_correction(
-        float c[3],
-        float r[3],
-        float p[3],
-        OUT float c_out[3]);
+        const float3 &c,
+        const float3 &r,
+        const float3 &p,
+        OUT float3 &c_out);
 
     void nearest_node_correction(
-        float (&c_a)[3],
-        float c_b[3],
-        float r_a[3],
-        float r_b[3],
-        float p_a[3],
-        float p_b[3]);
+        float3 &c_a,
+        const float3 &c_b,
+        const float3 &r_a,
+        const float3 &r_b,
+        const float3 &p_a,
+        const float3 &p_b);
 
     void element_minimum_displacement(
-        float p_a[3],
-        float p_b[3],
-        float r_a[3],
-        float r_b[3],
-        float c_a[3],
-        float c_b[3]);
+        const float3 &p_a,
+        const float3 &p_b,
+        const float3 &r_a,
+        const float3 &r_b,
+        float3 &c_a,
+        float3 &c_b);
+
+    // Not implemented?
+    //std::vector<int> nearest_periodic_image(
+    //    float3 &p_a,
+    //    float3 &p_b,
+    //    float3 &r_a,
+    //    float3 &r_b,
+    //    const std::vector<float> &box_dim);
+    // Not implemented?
+    //std::vector<int> nearest_periodic_image(
+    //    float3 &displacement,
+    //    const std::vector<float> &box_dim);
 
     std::vector<int> nearest_periodic_image(
-        float p_a[3],
-        float p_b[3],
-        float r_a[3],
-        float r_b[3],
-        std::vector<float> box_dim);
-
-    std::vector<int> nearest_periodic_image(
-        float displacement[3],
-        std::vector<float> box_dim);
-
-    std::vector<int> nearest_periodic_image(
-        float a[3],
-        float b[3],
-        std::vector<float> box_dim);
+        const float3 &a,
+        const float3 &b,
+        const std::vector<float> &box_dim);
 
     void set_steric_nbrs(
         int rod_id_a,
         int rod_id_b,
         int elem_id_a,
         int elem_id_b,
-        float p_a[3],
-        float p_b[3],
-        float r_a[3],
-        float r_b[3],
+        const float3 &p_a,
+        const float3 &p_b,
+        float3 &r_a,
+        float3 &r_b,
         float radius_a,
         float radius_b,
         std::vector<InteractionData> &neighbours_a,
         std::vector<InteractionData> &neighbours_b,
         bool periodic,
-        std::vector<float> box_dim);
+        const std::vector<float> &box_dim);
 
     float steric_energy_linear(
         float force_scaling_factor,
@@ -158,33 +159,33 @@ namespace rod
     float intersection_distance(
         int dim,
         float delta,
-        float c_a[3],
-        float c_b[3],
+        const float3 &c_a,
+        const float3 &c_b,
         float radius_sum);
 
     // Perturbation in +c_ab/-c_ab
     float intersection_distance(
         float delta,
-        float c_a[3],
-        float c_b[3],
+        const float3 &c_a,
+        const float3 &c_b,
         float radius_sum);
 
     // No perturbation
     float intersection_distance(
-        float c_a[3],
-        float c_b[3],
+        const float3 &c_a,
+        const float3 &c_b,
         float radius_sum);
 
     std::vector<float> element_steric_energy(
         float delta,
         float force_strength,
         float radius_sum,
-        float c_a[3],
-        float c_b[3]);
+        const float3 &c_a,
+        const float3 &c_b);
 
     std::vector<float> node_force_interpolation(
-        float contact[3],
-        float node_1[3],
+        const float3 & contact,
+        const float3 & node_1,
         float element_length,
         const std::vector<float> &element_force);
 
@@ -208,31 +209,31 @@ namespace rod
         int vdw_type;
         float L_rod;    // Fraction of rod length at which site is located, 0 <= L <= 1
         float L_elem;
-        float pos[3];
+        float3 pos;
 
-        VDWSite(const int rodid, const int siteid, const int vdwtype, const float lrod,  const float *r_rod,
+        VDWSite(const int rodid, const int siteid, const int vdwtype, const float lrod,  const std::vector<float> &r_rod,
             const float contour_length, const int num_nodes);
         void print_info() const;
         void get_parent_element(
-            const float* p_rod,
+            const std::vector<float> &p_rod,
             const float contour_length,
             const float norm_length_along_rod,
             const int num_nodes);
-        void update_position(const float* r_rod);
+        void update_position(const std::vector<float> &r_rod);
 
     };
 
     void set_vdw_nbrs(
         VDWSite site_a,
         VDWSite site_b,
-        float p_a[3],
-        float p_b[3],
-        float r_a[3],
-        float r_b[3],
+        const float3 &p_a,
+        const float3 &p_b,
+        const float3 &r_a,
+        const float3 &r_b,
         float radius_a,
         float radius_b,
-        std::vector<InteractionData>& nbr_a,
-        std::vector<InteractionData>& nbr_b,
+        std::vector<InteractionData> &nbr_a,
+        std::vector<InteractionData> &nbr_b,
         bool periodic,
         std::vector<float> box_dim,
         float vdw_cutoff,

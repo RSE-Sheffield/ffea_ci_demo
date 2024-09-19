@@ -47,7 +47,17 @@
 
 namespace rod
 {
-
+    typedef std::array<float, 2> float2;
+    typedef std::array<float, 3> float3;
+    typedef std::array<float, 4> float4;
+    typedef std::array<float, 6> float6;
+    typedef std::array<float, 9> float9;
+    typedef std::array<float3, 2> float2x3;
+    typedef std::array<float4, 2> float2x4;
+    typedef std::array<float3, 3> float3x3;
+    typedef std::array<float3, 4> float4x3;
+    typedef std::array<float4, 4> float4x4;
+    typedef std::array<int, 3> int3;
     extern bool dbg_print;
 
     const static bool debug_nan = false;
@@ -82,93 +92,91 @@ namespace rod
     template<typename T, size_t N>
     void print_array(std::string array_name, const std::array<T, N>& arr);
     template<typename T>
-    void print_array(std::string array_name, const T array[], int length);
-    void print_array(std::string array_name, const float array[], int start, int end);
-    void print_array(std::string array_name, const double array[], int length);
-    void write_array(FILE *file_ptr, float *array_ptr, int array_len, float unit_scale_factor, bool new_line);
-    void write_array(FILE *file_ptr, int *array_ptr, int array_len, bool new_line);
-    void write_vector(FILE* file_ptr, const std::vector<float> &vec, float unit_scale_factor, bool new_line);
+    void print_array(std::string array_name, const std::vector<T>& vec);
+    void print_array(std::string array_name, const std::vector<float> &vec, int start, int end);
+    void write_vector(FILE *file_ptr, const std::vector<int> &vec, bool new_line);
+    void write_vector(FILE *file_ptr, const std::vector<float> &vec, float unit_scale_factor, bool new_line);
     void print_vector(std::string vector_name, const std::vector<float> &vec);
     void print_vector(std::string vector_name, const std::vector<int> &vec);
     void print_vector(std::string vector_name, std::vector<float>::iterator start, std::vector<float>::iterator end);
     void print_vector(std::string vector_name, const std::vector<float> &vec, int start_ind, int end_ind);
     void print_vector(std::string vector_name, const std::vector<int> &vec, int start_ind, int end_ind);
     std::vector<float> slice_vector(std::vector<float> vec, int start_index, int end_index);
-    void normalize(float in[3], OUT float out[3]);
+    void normalize(const float3 &in, OUT float3 &out);
     void normalize(std::vector<float> in, OUT std::vector<float> out);
-    void normalize_unsafe(float in[3], OUT float out[3]);
-    float absolute(float in[3]);
-    float absolute(std::vector<float> in);
-    void cross_product(float a[3], float b[3], float out[3]);
-    void cross_product_unsafe(float a[3], float b[3], float out[3]);
-    void get_rotation_matrix(float a[3], float b[3], float rotation_matrix[9]);
-    void get_cartesian_rotation_matrix(int dim, float angle, float rotation_matrix[9]);
-    void apply_rotation_matrix(float vec[3], float matrix[9], OUT float rotated_vec[3]);
-    void apply_rotation_matrix_row(float vec[3], float matrix[9], OUT float rotated_vec[3]);
-    void matmul_3x3_3x3(float a[9], float b[9], OUT float out[9]);
-    float dot_product_3x1(float a[3], float b[3]);
+    void normalize_unsafe(const float3 &in, OUT float3 &out);
+    float absolute(const float3 &in);
+    float absolute(const std::vector<float> &in);
+    void cross_product(const float3 &a, const float3 &b, float3 &out);
+    void cross_product_unsafe(const float3 &a, const float3 &b, float3 &out);
+    void get_rotation_matrix(const float3 &a, const float3 &b, float9 &rotation_matrix);
+    void get_cartesian_rotation_matrix(int dim, float angle, float9 &rotation_matrix);
+    void apply_rotation_matrix(arr3_view<float, float3> vec, const float9 &matrix, OUT float3 &rotated_vec);
+    void apply_rotation_matrix_row(arr3_view<float, float3> vec, const float9 &matrix, OUT float3 &rotated_vec);
+    void matmul_3x3_3x3(const float9 &a, const float9 &b, OUT float9 &out);
+    float dot_product_3x1(const float3 &a, const float3 &b);
 
     // These are utility functions specific to the math for the rods
-    void get_p_i(float curr_r[3], float next_r[3], OUT float p_i[3]);
-    void get_element_midpoint(float p_i[3], float r_i[3], OUT float r_mid[3]);
-    void rodrigues_rotation(float v[3], float k[3], float theta, OUT float v_rot[3]);
+    void get_p_i(const float3 &curr_r, const float3 &next_r, OUT float3 &p_i);
+    void get_element_midpoint(const float3 &p_i, const float3 &r_i, OUT float3 &r_mid);
+    void rodrigues_rotation(const float3 &v, const float3 &k, float theta, OUT float3 &v_rot);
     float safe_cos(float in);
-    float get_l_i(float p_i[3], float p_im1[3]);
-    float get_signed_angle(float m1[3], float m2[3], float l[3]);
+    float get_l_i(const float3 &p_i, const float3 &p_im1);
+    float get_signed_angle(const float3 &m1, const float3 &m2, const float3 &l);
 
     /*-----------------------*/
     /* Update Material Frame */
     /*-----------------------*/
 
-    void perpendicularize(float m_i[3], float p_i[3], OUT float m_i_prime[3]);
-    void update_m1_matrix(float m_i[3], float p_i[3], float p_i_prime[3], float m_i_prime[3]);
+    void perpendicularize(const float3 &m_i, const float3 &p_i, OUT float3 &m_i_prime);
+    void update_m1_matrix(float3 &m_i, const float3 &p_i, const float3 &p_i_prime, float3 &m_i_prime);
 
     /*------------------*/
     /* Compute Energies */
     /*------------------*/
 
-    float get_stretch_energy(float k, float p_i[3], float p_i_equil[3]);
-    void parallel_transport(float m[3], float m_prime[3], float p_im1[3], float p_i[3]);
-    float get_twist_energy(float beta, float m_i[3], float m_im1[3], float m_i_equil[3], float m_im1_equil[3], float p_im1[3], float p_i[3], float p_im1_equil[3], float p_i_equil[3]);
-    void get_kb_i(float p_im1[3], float p_i[3], float e_im1_equil[3], float e_i_equil[3], OUT float kb_i[3]);
-    void get_omega_j_i(float kb_i[3], float n_j[3], float m_j[3], OUT float omega_j_i[2]);
-    float get_bend_energy(float omega_i_im1[2], float omega_i_im1_equil[2], float B_equil[4]);
+    float get_stretch_energy(float k, float3 &p_i, float3 &p_i_equil);
+    void parallel_transport(float3 &m, float3 &m_prime, const float3 &p_im1, const float3 &p_i);
+    float get_twist_energy(float beta, float3 &m_i, float3 &m_im1, float3 &m_i_equil, float3 &m_im1_equil, float3 &p_im1, float3 &p_i, float3 &p_im1_equil, float3 &p_i_equil);
+    void get_kb_i(const float3 &p_im1, const float3 &p_i, OUT float3 &kb_i);
+    void get_omega_j_i(const float3 &kb_i, const float3 &n_j, const float3 &m_j, OUT float2 &omega_j_i);
+    float get_bend_energy(const float2 &omega_i_im1, const float2 &omega_i_im1_equil, const float4 &B_equil);
 
     float get_bend_energy_from_p(
-        float p_im1[3],
-        float p_i[3],
-        float p_im1_equil[3],
-        float p_i_equil[3],
-        float n_im1[3],
-        float m_im1[3],
-        float n_im1_equil[3],
-        float m_im1_equil[3],
-        float n_i[3],
-        float m_i[3],
-        float n_i_equil[3],
-        float m_i_equil[3],
-        float B_i_equil[4],
-        float B_im1_equil[4]);
+        const float3 &p_im1,
+        const float3 &p_i,
+        const float3 &p_im1_equil,
+        const float3 &p_i_equil,
+        const float3 &n_im1,
+        const float3 &m_im1,
+        const float3 &n_im1_equil,
+        const float3 &m_im1_equil,
+        const float3 &n_i,
+        const float3 &m_i,
+        const float3 &n_i_equil,
+        const float3 &m_i_equil,
+        const float4 &B_i_equil,
+        const float4 &B_im1_equil);
 
-    float get_weights(float a[3], float b[3]);
-    void get_mutual_element_inverse(float pim1[3], float pi[3], float weight, OUT float mutual_element[3]);
-    void get_mutual_axes_inverse(float mim1[3], float mi[3], float weight, OUT float m_mutual[3]);
+    float get_weights(const float3 &a, const float3 &b);
+    void get_mutual_element_inverse(const float3 &pim1, const float3 &pi, float weight, OUT float3 &mutual_element);
+    void get_mutual_axes_inverse(const float3 &mim1, const float3 &mi, float weight, OUT float3 &m_mutual);
 
     float get_bend_energy_mutual_parallel_transport(
-        float p_im1[3],
-        float p_i[3],
-        float p_im1_equil[3],
-        float p_i_equil[3],
-        float n_im1[3],
-        float m_im1[3],
-        float n_im1_equil[3],
-        float m_im1_equil[3],
-        float n_i[3],
-        float m_i[3],
-        float n_i_equil[3],
-        float m_i_equil[3],
-        float B_i_equil[4],
-        float B_im1_equil[4]);
+        const float3 &p_im1,
+        const float3 &p_i,
+        const float3 &p_im1_equil,
+        const float3 &p_i_equil,
+        const float3 &n_im1,
+        float3 &m_im1,
+        const float3 &n_im1_equil,
+        float3 &m_im1_equil,
+        const float3 &n_i,
+        float3 &m_i,
+        const float3 &n_i_equil,
+        float3 &m_i_equil,
+        const float4 &B_i_equil,
+        const float4 &B_im1_equil);
 
     /*----------*/
     /* Dynamics */
@@ -180,23 +188,23 @@ namespace rod
     float get_torque(float twist_energy, float delta_theta);
     float get_delta_r(float friction, float timestep, float force, float noise, float external_force);
     float get_delta_r(float friction, float timestep, const std::vector<float> &forces);
-    float get_delta_r(float friction, float timestep, const std::vector<float>& forces, const float background_flow);
+    float get_delta_r(float friction, float timestep, const std::vector<float> &forces, float background_flow);
     float get_noise(float timestep, float kT, float friction, float random_number);
 
     /*------------*/
     /* Shorthands */
     /*------------*/
 
-    void load_p(float p[4][3], float *r, int offset);
-    void load_m(float m_loaded[4][3], float *m, int offset);
-    void normalize_all(float p[4][3]);
-    void absolute_all(float p[4][3], float absolutes[4]);
-    void cross_all(float p[4][3], float m[4][3], OUT float n[4][3]);
-    void delta_e_all(float e[4][3], float new_e[4][3], OUT float delta_e[4][3]);
-    void update_m1_all(float m[4][3], float absolutes[4], float t[4][3], float delta_e[4][3], OUT float m_out[4][3]);
-    void update_m1_matrix_all(float m[4][3], float p[4][3], float p_prime[4][3], OUT float m_prime[4][3], int start_cutoff, int end_cutoff);
-    void fix_m1_all(float m[4][3], float new_t[4][3]);
-    void update_and_fix_m1_all(float old_e[4][3], float new_e[4][3], float m[4][3]);
+    void load_p(float4x3 &p, const std::vector<float> &r, int offset);
+    void load_m(float4x3 &m_loaded, const std::vector<float> &m, int offset);
+    void normalize_all(float4x3 &p);
+    void absolute_all(const float4x3 &p, float4 &absolutes);
+    void cross_all(const float4x3 &p, const float4x3 &m, OUT float4x3 &n);
+    void delta_e_all(const float4x3 &e, const float4x3 &new_e, OUT float4x3 &delta_e);
+    // void update_m1_all(float4x3 &m, float4 &absolutes, float4x3 &t, float4x3 &delta_e, OUT float4x3 &m_out); // This doesn't exist?
+    void update_m1_matrix_all(float4x3 &m, const float4x3 &p, const float4x3 &p_prime, OUT float4x3 &m_prime, int start_cutoff, int end_cutoff);
+    void fix_m1_all(float4x3 &m, float4x3 &new_t);
+    void update_and_fix_m1_all(float4x3 &old_e, float4x3 &new_e, float4x3 &m);
     void set_cutoff_values(int e_i_node_no, int length, OUT int start_cutoff, int end_cutoff);
 
     /*----------*/
@@ -204,12 +212,12 @@ namespace rod
     /*----------*/
 
     bool not_simulation_destroying(float x);
-    bool not_simulation_destroying(float x[3]);
-    void load_B_all(float B[4][4], float *B_matrix, int offset);
-    void make_diagonal_B_matrix(float B, OUT float B_matrix[4]);
+    bool not_simulation_destroying(const float3 &x);
+    void load_B_all(float4x4 &B, const std::vector<float> &B_matrix, int offset);
+    void make_diagonal_B_matrix(float B, OUT float4 &B_matrix);
     void set_cutoff_values(int e_i_node_no, int length, OUT int *start_cutoff, int *end_cutoff);
-    float get_absolute_length_from_array(float *array, int node_no, int length);
-    void get_centroid_generic(float *r, int length, OUT float centroid[3]);
+    float get_absolute_length_from_array(const std::vector<float> &array, int node_no, int length);
+    void get_centroid_generic(const std::vector<float> &r, OUT float3 &centroid);
 
     /*-------------------------------*/
     /* Move the node, get the energy */
@@ -218,16 +226,16 @@ namespace rod
     void get_perturbation_energy(
         float perturbation_amount,
         int perturbation_dimension,
-        float B_equil[4],
-        float *material_params,
+        std::vector<float> &B_matrix, //@todo This was previously named B_equil and len 4 in the header
+        std::vector<float> &material_params,
         int start_cutoff,
         int end_cutoff,
         int p_i_node_no,
-        float *r_all,
-        float *r_all_equil,
-        float *m_all,
-        float *m_all_equil,
-        float energies[3]);
+        std::vector<float> &r_all,
+        std::vector<float> &r_all_equil,
+        std::vector<float> &m_all,
+        std::vector<float> &m_all_equil,
+        float3 &energies);
 
 }
 #endif

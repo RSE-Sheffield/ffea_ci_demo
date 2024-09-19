@@ -85,28 +85,29 @@ namespace rod
     arrays. This will also not create arrays with sizes that are independent of
     the rod length (e.g. VDW site positions).
     */
-    Rod::Rod(int length, int set_rod_no) : equil_r(new float[length]),
-                                           equil_m(new float[length]),
-                                           current_r(new float[length]),
-                                           current_m(new float[length]),
-                                           internal_perturbed_x_energy_positive(new float[length]),
-                                           internal_perturbed_y_energy_positive(new float[length]),
-                                           internal_perturbed_z_energy_positive(new float[length]),
-                                           internal_twisted_energy_positive(new float[length]),
-                                           internal_perturbed_x_energy_negative(new float[length]),
-                                           internal_perturbed_y_energy_negative(new float[length]),
-                                           internal_perturbed_z_energy_negative(new float[length]),
-                                           internal_twisted_energy_negative(new float[length]),
-                                           material_params(new float[length]),
-                                           B_matrix(new float[length + (length / 3)]),
-                                           steric_energy(new float[length]),
-                                           steric_force(new float[length]),
-                                           num_steric_nbrs(new int[length/3]),
-                                           vdw_energy(new float[length]),
-                                           vdw_force(new float[length]),
-                                           num_vdw_nbrs(new int[length/3]),
-                                           applied_forces(new float[length + (length / 3)]),
-                                           pinned_nodes(new bool[length / 3]){};
+    Rod::Rod(int length, int set_rod_no) : rod_no(set_rod_no),
+                                           equil_r(length),
+                                           equil_m(length),
+                                           current_r(length),
+                                           current_m(length),
+                                           internal_perturbed_x_energy_positive(length),
+                                           internal_perturbed_y_energy_positive(length),
+                                           internal_perturbed_z_energy_positive(length),
+                                           internal_twisted_energy_positive(length),
+                                           internal_perturbed_x_energy_negative(length),
+                                           internal_perturbed_y_energy_negative(length),
+                                           internal_perturbed_z_energy_negative(length),
+                                           internal_twisted_energy_negative(length),
+                                           material_params(length),
+                                           B_matrix(length + (length / 3)),
+                                           steric_energy(length),
+                                           steric_force(length),
+                                           num_steric_nbrs(length/3),
+                                           vdw_energy(length),
+                                           vdw_force(length),
+                                           num_vdw_nbrs(length/3),
+                                           applied_forces(length + (length / 3)),
+                                           pinned_nodes(length / 3) {}
 
     /**
     Create a rod from a file. This won't do anything other than create the
@@ -236,10 +237,10 @@ namespace rod
 
             // We need this e now because we need the previous value of e to do a material frame update
             // If you're curious about the [4][3] check out the get_perturbation_energy docs
-            float p[4][3];
+            float4x3 p;
             load_p(p, current_r, node_no);
 
-            float energies[3]; //bend, stretch, twist (temporary variable).
+            float3 energies; //bend, stretch, twist (temporary variable).
 
             // We move the node backwards and forwards in each degree of freedom, so we end up calling get_perturbation_energy eight whole times
             // Fill the temporary variable with energies ( we basically pass the entire state of the rod to get_perturbation_energy)
@@ -426,9 +427,9 @@ namespace rod
             float twist_perturbation = 0.006283185; // 2pi/1000
 
             // The material frame update requires that we grab the ith segment as it was before we did any dynamics
-            float previous_p_i[3];
-            float r_i[3];
-            float r_ip1[3];
+            float3 previous_p_i;
+            float3 r_i;
+            float3 r_ip1;
             r_i[0] = current_r[node_no * 3];
             r_i[1] = current_r[(node_no * 3) + 1];
             r_i[2] = current_r[(node_no * 3) + 2];
@@ -530,13 +531,13 @@ namespace rod
             // If we're applying delta twist, we must load our new p_i back in
             if (node_no != this->get_num_nodes() - 1)
             { // The last node has no p_i, so it can't rotate
-                float m_to_rotate[3];
+                float3 m_to_rotate;
                 m_to_rotate[0] = current_m[node_no * 3];
                 m_to_rotate[1] = current_m[(node_no * 3) + 1];
                 m_to_rotate[2] = current_m[(node_no * 3) + 2]; // take the relevant info out of the data structure
-                float p_i[3];
-                float r_i[3];
-                float r_ip1[3]; // we need all of these from the rod again
+                float3 p_i;
+                float3 r_i;
+                float3 r_ip1; // we need all of these from the rod again
                 r_i[0] = current_r[node_no * 3];
                 r_i[1] = current_r[(node_no * 3) + 1];
                 r_i[2] = current_r[(node_no * 3) + 2];
@@ -553,11 +554,11 @@ namespace rod
             // If the element has moved, we need to update the material frame to have moved accordingly
             if (node_no != this->get_num_nodes() - 1)
             { // for last node index, material frame doesn't exist!
-                float current_p_i[3];
-                float m_to_fix[3];
-                float m_i_prime[3];
-                float r_i[3];
-                float r_ip1[3]; //now: grab the quantities we need out of the data structure
+                float3 current_p_i;
+                float3 m_to_fix;
+                float3 m_i_prime;
+                float3 r_i;
+                float3 r_ip1; //now: grab the quantities we need out of the data structure
                 r_i[0] = current_r[node_no * 3];
                 r_i[1] = current_r[(node_no * 3) + 1];
                 r_i[2] = current_r[(node_no * 3) + 2];
@@ -693,31 +694,31 @@ namespace rod
         }
 
         /** Now that we know the rod length, we can allocate the memory **/
-        equil_r = static_cast<float *>(malloc(sizeof(float) * length));
-        equil_m = static_cast<float *>(malloc(sizeof(float) * length));
-        current_r = static_cast<float *>(malloc(sizeof(float) * length));
-        current_m = static_cast<float *>(malloc(sizeof(float) * length));
-        internal_perturbed_x_energy_positive = static_cast<float *>(malloc(sizeof(float) * length));
-        internal_perturbed_y_energy_positive = static_cast<float *>(malloc(sizeof(float) * length));
-        internal_perturbed_z_energy_positive = static_cast<float *>(malloc(sizeof(float) * length));
-        internal_twisted_energy_positive = static_cast<float *>(malloc(sizeof(float) * length));
-        internal_perturbed_x_energy_negative = static_cast<float *>(malloc(sizeof(float) * length));
-        internal_perturbed_y_energy_negative = static_cast<float *>(malloc(sizeof(float) * length));
-        internal_perturbed_z_energy_negative = static_cast<float *>(malloc(sizeof(float) * length));
-        internal_twisted_energy_negative = static_cast<float *>(malloc(sizeof(float) * length));
-        material_params = static_cast<float *>(malloc(sizeof(float) * length));
-        B_matrix = static_cast<float *>(malloc(sizeof(float) * (length + (length / 3))));
-        steric_energy = static_cast<float *>(malloc(sizeof(float) * (length)));
-        steric_force = static_cast<float *>(malloc(sizeof(float) * length));
-        num_steric_nbrs = static_cast<int *>(malloc(sizeof(int) * (length/3)));
-        applied_forces = static_cast<float *>(malloc(sizeof(float) * (length + (length / 3))));
-        pinned_nodes = static_cast<bool *>(malloc(sizeof(bool) * length / 3));
-        steric_nbrs = std::vector<std::vector<InteractionData>>((length / 3) - 1);
-        vdw_energy = static_cast<float *>(malloc(sizeof(float) * (length)));
-        vdw_force = static_cast<float *>(malloc(sizeof(float) * (length)));
-        num_vdw_nbrs = static_cast<int *>(malloc(sizeof(int) * (length/3)));
-        vdw_nbrs = std::vector<std::vector<InteractionData>>((length / 3) - 1);
-        vdw_site_pos = std::vector<float>(num_vdw_sites * 3);
+        equil_r.resize(length);
+        equil_m.resize(length);
+        current_r.resize(length);
+        current_m.resize(length);
+        internal_perturbed_x_energy_positive.resize(length);
+        internal_perturbed_y_energy_positive.resize(length);
+        internal_perturbed_z_energy_positive.resize(length);
+        internal_twisted_energy_positive.resize(length);
+        internal_perturbed_x_energy_negative.resize(length);
+        internal_perturbed_y_energy_negative.resize(length);
+        internal_perturbed_z_energy_negative.resize(length);
+        internal_twisted_energy_negative.resize(length);
+        material_params.resize(length);
+        B_matrix.resize(length + (length / 3));
+        steric_energy.resize(length);
+        steric_force.resize(length);
+        num_steric_nbrs.resize(length/3);
+        applied_forces.resize(length + (length / 3));
+        pinned_nodes.resize(length / 3);
+        steric_nbrs.resize((length / 3) - 1);
+        vdw_energy.resize(length);
+        vdw_force.resize(length);
+        num_vdw_nbrs.resize(length/3);
+        vdw_nbrs.resize((length / 3) - 1);
+        vdw_site_pos.resize(num_vdw_sites * 3);
 
         for (int i = 0; i < length / 3; i++)
         {
@@ -740,7 +741,7 @@ namespace rod
     Note: to remove the force, you must call this function again with 0s,
     or it will continue appyling the force.
     */
-    Rod Rod::add_force(float force[4], int node_index)
+    Rod Rod::add_force(const float4 &force, int node_index)
     {
         this->applied_forces[node_index * 4] = force[0] / mesoDimensions::force;
         this->applied_forces[(node_index * 4) + 1] = force[1] / mesoDimensions::force;
@@ -1041,26 +1042,26 @@ namespace rod
     {
         this->frame_no += 1;
         std::fprintf(file_ptr, "FRAME %i ROD %i\n", frame_no, rod_no);
-        write_array(file_ptr, equil_r, length, mesoDimensions::length, true);
-        write_array(file_ptr, equil_m, length, mesoDimensions::length, true);
-        write_array(file_ptr, current_r, length, mesoDimensions::length, true);
-        write_array(file_ptr, current_m, length, mesoDimensions::length, true);
-        write_array(file_ptr, internal_perturbed_x_energy_positive, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, internal_perturbed_y_energy_positive, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, internal_perturbed_z_energy_positive, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, internal_twisted_energy_positive, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, internal_perturbed_x_energy_negative, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, internal_perturbed_y_energy_negative, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, internal_perturbed_z_energy_negative, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, internal_twisted_energy_negative, length, mesoDimensions::Energy, true);
-        write_mat_params_array(material_params, length, spring_constant_factor, twist_constant_factor, mesoDimensions::length);
-        write_array(file_ptr, B_matrix, length + (length / 3), bending_response_factor, true);
-        write_array(file_ptr, steric_energy, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, steric_force, length, mesoDimensions::force, true);
-        write_array(file_ptr, num_steric_nbrs, length/3, true);
-        write_array(file_ptr, vdw_energy, length, mesoDimensions::Energy, true);
-        write_array(file_ptr, vdw_force, length, mesoDimensions::force, true);
-        write_array(file_ptr, num_vdw_nbrs, length/3, true);
+        write_vector(file_ptr, equil_r, mesoDimensions::length, true);
+        write_vector(file_ptr, equil_m, mesoDimensions::length, true);
+        write_vector(file_ptr, current_r, mesoDimensions::length, true);
+        write_vector(file_ptr, current_m, mesoDimensions::length, true);
+        write_vector(file_ptr, internal_perturbed_x_energy_positive, mesoDimensions::Energy, true);
+        write_vector(file_ptr, internal_perturbed_y_energy_positive, mesoDimensions::Energy, true);
+        write_vector(file_ptr, internal_perturbed_z_energy_positive, mesoDimensions::Energy, true);
+        write_vector(file_ptr, internal_twisted_energy_positive, mesoDimensions::Energy, true);
+        write_vector(file_ptr, internal_perturbed_x_energy_negative, mesoDimensions::Energy, true);
+        write_vector(file_ptr, internal_perturbed_y_energy_negative, mesoDimensions::Energy, true);
+        write_vector(file_ptr, internal_perturbed_z_energy_negative, mesoDimensions::Energy, true);
+        write_vector(file_ptr, internal_twisted_energy_negative, mesoDimensions::Energy, true);
+        write_mat_params_vector(material_params, spring_constant_factor, twist_constant_factor, mesoDimensions::length);
+        write_vector(file_ptr, B_matrix, bending_response_factor, true);
+        write_vector(file_ptr, steric_energy, mesoDimensions::Energy, true);
+        write_vector(file_ptr, steric_force, mesoDimensions::force, true);
+        write_vector(file_ptr, num_steric_nbrs, true);
+        write_vector(file_ptr, vdw_energy, mesoDimensions::Energy, true);
+        write_vector(file_ptr, vdw_force, mesoDimensions::force, true);
+        write_vector(file_ptr, num_vdw_nbrs, true);
         write_vector(file_ptr, vdw_site_pos, mesoDimensions::length, true);
         fflush(file_ptr);
         return *this;
@@ -1070,18 +1071,14 @@ namespace rod
     This function is almost identical to the one above, but it appllies
     different scale factors for objects in the array,
     */
-    Rod Rod::write_mat_params_array(float *array_ptr, int array_len, float stretch_scale_factor, float twist_scale_factor, float length_scale_factor)
+    Rod Rod::write_mat_params_vector(const std::vector<float> &vec, float stretch_scale_factor, float twist_scale_factor, float length_scale_factor)
     {
-        float scale_factors[3] = {stretch_scale_factor, twist_scale_factor, length_scale_factor};
-        for (int i = 0; i < array_len; i++)
-        {
-            if (i < array_len - 1)
-            {
-                std::fprintf(file_ptr, "%e,", array_ptr[i] * scale_factors[i % 3]);
-            }
-            else
-            {
-                std::fprintf(file_ptr, "%e", array_ptr[i] * scale_factors[i % 3]);
+        float3 scale_factors = {stretch_scale_factor, twist_scale_factor, length_scale_factor};
+        for (int i = 0; i < vec.size(); i++) {
+            if (i < vec.size() - 1) {
+                std::fprintf(file_ptr, "%e,", vec[i] * scale_factors[i % 3]);
+            } else {
+                std::fprintf(file_ptr, "%e", vec[i] * scale_factors[i % 3]);
             }
         }
         std::fprintf(file_ptr, "\n");
@@ -1152,7 +1149,7 @@ namespace rod
     node positions, e.g. this->current_r or this->equil_r. No return values,
     it just updates those arrays
     */
-    Rod Rod::translate_rod(float *r, float translation_vec[3])
+    Rod Rod::translate_rod(std::vector<float> &r, const float3 &translation_vec)
     {
         for (int i = 0; i < this->length; i += 3)
         {
@@ -1170,17 +1167,17 @@ namespace rod
     each centroid, so if current_r and equil_r have different centroids,
     they will be rotated about different points.
     */
-    Rod Rod::rotate_rod(float euler_angles[3])
+    Rod Rod::rotate_rod(const std::array<float, 3> &euler_angles)
     {
         /** Put rod centroid on 0,0,0 */
-        float equil_centroid[3];
-        get_centroid_generic(this->equil_r, this->length, equil_centroid);
-        float equil_to_translate[3] = {-equil_centroid[0], -equil_centroid[1], -equil_centroid[2]};
+        float3 equil_centroid;
+        get_centroid_generic(this->equil_r, equil_centroid);
+        float3 equil_to_translate = {-equil_centroid[0], -equil_centroid[1], -equil_centroid[2]};
         this->translate_rod(this->equil_r, equil_to_translate);
 
-        float current_centroid[3];
-        get_centroid_generic(this->current_r, this->length, current_centroid);
-        float current_to_translate[3] = {-current_centroid[0], -current_centroid[1], -current_centroid[2]};
+        float3 current_centroid;
+        get_centroid_generic(this->current_r, current_centroid);
+        float3 current_to_translate = {-current_centroid[0], -current_centroid[1], -current_centroid[2]};
         this->translate_rod(this->current_r, current_to_translate);
 
         /** Construct rotation matrix from euler angles **/
@@ -1188,33 +1185,33 @@ namespace rod
         float ye = euler_angles[1];
         float ze = euler_angles[2];
 
-        float Rx[9] = {1, 0, 0, 0, cosf(xe), -sinf(xe), 0, sinf(xe), cosf(xe)};
-        float Ry[9] = {cosf(ye), 0, sinf(ye), 0, 1, 0, -sinf(ye), 0, cosf(ye)};
-        float Rz[9] = {cosf(ze), -sinf(ze), 0, sinf(ze), cosf(ze), 0, 0, 0, 1};
+        float9 Rx = {1, 0, 0, 0, cosf(xe), -sinf(xe), 0, sinf(xe), cosf(xe)};
+        float9 Ry = {cosf(ye), 0, sinf(ye), 0, 1, 0, -sinf(ye), 0, cosf(ye)};
+        float9 Rz = {cosf(ze), -sinf(ze), 0, sinf(ze), cosf(ze), 0, 0, 0, 1};
 
-        float RyRx[9];
+        float9 RyRx;
         matmul_3x3_3x3(Ry, Rx, RyRx);
-        float RzRyRx[9];
+        float9 RzRyRx;
         matmul_3x3_3x3(Rz, RyRx, RzRyRx);
 
         /** Apply rotation matrix **/
         for (int i = 0; i < length; i += 3)
         {
-            float temp_vec[3];
+            float3 temp_vec;
             /** do not try to improve this */
-            apply_rotation_matrix(this->equil_r + i, RzRyRx, temp_vec);
+            apply_rotation_matrix(arr3_view(this->equil_r.data() + i, 3), RzRyRx, temp_vec);
             equil_r[i] = temp_vec[0];
             equil_r[i + 1] = temp_vec[1];
             equil_r[i + 2] = temp_vec[2];
-            apply_rotation_matrix(this->current_r + i, RzRyRx, temp_vec);
+            apply_rotation_matrix(arr3_view(this->current_r.data() + i, 3), RzRyRx, temp_vec);
             current_r[i] = temp_vec[0];
             current_r[i + 1] = temp_vec[1];
             current_r[i + 2] = temp_vec[2];
-            apply_rotation_matrix(this->equil_m + i, RzRyRx, temp_vec);
+            apply_rotation_matrix(arr3_view(this->equil_m.data() + i, 3), RzRyRx, temp_vec);
             equil_m[i] = temp_vec[0];
             equil_m[i + 1] = temp_vec[1];
             equil_m[i + 2] = temp_vec[2];
-            apply_rotation_matrix(this->current_m + i, RzRyRx, temp_vec);
+            apply_rotation_matrix(arr3_view(this->current_m.data() + i, 3), RzRyRx, temp_vec);
             current_m[i] = temp_vec[0];
             current_m[i + 1] = temp_vec[1];
             current_m[i + 2] = temp_vec[2];
@@ -1250,7 +1247,7 @@ namespace rod
      * Get a centroid for the current frame of the rod. Note: you must supply
      * an array (either current_r or equil_r).
     */
-    Rod Rod::get_centroid(float *r, OUT float centroid[3])
+    Rod Rod::get_centroid(const std::vector<float> &r, OUT float3 &centroid)
     {
         vec3d(n) { centroid[n] = 0; }
         for (int i = 0; i < this->length; i += 3)
@@ -1263,7 +1260,7 @@ namespace rod
         return *this;
     }
 
-    Rod Rod::get_min_max(float *r, OUT float min[3], float max[3])
+    Rod Rod::get_min_max(const std::vector<float> &r, OUT float3 &min, float3 &max)
     {
         for (int i = 0; i < this->length; i += 3)
         {
@@ -1299,7 +1296,7 @@ namespace rod
      * Get the rod element for the equilibrium or current structure, given
      * an element index.
      */
-    Rod Rod::get_p(int index, OUT float p[3], bool equil)
+    Rod Rod::get_p(int index, OUT float3 &p, bool equil)
     {
         if (equil)
         {
@@ -1319,7 +1316,7 @@ namespace rod
      * Get the rod node position for the equilibrium or current structure, given
      * a node index.
      */
-    Rod Rod::get_r(int node_index, OUT float r_i[3], bool equil)
+    Rod Rod::get_r(int node_index, OUT float3 &r_i, bool equil)
     {
         if (equil)
         {
@@ -1340,7 +1337,7 @@ namespace rod
     // length at maximum extension of rod
     float Rod::contour_length()
     {
-        float p[3] = {0};
+        float3 p = {0};
         float length = 0;
         for (int i=0; i < this->get_num_nodes() - 1; i++)
         {
@@ -1352,7 +1349,7 @@ namespace rod
 
     float Rod::end_to_end_length()
     {
-        float disp[3] = {0};
+        float3 disp = {0};
         int end = 3 * (this->get_num_nodes() - 1);
         vec3d(n){disp[n] = this->current_r[end + n] - this->current_r[n];}
         return rod::absolute(disp);
@@ -1412,12 +1409,12 @@ namespace rod
     // Just a silly debug function that prints all the positional data of the rod
     Rod Rod::print_node_positions()
     {
-        float r[3] = {0, 0, 0};
+        std::array<float, 3> r = {0, 0, 0};
         for (int i = 0; i < this->get_num_nodes(); i++)
         {
             std::string msg = "rod " + std::to_string(this->rod_no) + " r" + std::to_string(i);
             vec3d(n) { r[n] = this->current_r[(i * 3) + n]; }
-            rod::print_array(msg, r, 3);
+            rod::print_array(msg, r);
         }
         return *this;
     }
@@ -1436,11 +1433,11 @@ namespace rod
         float energy_sum = 0;
         std::vector<float> node_force(6, 0);
         std::vector<float> node_force_sum(6, 0);
-        float c_ab[3] = { 0 };
-        float c_ab_norm[3] = { 0 };
+        float3 c_ab = { 0 };
+        float3 c_ab_norm = { 0 };
         float gradient = 0;
-        float p_self[3] = { 0 };
-        float diff[3] = { 0 };
+        float3 p_self = { 0 };
+        float3 diff = { 0 };
         float force_constant = 0;
         float radius_sum = 0;
 
@@ -1546,7 +1543,7 @@ namespace rod
 
         if (rod::dbg_print)
         {
-            rod::print_array("  steric_force", this->steric_force, this->get_num_nodes());
+            rod::print_array("  steric_force", this->steric_force);
             std::cout << "\n";
         }
 
@@ -1558,9 +1555,9 @@ namespace rod
         float energy_sum = 0;
         std::vector<float> node_force(6, 0);
         std::vector<float> node_force_sum(6, 0);
-        float c_ab_norm[3] = { 0 };
-        float p_self[3] = { 0 };
-        float diff[3] = { 0 };
+        float3 c_ab_norm = { 0 };
+        float3 p_self = { 0 };
+        float3 diff = { 0 };
         float r_mag = 0;
         float r_mag_inv = 0;
         float force_mag = 0;

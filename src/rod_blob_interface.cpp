@@ -45,13 +45,13 @@ namespace rod{
 /**
  Given the three nodes in a triangle (or the face of a tetrahedron, if you prefer), get the direction vector of the normal to to that face. 
 */ 
-void get_tri_norm(float node0[3], float node1[3], float node2[3], OUT float tri_norm[3]){
-    float ax = node1[0] - node0[0];
-	float ay = node1[1] - node0[1];
-	float az = node1[2] - node0[2];
-	float bx = node2[0] - node1[0];
-	float by = node2[1] - node1[1];
-	float bz = node2[2] - node1[2];
+void get_tri_norm(const float3 &node0, const float3 &node1, const float3 &node2, OUT float3 &tri_norm){
+    const float ax = node1[0] - node0[0];
+    const float ay = node1[1] - node0[1];
+    const float az = node1[2] - node0[2];
+    const float bx = node2[0] - node1[0];
+    const float by = node2[1] - node1[1];
+    const float bz = node2[2] - node1[2];
     tri_norm[0] = az*by - ay*bz;
     tri_norm[1] = ax*bz - az*bx;
     tri_norm[2] = ay*bx - ax*by;
@@ -60,7 +60,7 @@ void get_tri_norm(float node0[3], float node1[3], float node2[3], OUT float tri_
 /**
  For an array of 9 tet_nodes (defined in  object defined in mesh_node.cpp/mesh_node.h) populate a 1-D array with the 3x3 Jacobian of the shape functions. 
 */
-void get_jacobian(std::array<mesh_node*, NUM_NODES_LINEAR_TET> &tet_nodes, OUT float J[9]){
+void get_jacobian(const std::array<mesh_node*, NUM_NODES_LINEAR_TET> &tet_nodes, OUT float9 &J){
     J[0] = tet_nodes[1]->pos[0] - tet_nodes[0]->pos[0];
     J[1] = tet_nodes[1]->pos[1] - tet_nodes[0]->pos[1];
     J[2] = tet_nodes[1]->pos[2] - tet_nodes[0]->pos[2];
@@ -124,7 +124,7 @@ void float_3x3_invert(float m[9], OUT float m_inv[9]) {
 /**
  Multiply the 3x3 matrices A and B. This one is unrolled. Store the result in result. A, B and result are 1-D arrays of length 9 representing 3x3 matrices. Again, this does the same thing as the mat_vec_fn, but with 1-D arrays of floats.
 */ 
-void float_3x3_mult_unrolled(float A[9], float B[9], OUT float result[9]){
+void float_3x3_mult_unrolled(const float9 &A, const float9 &B, OUT float9 &result){
     result[0] += A[0] * B[0];
     result[0] += A[3] * B[1];
     result[0] += A[6] * B[2];
@@ -157,7 +157,7 @@ void float_3x3_mult_unrolled(float A[9], float B[9], OUT float result[9]){
 /**
  Transpose a 3x3 matrix, represented as a 1-D array of floats. Populate the array 'transposed'.
 */
-void transpose_3x3(float in[9], OUT float transposed[9]){
+void transpose_3x3(const float9 &in, OUT float9 &transposed){
     transposed[0] = in[0];
     transposed[1] = in[3];
     transposed[2] = in[6];
@@ -178,16 +178,16 @@ void transpose_3x3(float in[9], OUT float transposed[9]){
  Where \f$ \mathbf{F} \f$ is the gradient deformation matrix, \f$ \mathbf{J'} \f$ is the Jacobian of the new deformed tetrahedron, and \f$ \mathbf{J} \f$ is the Jacobian of the undeformed one.
  Note: this is mostly the same as the one in tetra_element_linear.cpp, but that one is a member function that operates on member variables of tetra_element_linear, whereas this one is a pure function (and uses the same floats and 1-d arrays as the rest of the rod stuff).
 */
-void get_gradient_deformation(float J_inv_0[9], std::array<mesh_node*, NUM_NODES_LINEAR_TET> &nodes_curr, OUT float transposed_gradient_deformation_3x3[9]){
+void get_gradient_deformation(const float9 &J_inv_0, std::array<mesh_node*, NUM_NODES_LINEAR_TET> &nodes_curr, OUT float9 &transposed_gradient_deformation_3x3){
     if(dbg_print){std::cout << " Gradient deformation is occuring.\n";}
     if(dbg_print){std::cout << "  Getting jacobian...\n";}
-    //float J_before[9];
-    float J_after[9];
+    //float9 J_before;
+    float9 J_after;
     //get_jacobian(nodes_before, J_before);
     get_jacobian(nodes_curr, J_after);
-    //float before_inverse[9];
+    //float9 before_inverse;
     //float_3x3_invert(J_before, before_inverse);
-    float gradient_deformation_3x3[9] = {0,0,0,0,0,0,0,0,0};
+    float9 gradient_deformation_3x3 = {0,0,0,0,0,0,0,0,0};
     float_3x3_mult_unrolled(J_after, J_inv_0, gradient_deformation_3x3);
     transpose_3x3(gradient_deformation_3x3, transposed_gradient_deformation_3x3);
     
@@ -200,10 +200,10 @@ void get_gradient_deformation(float J_inv_0[9], std::array<mesh_node*, NUM_NODES
     print_array("  Tet after node 2", nodes_curr[2]->pos);
     print_array("  Tet after node 3", nodes_curr[3]->pos);
     
-    print_array("  J after", J_after, 9);
-    print_array("  before inverse", J_inv_0, 9);
-    print_array("  gradient_deformation_3x3", gradient_deformation_3x3, 9);
-    print_array("  transposed_gradient_deformation_3x3", transposed_gradient_deformation_3x3, 9);
+    print_array("  J after", J_after);
+    print_array("  before inverse", J_inv_0);
+    print_array("  gradient_deformation_3x3", gradient_deformation_3x3);
+    print_array("  transposed_gradient_deformation_3x3", transposed_gradient_deformation_3x3);
 }
 
 /**
@@ -224,23 +224,23 @@ void get_gradient_deformation(float J_inv_0[9], std::array<mesh_node*, NUM_NODES
 
   = QR \f]
 */ 
-void QR_decompose_gram_schmidt(float matrix_3x3[9], OUT float Q[9], float R[9]){
-    float a1[3] = {matrix_3x3[0], matrix_3x3[3], matrix_3x3[6]};
-    float a2[3] = {matrix_3x3[1], matrix_3x3[4], matrix_3x3[7]};
-    float a3[3] = {matrix_3x3[2], matrix_3x3[5], matrix_3x3[8]};
-    float u1[3] = {a1[0], a1[1], a1[2]};
-    float e1[3];
+void QR_decompose_gram_schmidt(const float9 &matrix_3x3, OUT float9 &Q, float9 &R){
+    float3 a1 = {matrix_3x3[0], matrix_3x3[3], matrix_3x3[6]};
+    float3 a2 = {matrix_3x3[1], matrix_3x3[4], matrix_3x3[7]};
+    float3 a3 = {matrix_3x3[2], matrix_3x3[5], matrix_3x3[8]};
+    float3 u1 = {a1[0], a1[1], a1[2]};
+    float3 e1;
     normalize(u1, e1);
-    float u2[3];
+    float3 u2;
     float a2_dot_e1 = a2[0]*e1[0] + a2[1]*e1[1] + a2[2]*e1[2];
     vec3d(n){ u2[n] = a2[n] - a2_dot_e1*e1[n];}
-    float e2[3];
+    float3 e2;
     normalize(u2, e2);
-    float u3[3];
+    float3 u3;
     float a3_dot_e1 = a3[0]*e1[0] + a3[1]*e1[1] + a3[2]*e1[2];
     float a3_dot_e2 = a3[0]*e2[0] + a3[1]*e2[1] + a3[2]*e2[2];
     vec3d(n) u3[n] = a3[n] - a3_dot_e1*e1[n] - a3_dot_e2*e2[n];
-    float e3[3];
+    float3 e3;
     normalize(u3, e3);
     
     Q[0] = e1[0]; Q[1] = e1[1]; Q[2] = e1[2]; Q[3] = e2[0]; Q[4] = e2[1]; Q[5] = e2[2]; Q[6] = e3[0]; Q[7] = e3[1]; Q[8] = e3[2];
@@ -265,7 +265,7 @@ void QR_decompose_gram_schmidt(float matrix_3x3[9], OUT float Q[9], float R[9]){
 /**
  Construct an euler rotation matrix of the X1Y2Z3 type. Parameters, a, b and c, the angles of rotation. Populates the array 'rotmat'.
 */
-void construct_euler_rotation_matrix(float a, float b, float g, float rotmat[9]){
+void construct_euler_rotation_matrix(float a, float b, float g, float9 &rotmat){
     float s1 = std::sin(a);
     float s2 = std::sin(b);
     float s3 = std::sin(g);
@@ -286,7 +286,7 @@ void construct_euler_rotation_matrix(float a, float b, float g, float rotmat[9])
 /**
  Rotate a tetrahedron (given by an array of mesh_node objects) by a 3x3 rotation matrix (given as a 1-d array of floats) about its centroid. Populates a new mesh_node object. Note that this function is not used in the main simulation loop, it is only used in the rod_blob_interface unit test.
 */
-void rotate_tet(float rotmat[9], std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &nodes, OUT std::array<mesh_node*, NUM_NODES_LINEAR_TET>&rotated_nodes){
+void rotate_tet(const float9 &rotmat, const std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &nodes, OUT std::array<mesh_node*, NUM_NODES_LINEAR_TET> &rotated_nodes){
     
     //print_array("connected tetrahedron node 0", nodes[0]->pos.data, 3);
     //print_array("connected tetrahedron node 1", nodes[1]->pos.data, 3);
@@ -294,7 +294,7 @@ void rotate_tet(float rotmat[9], std::array<mesh_node*, NUM_NODES_QUADRATIC_TET>
     //print_array("connected tetrahedron node 3", nodes[3]->pos.data, 3);
     
     // get centroid
-    float tet_centroid[3] = {0,0,0};
+    float3 tet_centroid = {0,0,0};
     for (int i=0; i<4; i++){
         vec3d(n) {tet_centroid[n] += nodes[i]->pos[n];}
         
@@ -308,8 +308,8 @@ void rotate_tet(float rotmat[9], std::array<mesh_node*, NUM_NODES_QUADRATIC_TET>
         vec3d(n){ nodes[i]->pos[n] -= tet_centroid[n]; }
     }
     
-    float posdata_tofloat[3];
-    float posdata_rotated[3];
+    float3 posdata_tofloat;
+    float3 posdata_rotated;
 
     // rotate
     for (int i=0; i<4; i++){
@@ -332,7 +332,7 @@ void rotate_tet(float rotmat[9], std::array<mesh_node*, NUM_NODES_QUADRATIC_TET>
  a set of euler angles. I thought I needed it due to the way the blob
  interface is written, turns out I don't. 
 */
-void get_euler_angles(float rm[9], OUT float euler_angles[3]){ // euler angles assumed to be [x, y, z]
+void get_euler_angles(const float9 &rm, OUT float3 &euler_angles){ // euler angles assumed to be [x, y, z]
     // credit: greg slabaugh: http://www.gregslabaugh.net/publications/euler.pdf
     float theta_1;
     float psi_1;
@@ -344,8 +344,7 @@ void get_euler_angles(float rm[9], OUT float euler_angles[3]){ // euler angles a
         //float psi_2 = atan2(rm[7]/cos(theta_2), rm[8]/cos(theta_2) );
         phi_1 = atan2(rm[3]/cos(theta_1), rm[0]/cos(theta_1) );
         //float phi_2 = atan2(rm[3]/cos(theta_2), rm[0]/cos(theta_2) );
-    }
-    else{
+    } else{
         std::cout << "Gimbal lock! Nice!\n";
         float phi_1 = 0;
         if (rm[6] == -1){
@@ -368,7 +367,7 @@ void get_euler_angles(float rm[9], OUT float euler_angles[3]){ // euler angles a
  previous function. Given a set of euler angles, it produces a rotation
  matrix.
 */
-void get_rotation_matrix_from_euler(float euler_angles[3], OUT float rm[9]){
+void get_rotation_matrix_from_euler(const float3 &euler_angles, OUT float9 &rm){
     rm[0] = cos(euler_angles[1]) * cos(euler_angles[2]);
     rm[1] = sin(euler_angles[0]) * sin(euler_angles[1]) * cos(euler_angles[2]) - cos(euler_angles[0]) * sin(euler_angles[2]);
     rm[2] = cos(euler_angles[0]) * sin(euler_angles[1]) * cos(euler_angles[2]) + sin(euler_angles[0]) * sin(euler_angles[2]);
@@ -390,7 +389,7 @@ void get_rotation_matrix_from_euler(float euler_angles[3], OUT float rm[9]){
  FFEA data structure apparently didn't think that information was
  important.
 */
-bool array_equal(float arr1[3], float arr2[3]){
+bool array_equal(const float3 &arr1, const float3 &arr2){
     bool arr_equal = true;
     for (int i=0; i<3; i++){
         if(arr1[i] != arr2[i]){ arr_equal = false; }
@@ -406,7 +405,7 @@ bool array_equal(float arr1[3], float arr2[3]){
  * large_arr - the positional data for the nodes of an element.
  * small_arr - the positional data for the nodes of a face.
 */
-bool array_contains(float large_arr[4][3], float small_arr[3][3]){
+bool array_contains(const float4x3 &large_arr, const float3x3 &small_arr){
     bool arr_equal = false;
     int num_equal=0;
     for (int i=0; i<4; i++){
@@ -447,12 +446,12 @@ void mesh_node_null_check(mesh_node* node, std::string location){
  * scaled_attachment_node - the scaled version of the attachment element
  * scaled_attachment_node_equil - the same, at equilibrium
 */
-void rescale_attachment_node(float attachment_node[3], float end_node[3], float attachment_node_equil[3], float end_node_equil[3], OUT float scaled_attachment_node[3], float scaled_attachment_node_equil[3]){
+void rescale_attachment_node(const float3 &attachment_node, const float3 &end_node, const float3 &attachment_node_equil, const float3 &end_node_equil, OUT float3 &scaled_attachment_node, float3 &scaled_attachment_node_equil){
     if(dbg_print){std::cout << "      Rescaling attachment node...\n";}
-    print_array("      attachment node      ", attachment_node, 3);
-    print_array("      attachment node equil", attachment_node_equil, 3);    
-    print_array("      end_node             ", end_node, 3);
-    print_array("      end_node_equil       ", end_node_equil, 3);
+    print_array("      attachment node      ", attachment_node);
+    print_array("      attachment node equil", attachment_node_equil);    
+    print_array("      end_node             ", end_node);
+    print_array("      end_node_equil       ", end_node_equil);
     
     float desired_length = absolute(end_node_equil)*2;
     float attachment_node_scale = desired_length - absolute(end_node);
@@ -462,8 +461,8 @@ void rescale_attachment_node(float attachment_node[3], float end_node[3], float 
     if(dbg_print){std::cout << "      desired length       " << desired_length << "\n";}
     if(dbg_print){std::cout << "      attachment_node_scale " << attachment_node_scale << "\n";}
     if(dbg_print){std::cout << "      attachment_node_equil_scale " << attachment_node_equil_scale << "\n";}
-    print_array("      scaled_attachment_node", scaled_attachment_node, 3);
-    print_array("      scaled_attachment_node_equil", scaled_attachment_node_equil, 3);
+    print_array("      scaled_attachment_node", scaled_attachment_node);
+    print_array("      scaled_attachment_node_equil", scaled_attachment_node_equil);
 }
 
 /**
@@ -471,7 +470,7 @@ void rescale_attachment_node(float attachment_node[3], float end_node[3], float 
  Params: m - a matrix. Counted row-wise, so a11, a12, a13, a21... etc
  Returns: the same, but inverted.
 */
-void matrix_invert_3x3(float m[9], OUT float inverted_matrix[9]){
+void matrix_invert_3x3(const float9 &m, OUT float9 &inverted_matrix){
     float det = 1/(m[0]*m[4]*m[8]-m[0]*m[5]*m[7]-m[1]*m[3]*m[8]+m[1]*m[5]*m[6]+m[2]*m[3]*m[7]-m[2]*m[4]*m[6]);
     inverted_matrix[0] = (m[4]*m[8]-m[5]*m[7])*det;
     inverted_matrix[1] = (m[2]*m[7]-m[1]*m[8])*det;
@@ -501,27 +500,27 @@ void matrix_invert_3x3(float m[9], OUT float inverted_matrix[9]){
  Returns:
  * equil_attachment_node - the equilibrium attachment element
 */
-void equil_attachment_node_from_J(float J_inv_0[9], int face_node_indices[3], bool ends_at_rod, float node_weighting[3], float tet_origin[3], float edge_vecs[3][3], float rotation[3], OUT float equil_attachment_node[3]){
-    float J[9];
+void equil_attachment_node_from_J(const float9 &J_inv_0, const int3 &face_node_indices, const bool ends_at_rod, const float3 &node_weighting, const float3 &tet_origin, const float3x3 &edge_vecs, const float3 &rotation, OUT float3 &equil_attachment_node){
+    float9 J;
     // reconstruct nodes from jacobian
     matrix_invert_3x3(J_inv_0, J);
-    print_array("J", J, 9);
-    float face_nodes[4][3];
+    print_array("J", J);
+    float4x3 face_nodes;
     vec3d(n){face_nodes[0][n] = 0;}
     vec3d(n){face_nodes[1][n] = J[n];}
     vec3d(n){face_nodes[2][n] = J[n+3];}
     vec3d(n){face_nodes[3][n] = J[n+6];}
     
-    print_array("face_node_1", face_nodes[0], 3);
-    print_array("face_node_2", face_nodes[1], 3);
-    print_array("face_node_3", face_nodes[2], 3);
-    print_array("face_node_4", face_nodes[3], 3);
+    print_array("face_node_1", face_nodes[0]);
+    print_array("face_node_2", face_nodes[1]);
+    print_array("face_node_3", face_nodes[2]);
+    print_array("face_node_4", face_nodes[3]);
     
     // get attachment element as in get_attachment_node etc
     get_tri_norm(face_nodes[face_node_indices[0]], face_nodes[face_node_indices[1]], face_nodes[face_node_indices[2]], equil_attachment_node);
     normalize(equil_attachment_node, equil_attachment_node);
     
-    float equil_attachment_node_pos_relative[3];
+    float3 equil_attachment_node_pos_relative;
     get_attachment_node_pos(face_nodes[face_node_indices[0]], face_nodes[face_node_indices[1]], face_nodes[face_node_indices[2]], edge_vecs, node_weighting, tet_origin, equil_attachment_node_pos_relative);
     
     // set the direction of this element (accounting for the direction/'polarity' of the rod)
@@ -539,11 +538,11 @@ void equil_attachment_node_from_J(float J_inv_0[9], int face_node_indices[3], bo
         vec3d(n){equil_attachment_node[n]*=polarity_multiplication_factor;}
     }
     
-   float empty[3] = {0,0,0};
+   float3 empty = {0,0,0};
    if (array_equal(rotation, empty) == false){
-       float euler_rm[9];
+       float9 euler_rm;
        get_rotation_matrix_from_euler(rotation, euler_rm);
-       float rotated_attachment_node[3];
+       float3 rotated_attachment_node;
        apply_rotation_matrix(equil_attachment_node, euler_rm, rotated_attachment_node);
        vec3d(n){equil_attachment_node[n] = rotated_attachment_node[n];}
    }
@@ -562,14 +561,14 @@ void equil_attachment_node_from_J(float J_inv_0[9], int face_node_indices[3], bo
  * points_out, a boolean. True if it points out.
  
 */
-bool points_out_of_tet(float node1[3], float node2[3], float node3[3], float node4[3], float attachment_element[3], float attachment_node[3]){
-    float tet_centroid[3] = {0,0,0};
+bool points_out_of_tet(const float3 &node1, const float3 &node2, const float3 &node3, const float3 &node4, const float3 &attachment_element, const float3 &attachment_node){
+    float3 tet_centroid = {0,0,0};
     vec3d(n){tet_centroid[n] += node1[n];}
     vec3d(n){tet_centroid[n] += node2[n];}
     vec3d(n){tet_centroid[n] += node3[n];}
     vec3d(n){tet_centroid[n] += node4[n];}
     vec3d(n){tet_centroid[n] /= 4.0;}
-    float path_to_centroid[3];
+    float3 path_to_centroid;
     vec3d(n){path_to_centroid[n] = attachment_node[n] - tet_centroid[n];}
     float dotprod = 0;
     vec3d(n){dotprod += attachment_element[n] * path_to_centroid[n];}
@@ -582,7 +581,7 @@ bool points_out_of_tet(float node1[3], float node2[3], float node3[3], float nod
  replace the get_attachment_node_pos stuff inside rod_blob_interface
  with calls to this.
 */
-void get_attachment_node_pos(float face_node_1[3], float face_node_2[3], float face_node_3[3], float edge_vecs[3][3], float node_weighting[3], float tet_origin[3], OUT float attachment_node_pos[3]){
+void get_attachment_node_pos(const float3 &face_node_1, const float3 &face_node_2, const float3 &face_node_3, const float3x3 &edge_vecs, const float3 &node_weighting, const float3 &tet_origin, OUT float3 &attachment_node_pos){
     if (node_weighting[0] == -1 && node_weighting[1] == -1 && node_weighting[2] == -1){
         attachment_node_pos[0] = .33 * (face_node_1[0] + face_node_2[0] + face_node_3[0]);
         attachment_node_pos[1] = .33 * (face_node_1[1] + face_node_2[1] + face_node_3[1]);
@@ -609,7 +608,7 @@ void get_attachment_node_pos(float face_node_1[3], float face_node_2[3], float f
  initial internal state (that's the edge vectors and internal tetrahedron)
  and set the indices of the face nodes relative to the tetrahedron.
 */
-Rod_blob_interface::Rod_blob_interface(Rod* set_connected_rod, Blob* set_connected_blob, bool set_ends_at_rod, int set_to_index, int set_from_index, int blob_node_ids[3], float rotation[3], float node_weighting[3], int order)
+Rod_blob_interface::Rod_blob_interface(Rod* set_connected_rod, Blob* set_connected_blob, bool set_ends_at_rod, int set_to_index, int set_from_index, int3 &blob_node_ids, float3 &rotation, float3 &node_weighting, int order)
     {
         if(dbg_print){std::cout << "Creating rod.\n";}
         this->connected_rod = set_connected_rod;
@@ -623,8 +622,8 @@ Rod_blob_interface::Rod_blob_interface(Rod* set_connected_rod, Blob* set_connect
         vec3d(n){this->node_weighting[n] = node_weighting[n];}
         
         if(dbg_print){std::cout << "  ends at rod: " << this->ends_at_rod << "\n";}
-        print_array("  euler angles", this->euler_angles, 3);
-        print_array("  node_weighting", this->node_weighting, 3);
+        print_array("  euler angles", this->euler_angles);
+        print_array("  node_weighting", this->node_weighting);
         
         int element_no = this->get_element_id(blob_node_ids);
         if(dbg_print){std::cout << "element no: " << element_no << "\n";}
@@ -696,7 +695,7 @@ void Rod_blob_interface::set_initial_values(){
             this->J_inv_0[i] = (float)this->connected_tet->J_inv_0[j][k];
         }
         
-        print_array("  J_inv_0", this->J_inv_0, 9);
+        print_array("  J_inv_0", this->J_inv_0);
         
         equil_attachment_node_from_J(this->J_inv_0, this->face_node_indices, this->ends_at_rod, this->node_weighting, this->tet_origin, this->edge_vecs, this->euler_angles, this->attachment_node_equil); // note: remove attachment_node_pos_equil, it is useless
         this->get_attachment_material_axis(this->attachment_node_equil, this->attachment_m_equil);
@@ -726,9 +725,9 @@ void Rod_blob_interface::update_internal_state(bool update_edge_vecs, bool updat
 void Rod_blob_interface::update_J_0(){
     // only run this in initialisation, after box positioning, before restart loading
     this->update_internal_state(true, true);
-    float J[9];
+    float9 J;
     get_jacobian(this->deformed_tet_nodes, J);
-    float J_inv[9];
+    float9 J_inv;
     matrix_invert_3x3(J, J_inv);
     for(int i=0; i<9; i++){this->J_inv_0[i] = J_inv[i];}
 }
@@ -756,12 +755,12 @@ void Rod_blob_interface::set_edge_vecs(){
  reorientate_connection will update the material axis based on the rotation
  of the tetrahedorn.
 */
-void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float attachment_node_pos[3], bool equil){ //equil
+void Rod_blob_interface::get_attachment_node(OUT float3 &attachment_node, float3 &attachment_node_pos, bool equil){ //equil
     
     // std::cout << "Getting attachment node\n"; //dbg
     
     //Note: do not look inside the function 'select_face_nodes'.
-    //int face_node_indices[3];
+    //int3 face_node_indices;
     //this->select_face_nodes(face_node_indices);
     // std::cout << "  Face node indices: " << this->face_node_indices[0] << ", " << this->face_node_indices[1] << ", " << this->face_node_indices[2] << "\n"; //dbg
     
@@ -770,9 +769,9 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
     //arr3 face_node_1_data;
     //arr3 face_node_2_data;
     //arr3 face_node_3_data;
-    //float face_node_1[3];
-    //float face_node_2[3];
-    //float face_node_3[3];
+    //float3 face_node_1;
+    //float3 face_node_2;
+    //float3 face_node_3;
     //for (int i=0; i<3; i++){
     //    face_node_1[i] = this->connected_face->n[0]->pos[i];
     //    face_node_2[i] = this->connected_face->n[1]->pos[i];
@@ -790,10 +789,10 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
     //rod::print_array("face node 2", face_node_2, 3);
     //rod::print_array("face node 3", face_node_3, 3);
     
-    float face_node_1[3];
-    float face_node_2[3];
-    float face_node_3[3];
-    float non_face_node[3];
+    float3 face_node_1;
+    float3 face_node_2;
+    float3 face_node_3;
+    float3 non_face_node;
     
     //if (equil){
     //    vec3d(n){face_node_1[n] = this->deformed_tet_nodes[this->face_node_indices[0]]->pos_0.data[n];}
@@ -814,9 +813,9 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
     
     if(dbg_print){std::cout << "face node indices: " << this->face_node_indices[0] << ", " << this->face_node_indices[1] << ", " << this->face_node_indices[2] << "\n";}
     
-    print_array("face_node_1", face_node_1, 3);
-    print_array("face_node_2", face_node_2, 3);
-    print_array("face_node_3", face_node_3, 3);
+    print_array("face_node_1", face_node_1);
+    print_array("face_node_2", face_node_2);
+    print_array("face_node_3", face_node_3);
     
     //get normal
     if (equil){
@@ -826,18 +825,18 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
         get_tri_norm(face_node_1, face_node_2, face_node_3, attachment_node);
     }
     
-    print_array("attachment node", attachment_node, 3);
+    print_array("attachment node", attachment_node);
     
     normalize(attachment_node, attachment_node);
     
-    print_array("normalized attachment node", attachment_node, 3);
+    print_array("normalized attachment node", attachment_node);
     
     // note: if there is a rotation of the node needed, put it here!
     
     // print_array(" tet origin", this->tet_origin, 3); //dbg
     
     //get position of node in face
-    //float minus1array[3] = {-1,-1,-1}; //set everything to -1 just to center the node
+    //float3 minus1array = {-1,-1,-1}; //set everything to -1 just to center the node
     this->update_internal_state(true, false);
     if (this->node_weighting[0] == -1 && this->node_weighting[1] == -1 && this->node_weighting[2] == -1){
         attachment_node_pos[0] = .33 * (face_node_1[0] + face_node_2[0] + face_node_3[0]);
@@ -856,7 +855,7 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
        // }
     }
 
-    float end_node[3];
+    float3 end_node;
     int index;
     if (this->ends_at_rod){
         index = 0;
@@ -865,12 +864,12 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
         index = this->connected_rod->num_nodes-1;
     }
     
-    float end_node_pos[3];
+    float3 end_node_pos;
     vec3d(n){end_node_pos[n] = this->connected_rod->current_r[(index*3)+n];}
     //normalize(end_node, end_node);
     
-    print_array("   attachment_node_pos", attachment_node_pos, 3);
-    print_array("   attachment_node", attachment_node, 3);
+    print_array("   attachment_node_pos", attachment_node_pos);
+    print_array("   attachment_node", attachment_node);
     //print_array("   centroid", centroid, 3);
     //print_array("   path to centroid", path_to_centroid, 3);
 
@@ -894,38 +893,38 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
         vec3d(n){attachment_node[n]*=polarity_multiplication_factor;}
     }
     
-    print_array("   attachment_node (reverse'd)", attachment_node, 3);
+    print_array("   attachment_node (reverse'd)", attachment_node);
     vec3d(n){end_node[n] = this->connected_rod->current_r[(index*3)+3+n] - this->connected_rod->current_r[(index*3)+n];}
-    print_array("   end node (unmodified)", end_node, 3);
-    print_array("   end node pos (unmodified)", end_node_pos, 3);
+    print_array("   end node (unmodified)", end_node);
+    print_array("   end node pos (unmodified)", end_node_pos);
         
     // print_array("  end_node", end_node, 3); //dbg
 
     //make sure normal is facing the right way
     //note: blob centroid, not the tet centroid
-    //float way_to_centroid[3];
-    //arr3 blob_centroid[3];
+    //float3 way_to_centroid;
+    //std::arrat<arr3, 3> blob_centroid;
     //this->connected_blob->get_centroid(blob_centroid);
     //vec3d(n){way_to_centroid[n] = blob_centroid->data[n] - attachment_node_pos[n];}
     //vec3d(n){way_to_centroid[n] = this->connected_tet->centroid[n] - attachment_node_pos[n];}
     //normalize(way_to_centroid, way_to_centroid);
     //float dotprod = way_to_centroid[0]*attachment_node[0] + way_to_centroid[1]*attachment_node[1] + way_to_centroid[2]*attachment_node[2];
-    // print_array("  attachment node pos", attachment_node_pos, 3); //dbg
-    // print_array("  attachment node", attachment_node, 3); //dbg
-    //print_array(" blob centroid", blob_centroid->data, 3);
-    //print_array(" way_to_centroid", way_to_centroid, 3);
+    // print_array("  attachment node pos", attachment_node_pos); //dbg
+    // print_array("  attachment node", attachment_node); //dbg
+    //print_array(" blob centroid", blob_centroid->data);
+    //print_array(" way_to_centroid", way_to_centroid);
     // std::cout << "  dotprod: " << dotprod << "\n"; //dbg
     //if (dotprod < 0){
     //    std::cout << " reversing attachment node.\n";
     //    vec3d(n){attachment_node[n]*=-1;}
    // }
    
-   float empty[3] = {0,0,0};
+   float3 empty = {0,0,0};
    if (array_equal(this->euler_angles, empty) == false){
        std::cout << "attachment node before rotation: " << attachment_node[0] << ", " << attachment_node[1] << ", " << attachment_node[2] << "\n";
-       float euler_rm[9];
+       float9 euler_rm;
        get_rotation_matrix_from_euler(this->euler_angles, euler_rm);
-       float rotated_attachment_node[3];
+       float3 rotated_attachment_node;
        apply_rotation_matrix(attachment_node, euler_rm, rotated_attachment_node);
        vec3d(n){attachment_node[n] = rotated_attachment_node[n];}
        std::cout << "attachment node after rotation: " << attachment_node[0] << ", " << attachment_node[1] << ", " << attachment_node[2] << "\n";
@@ -942,13 +941,13 @@ void Rod_blob_interface::get_attachment_node(OUT float attachment_node[3], float
  to the tetrahedron or anything. Uses the weighting that the object
  was initialised with. 
 */
-void Rod_blob_interface::get_attachment_node_pos(float attachment_node_pos[3], bool equil){
+void Rod_blob_interface::get_attachment_node_pos(float3 &attachment_node_pos, bool equil){
 
     this->update_internal_state(true, false);
 
-    float face_node_1[3];
-    float face_node_2[3];
-    float face_node_3[3];
+    float3 face_node_1;
+    float3 face_node_2;
+    float3 face_node_3;
     
     if (equil){
         vec3d(n){face_node_1[n] = this->deformed_tet_nodes[this->face_node_indices[0]]->pos_0[n];}
@@ -985,9 +984,9 @@ void Rod_blob_interface::get_attachment_node_pos(float attachment_node_pos[3], b
  Note that the initial direction is arbitray - by default it is set such that there is no energy between the attachment axis and the first rod material axis.
  Only run this function for initialisation! When the simulation is running, you need to update the orientation of this thing using this->reorientate_connection.
 */
-void Rod_blob_interface::get_attachment_material_axis(float attachment_node[3], OUT float attachment_material_axis[3]){
-    float nearest_material_axis[3];
-    float nearest_element[3];
+void Rod_blob_interface::get_attachment_material_axis(float3 &attachment_node, OUT float3 &attachment_material_axis){
+    float3 nearest_material_axis;
+    float3 nearest_element;
     
     if (this->ends_at_rod){
         vec3d(n){ nearest_material_axis[n] = this->connected_rod->equil_m[this->connected_rod->length - 3 + n]; }
@@ -1038,16 +1037,16 @@ void Rod_blob_interface::set_tet(tetra_element_linear *tet){
 /**
  For a given attachment element and material axis, get a new material axis and attachment element based on the rotation matrix found from the QR decomposition of the gradient deformation matrix. Run this every timestep!
 */
-void Rod_blob_interface::reorientate_connection(float attachment_element_orig[3], float attachment_material_axis_orig[3], OUT float new_attachment_element[3], float new_attachment_material_axis[3]){
-    float gradient_deformation[9] = {0,0,0,0,0,0,0,0,0};
-    float R[9];
-    float Q[9];
+void Rod_blob_interface::reorientate_connection(float3 &attachment_element_orig, float3 &attachment_material_axis_orig, OUT float3 &new_attachment_element, float3 &new_attachment_material_axis){
+    float9 gradient_deformation = {0,0,0,0,0,0,0,0,0};
+    float9 R;
+    float9 Q;
     get_gradient_deformation(this->J_inv_0, this->deformed_tet_nodes, gradient_deformation);
     QR_decompose_gram_schmidt(gradient_deformation, Q, R);
     apply_rotation_matrix(attachment_element_orig, Q, new_attachment_element); // yes, really
     apply_rotation_matrix(attachment_material_axis_orig, Q, new_attachment_material_axis);
-    print_array("  R", R, 9); //dbg
-    print_array("  Q", Q, 9); //dbg
+    print_array("  R", R); //dbg
+    print_array("  Q", Q); //dbg
 }
 
 /**
@@ -1069,18 +1068,18 @@ void Rod_blob_interface::position_rod_from_blob(bool use_equil){ // default fals
     } 
     
     // get the 1st element and work out the rotation matrix that lines it up with the attachment node
-    float p_0[3];
-    float p_0_rotated[3];
-    float attachment_node[3];
-    float attachment_node_pos[3];
-    float rm[9];
+    float3 p_0;
+    float3 p_0_rotated;
+    float3 attachment_node;
+    float3 attachment_node_pos;
+    float9 rm;
     this->connected_rod->get_p(0, p_0, use_equil);
     
     this->get_attachment_node(OUT attachment_node, attachment_node_pos, false);
     
     if(dbg_print){std::cout << "POSITIONING ROD FROM BLOB!\n";} //dbg
-    print_array("-  attachment_node", attachment_node, 3); //dbg
-    print_array("-  attachment_node_pos", attachment_node_pos, 3); //dbg
+    print_array("-  attachment_node", attachment_node); //dbg
+    print_array("-  attachment_node_pos", attachment_node_pos); //dbg
     
     float p_0_scale = sqrt(p_0[0]*p_0[0] + p_0[1]*p_0[1] + p_0[2]*p_0[2]);
     vec3d(n){p_0[n] /= p_0_scale;}
@@ -1088,45 +1087,38 @@ void Rod_blob_interface::position_rod_from_blob(bool use_equil){ // default fals
     get_rotation_matrix(p_0, attachment_node, rm);
     apply_rotation_matrix(p_0, rm, p_0_rotated);
     
-    float *m_src;
-    
-    float m_0[3];
-    if (use_equil){
-        m_src = this->connected_rod->equil_m;
-    }
-    else{
-        m_src = this->connected_rod->current_m;
-    }
+    float3 m_0;
+    std::vector<float>& m_src = use_equil ? this->connected_rod->equil_m : this->connected_rod->current_m;
     
     // same as above for material axis
     vec3d(n){m_0[n] = m_src[n];}
     normalize(m_0, m_0);
-    float m_0_rotated[3];
+    float3 m_0_rotated;
     apply_rotation_matrix(m_0, rm, m_0_rotated);
     vec3d(n){m_src[n] = m_0_rotated[n];}
     
     vec3d(n){p_0_rotated[n] *= p_0_scale;}
     
     // work out translation needed to line up rod with interface element
-    float translation[3];
+    float3 translation;
     vec3d(n){translation[n] = attachment_node_pos[n] - current_r_rotated[n];}
     vec3d(n){current_r_rotated[n] += translation[n];}
     vec3d(n){current_r_rotated[n+3] += (translation[n] + p_0[n]);}
     
-    print_array("-  translation", translation, 3); //dbg
+    print_array("-  translation", translation); //dbg
     
-    print_array("p_0", p_0, 3); //dbg
+    print_array("p_0", p_0); //dbg
     if(dbg_print){std::cout << "p_0_scale = " << p_0_scale << "\n";} //dbg
-    print_array("p_0 rotated", p_0_rotated, 3); //dbg
-    print_array("attachment_node_pos", attachment_node_pos, 3); //dbg
-    print_array("rm", rm, 9); //dbg
+    print_array("p_0 rotated", p_0_rotated); //dbg
+    print_array("attachment_node_pos", attachment_node_pos); //dbg
+    print_array("rm", rm); //dbg
 
-    float p[3];
-    float p_rotated[3];    
+    float3 p;
+    float3 p_rotated;    
     float p_scale;
     
-    float m[3];
-    float m_rotated[3];
+    float3 m;
+    float3 m_rotated;
     
     vec3d(n){current_r_rotated[n] = attachment_node_pos[n];}
     vec3d(n){current_r_rotated[n+3] = attachment_node_pos[n] + p_0_rotated[n];}
@@ -1139,7 +1131,7 @@ void Rod_blob_interface::position_rod_from_blob(bool use_equil){ // default fals
         vec3d(n){p[n] /= p_scale;}
         apply_rotation_matrix(p, rm, p_rotated);
         vec3d(n){p_rotated[n] *= p_scale;}
-        print_array("p_rotated", p_rotated, 3);  //dbg
+        print_array("p_rotated", p_rotated);  //dbg
         vec3d(n){current_r_rotated[((i+1)*3)+n] = current_r_rotated[(i*3)+n] + p_rotated[n];}
         
         //m
@@ -1163,13 +1155,13 @@ void Rod_blob_interface::position_rod_from_blob(bool use_equil){ // default fals
  position_rod_from_blob, it's called during initialisation from world.cpp.
 */
 void Rod_blob_interface::position_blob_from_rod(){
-    float p_end[3];
-    float p_end_normalized[3];
-    float attachment_node[3];
-    float attachment_node_pos[3];
-    float rm[9];
-    float rod_end[3];
-    float translate[3];
+    float3 p_end;
+    float3 p_end_normalized;
+    float3 attachment_node;
+    float3 attachment_node_pos;
+    float9 rm;
+    float3 rod_end;
+    float3 translate;
     this->update_internal_state(true, true);
     
     // get end node
@@ -1183,27 +1175,27 @@ void Rod_blob_interface::position_blob_from_rod(){
     
     // the same as above but now for position instead of rotation
     this->update_internal_state(true, true);
-    float attachment_node_pos_rotated[3];
+    float3 attachment_node_pos_rotated;
     this->get_attachment_node_pos(attachment_node_pos_rotated, false);
     vec3d(n){rod_end[n] = this->connected_rod->current_r[this->connected_rod->length-3+n];}
     vec3d(n){translate[n] = rod_end[n] - attachment_node_pos_rotated[n];}
     this->connected_blob->move(translate[0], translate[1], translate[2]);
     this->update_internal_state(true, true);
-    float attachment_node_pos_after[3];
+    float3 attachment_node_pos_after;
     get_attachment_node_pos(attachment_node_pos_after, false);
     
     std::cout << "\n";
-    float new_rod_end[3]; vec3d(n){new_rod_end[n] = this->connected_rod->current_r[this->connected_rod->length-3+n];}
-    print_array("rod_end_before (should be some random ass thing)", rod_end, 3);
-    print_array("attachment_node_pos_rotated", attachment_node_pos_rotated, 3);
-    print_array("translate (rod_end - attachment_node_pos_rotated", translate, 3);
-    print_array("attachment_node_pos_after (attachment_node_pos_rotated + translate)", attachment_node_pos_after, 3);
+    float3 new_rod_end; vec3d(n){new_rod_end[n] = this->connected_rod->current_r[this->connected_rod->length-3+n];}
+    print_array("rod_end_before (should be some random ass thing)", rod_end);
+    print_array("attachment_node_pos_rotated", attachment_node_pos_rotated);
+    print_array("translate (rod_end - attachment_node_pos_rotated", translate);
+    print_array("attachment_node_pos_after (attachment_node_pos_rotated + translate)", attachment_node_pos_after);
     std::cout << "\n";
     
-    float new_attachment_node_pos[3]; 
+    float3 new_attachment_node_pos; 
     get_attachment_node_pos(new_attachment_node_pos, false);
     
-    float new_attachment_node[3];
+    float3 new_attachment_node;
     get_attachment_node(new_attachment_node, attachment_node_pos, false);
     
     vec3d(n){this->attachment_node_equil[n] = new_attachment_node[n];}
@@ -1217,12 +1209,12 @@ void Rod_blob_interface::position_blob_from_rod(){
  as a parameter in the constructor.
  Note: do not read the body of this function, just move on
 */
-void Rod_blob_interface::select_face_nodes(OUT int face_node_indices[3]){
+void Rod_blob_interface::select_face_nodes(OUT int3 &face_node_indices){
     
     arr3 face_node_1_data;
     arr3 face_node_2_data;
     arr3 face_node_3_data;
-    float face_nodes[3][3];
+    float3x3 face_nodes;
     for (int i=0; i<3; i++){
         this->connected_blob->get_node(this->face_nodes[0], face_node_1_data);
         this->connected_blob->get_node(this->face_nodes[1], face_node_2_data);
@@ -1232,7 +1224,7 @@ void Rod_blob_interface::select_face_nodes(OUT int face_node_indices[3]){
     vec3d(n){face_nodes[1][n] = face_node_2_data[n];}
     vec3d(n){face_nodes[2][n] = face_node_3_data[n];}
     
-    float all_nodes[4][3];
+    float4x3 all_nodes;
     for (int i=0; i<4; i++){
         vec3d(n){all_nodes[i][n] = (float)this->deformed_tet_nodes[i]->pos[n];}
     }
@@ -1241,8 +1233,8 @@ void Rod_blob_interface::select_face_nodes(OUT int face_node_indices[3]){
     for (int i=0; i<4; i++){
         for (int j=0; j<3; j++){
             if(dbg_print){std::cout << "testing i=" << i << " and j=" << j << "\n";}
-            print_array("First thing", all_nodes[i], 3);
-            print_array("Second thing", face_nodes[j], 3);
+            print_array("First thing", all_nodes[i]);
+            print_array("Second thing", face_nodes[j]);
             if (array_equal(all_nodes[i], face_nodes[j])){face_node_indices[j] = i;}
         }
     }
@@ -1253,14 +1245,14 @@ void Rod_blob_interface::select_face_nodes(OUT int face_node_indices[3]){
  Similar to the above function, but it instead gets the ID of an element
  given 3 nodes inside it.
 */
-int Rod_blob_interface::get_element_id(int nodes[3]){
+int Rod_blob_interface::get_element_id(const int3 &nodes){
     
     int element_id = -1;
     
     arr3 face_node_1_data;
     arr3 face_node_2_data;
     arr3 face_node_3_data;
-    float face_nodes[3][3];
+    float3x3 face_nodes;
     for (int i=0; i<3; i++){
         this->connected_blob->get_node(this->face_nodes[0], face_node_1_data);
         this->connected_blob->get_node(this->face_nodes[1], face_node_2_data);
@@ -1277,7 +1269,7 @@ int Rod_blob_interface::get_element_id(int nodes[3]){
         
         tetra_element_linear* curr_element;
         curr_element = this->connected_blob->get_element(i);
-        float elem_nodes[4][3];
+        float4x3 elem_nodes;
         
         for (int j=0; j<4; j++){
             vec3d(n){elem_nodes[j][n] = (float)curr_element->n[j]->pos[n];}
@@ -1303,20 +1295,27 @@ int Rod_blob_interface::get_element_id(int nodes[3]){
   - displacement - how much the node is being moved. I would suggest this->connected_rod->perturbation_amount
   - energy - this is the output listing the energy associated with that perturbation in the following axes: [+x +y +z -x -y -z].
 */
-void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_equil[3], float attachment_material_axis_equil[3], float attachment_node[3], float attachment_material_axis[3], float displacement, float energy[6]){ //int direction, float equil_energy, bool use_equil_energy){
+void Rod_blob_interface::get_node_energy(
+    int node_index,
+    float3 &attachment_node_equil,
+    float3 &attachment_material_axis_equil,
+    float3 &attachment_node,
+    float3 &attachment_material_axis,
+    float displacement,
+    float6 &energy){ //int direction, float equil_energy, bool use_equil_energy){
     
-    float attachment_node_pos[3];
-    float attachment_n[3];
-    float attachment_n_equil[3];
-    float p[2][3];
-    float m[2][3];
-    float n[2][3];
-    float p_equil[2][3];
-    float m_equil[2][3];
-    float n_equil[2][3];
+    float3 attachment_node_pos;
+    float3 attachment_n;
+    float3 attachment_n_equil;
+    float2x3 p;
+    float2x3 m;
+    float2x3 n;
+    float2x3 p_equil;
+    float2x3 m_equil;
+    float2x3 n_equil;
     float k;
-    float beta[2];
-    float B[2][4];
+    float2 beta;
+    float2x4 B;
     
     if(dbg_print){std::cout << "Getting node energy for node " << node_index << "\n";}
     
@@ -1369,8 +1368,8 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
     // to get m, parallel transport the double adjacent node onto the new element we've created
     vec3d(n){m_equil[1][n] = this->connected_rod->equil_m[(mat_double_adjacent_index*3)+n];}
     vec3d(n){m_equil[0][n] = this->connected_rod->equil_m[(mat_adjacent_index*3)+n];}
-    float p_0_equil_norm[3];
-    float p_1_equil_norm[3];
+    float3 p_0_equil_norm;
+    float3 p_1_equil_norm;
     normalize(m_equil[1], m_equil[1]);
     normalize(m_equil[0], m_equil[0]);
     normalize(p_equil[0], p_0_equil_norm);
@@ -1399,18 +1398,18 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
     print_array(" undeformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos);
     print_array(" undeformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos);
     print_array(" undeformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos);
-    print_array(" attachment_node_equil", attachment_node_equil, 3);
-    print_array(" attachment_n_equil", attachment_n_equil, 3);
-    print_array(" attachment_material_axis_equil", attachment_material_axis_equil, 3);
-    print_array(" p_equil[0]", p_equil[0], 3); //dbg
-    print_array(" p_equil[1]", p_equil[1], 3); //dbg
-    print_array(" m_equil[0]", m_equil[0], 3); //dbg
-    print_array(" m_equil[1]", m_equil[1], 3); //dbg
-    print_array(" n_equil[0]", n_equil[0], 3); //dbg
-    print_array(" n_equil[1]", n_equil[1], 3); //dbg
-    print_array(" B[0]", B[0], 4); //dbg
-    print_array(" B[1]", B[1], 4); //dbg
-    print_array(" beta", beta, 2); //dbg
+    print_array(" attachment_node_equil", attachment_node_equil);
+    print_array(" attachment_n_equil", attachment_n_equil);
+    print_array(" attachment_material_axis_equil", attachment_material_axis_equil);
+    print_array(" p_equil[0]", p_equil[0]); //dbg
+    print_array(" p_equil[1]", p_equil[1]); //dbg
+    print_array(" m_equil[0]", m_equil[0]); //dbg
+    print_array(" m_equil[1]", m_equil[1]); //dbg
+    print_array(" n_equil[0]", n_equil[0]); //dbg
+    print_array(" n_equil[1]", n_equil[1]); //dbg
+    print_array(" B[0]", B[0]); //dbg
+    print_array(" B[1]", B[1]); //dbg
+    print_array(" beta", beta); //dbg
     if(dbg_print){std::cout << " k:  " << k << "\n";} //dbg
     
     for(int i=0; i<6; i++){ //dimensions, + and -
@@ -1436,7 +1435,7 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
         // get actual attachment node
         this->reorientate_connection(attachment_node_equil, attachment_material_axis_equil, attachment_node, attachment_material_axis);
                 
-        float facevec[3];
+        float3 facevec;
         // Below line is the original code, which appears wrong as data-data was pointer arithmetic
         //vec3d(n){facevec[n] = deformed_tet_nodes[this->face_node_indices[0]][n].pos.data -  deformed_tet_nodes[this->face_node_indices[1]][n].pos.data;}
         // This version seems right, but regardless it's not used
@@ -1462,8 +1461,8 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
         vec3d(n){m[0][n] = this->connected_rod->current_m[(mat_adjacent_index*3)+n];}
 
         // normalize
-        float p_0_norm[3];
-        float p_1_norm[3];
+        float3 p_0_norm;
+        float3 p_1_norm;
         normalize(m[1], m[1]);
         normalize(m[0], m[0]);
         normalize(p[0], p_0_norm);
@@ -1484,22 +1483,22 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
         print_array(" deformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos);
         print_array(" deformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos);
         print_array(" deformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos);
-        print_array(" attachment_node", attachment_node, 3);
-        print_array(" attachment_node_pos", attachment_node_pos, 3);
-        print_array(" attachment_material_axis", attachment_material_axis, 3);
-        print_array(" attachment_n", attachment_n, 3);
-        print_array(" p[0]", p[0], 3);
-        print_array(" p[1]", p[1], 3);
-        print_array(" n[0]", n[0], 3);
-        print_array(" n[1]", n[1], 3);
-        print_array(" m[0]", m[0], 3);
-        print_array(" m[1]", m[1], 3);
-        print_array(" p_equil[0]", p_equil[0], 3);
-        print_array(" p_equil[1]", p_equil[1], 3);
-        print_array(" n_equil[0]", n_equil[0], 3);
-        print_array(" m_equil[0]", m_equil[0], 3);
-        print_array(" n_equil[1]", n_equil[1], 3);
-        print_array(" m_equil[1]", m_equil[1], 3);
+        print_array(" attachment_node", attachment_node);
+        print_array(" attachment_node_pos", attachment_node_pos);
+        print_array(" attachment_material_axis", attachment_material_axis);
+        print_array(" attachment_n", attachment_n);
+        print_array(" p[0]", p[0]);
+        print_array(" p[1]", p[1]);
+        print_array(" n[0]", n[0]);
+        print_array(" n[1]", n[1]);
+        print_array(" m[0]", m[0]);
+        print_array(" m[1]", m[1]);
+        print_array(" p_equil[0]", p_equil[0]);
+        print_array(" p_equil[1]", p_equil[1]);
+        print_array(" n_equil[0]", n_equil[0]);
+        print_array(" m_equil[0]", m_equil[0]);
+        print_array(" n_equil[1]", n_equil[1]);
+        print_array(" m_equil[1]", m_equil[1]);
 
         energy[i] += get_bend_energy_mutual_parallel_transport(attachment_node, p[0], attachment_node_equil, p_equil[0], attachment_n, attachment_material_axis, attachment_n_equil, attachment_material_axis_equil, n[0], m[0], n_equil[0], m_equil[0], B[0], B[0]);
         energy[i] += get_bend_energy_mutual_parallel_transport(p[0], p[1], p_equil[0], p_equil[1], n[0], m[0], n_equil[0], m_equil[0], n[1], m[1], n_equil[1], m_equil[1], B[1], B[1]);
@@ -1527,20 +1526,19 @@ void Rod_blob_interface::get_node_energy(int node_index, float attachment_node_e
  The energies about this end node are actually what transmit forces
  from the blob to the rod, so they're important!
 */
-void Rod_blob_interface::position_rod_ends(float attachment_node_pos[3]){
+void Rod_blob_interface::position_rod_ends(float3 &attachment_node_pos){
         if (this->ends_at_rod){ //blob to rod
-            float p_0[3]; float m_0[3];
-            float p_0_prime[3]; float m_0_prime[3];
+            float3 p_0; float3 m_0;
+            float3 p_0_prime; float3 m_0_prime;
             vec3d(n){p_0[n] = this->connected_rod->current_r[3+n] - this->connected_rod->current_r[n];}
             vec3d(n){m_0[n] = this->connected_rod->current_m[n];}
             vec3d(n){p_0_prime[n] = this->connected_rod->current_r[3+n] - attachment_node_pos[n];}
             update_m1_matrix(m_0, p_0, p_0_prime, m_0_prime);
             vec3d(n){this->connected_rod->current_r[n] = attachment_node_pos[n];}
             vec3d(n){this->connected_rod->current_m[n] = m_0_prime[n];}
-        }
-        else{ //rod to blob
-            float p_n[3]; float m_n[3];
-            float p_n_prime[3]; float m_n_prime[3];
+        } else{ //rod to blob
+            float3 p_n; float3 m_n;
+            float3 p_n_prime; float3 m_n_prime;
             vec3d(n){p_n[n] = this->connected_rod->current_r[this->connected_rod->length-6+n] - this->connected_rod->current_r[this->connected_rod->length-3+n];}
             vec3d(n){m_n[n] = this->connected_rod->current_m[this->connected_rod->length-6+n];}
             vec3d(n){p_n_prime[n] = attachment_node_pos[n] - this->connected_rod->current_r[this->connected_rod->length-6+n];}
@@ -1573,7 +1571,7 @@ void Rod_blob_interface::do_connection_timestep(){ // run this after regular blo
     
     // For each tetrahedron node:
     for(int i=0; i<4; i++){
-        float curr_node_energy[6] = {0,0,0,0,0,0};
+        float6 curr_node_energy = {0,0,0,0,0,0};
         get_node_energy(i, this->attachment_node_equil, this->attachment_m_equil, this->attachment_node, this->attachment_m, dynamics_displacement*0.5, curr_node_energy)   ; 
         arr3 force;
         vec3d(n){force[n] = (curr_node_energy[n+3] - curr_node_energy[n])/dynamics_displacement;}

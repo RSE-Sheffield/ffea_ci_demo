@@ -79,31 +79,31 @@ namespace rod
 
         /** Each set of rod data is stored in a single, c-style array, most of which go as {x,y,z,x,y,z...} */
 
-        float *equil_r;                              /** Equilibrium configuration of the rod nodes. */
-        float *equil_m;                              /** Equilibrium configuration of the material frame. */
-        float *current_r;                            /** Current configuration of the rod nodes. */
-        float *current_m;                            /** Current configuration of the material frame. */
-        float *internal_perturbed_x_energy_positive; /** Energies associated with the perturbations we do in order to get dE. Given as [stretch, bend, twist, stretch, bend, twist...]**/
-        float *internal_perturbed_y_energy_positive;
-        float *internal_perturbed_z_energy_positive;
-        float *internal_twisted_energy_positive;
-        float *internal_perturbed_x_energy_negative; /** Stretch, bend, twist, stretch, bend, twist... */
-        float *internal_perturbed_y_energy_negative;
-        float *internal_perturbed_z_energy_negative;
-        float *internal_twisted_energy_negative;
-        float *material_params;                  /** Stretch, twist, radius, stretch, twist, radius... **/
-        float *B_matrix;                         /** Contents of the bending modulus matrix for each node, as a 1-d array. Given as [a_1_1, a_1_2, a_2,1, a_2_2, a_1_1...]. **/
-        float *steric_perturbed_energy_positive; // Length 2L array: energies from steric interactions at the start (0) and end (1) nodes of each rod element, i. Given as [xi0 yi0 zi0, xi1 yi1 zi1, ...]
-        float *steric_perturbed_energy_negative;
-        float *steric_energy;                    // Length L array : steric repulsion energy of elements (should be L/3 array, but previous decisions make it easier this way; xi=yi=zi, and so on)
-        float *steric_force;                     // Length L array: steric repulsive force interpolated onto nodes from elements [x, y, z, ...]
-        int *num_steric_nbrs; // Length L/3 array. Keeps track of how many neighbours each rod element has.
-        float *vdw_energy;
-        float *vdw_force;
-        int *num_vdw_nbrs;
+        std::vector<float> equil_r;                              /** Equilibrium configuration of the rod nodes. */
+        std::vector<float> equil_m;                              /** Equilibrium configuration of the material frame. */
+        std::vector<float> current_r;                            /** Current configuration of the rod nodes. */
+        std::vector<float> current_m;                            /** Current configuration of the material frame. */
+        std::vector<float> internal_perturbed_x_energy_positive; /** Energies associated with the perturbations we do in order to get dE. Given as [stretch, bend, twist, stretch, bend, twist...]**/
+        std::vector<float> internal_perturbed_y_energy_positive;
+        std::vector<float> internal_perturbed_z_energy_positive;
+        std::vector<float> internal_twisted_energy_positive;
+        std::vector<float> internal_perturbed_x_energy_negative; /** Stretch, bend, twist, stretch, bend, twist... */
+        std::vector<float> internal_perturbed_y_energy_negative;
+        std::vector<float> internal_perturbed_z_energy_negative;
+        std::vector<float> internal_twisted_energy_negative;
+        std::vector<float> material_params;                  /** Stretch, twist, radius, stretch, twist, radius... **/
+        std::vector<float> B_matrix;                         /** Contents of the bending modulus matrix for each node, as a 1-d array. Given as [a_1_1, a_1_2, a_2,1, a_2_2, a_1_1...]. **/
+        std::vector<float> steric_perturbed_energy_positive; // Length 2L array: energies from steric interactions at the start (0) and end (1) nodes of each rod element, i. Given as [xi0 yi0 zi0, xi1 yi1 zi1, ...]
+        std::vector<float> steric_perturbed_energy_negative;
+        std::vector<float> steric_energy;                    // Length L array : steric repulsion energy of elements (should be L/3 array, but previous decisions make it easier this way; xi=yi=zi, and so on)
+        std::vector<float> steric_force;                     // Length L array: steric repulsive force interpolated onto nodes from elements [x, y, z, ...]
+        std::vector<int> num_steric_nbrs; // Length L/3 array. Keeps track of how many neighbours each rod element has.
+        std::vector<float> vdw_energy;
+        std::vector<float> vdw_force;
+        std::vector<int> num_vdw_nbrs;
         std::vector<float> vdw_site_pos;     // Length = num_vdw_sites * 3. Must be a vector since it has to allow for there being no VDW sites on the rod.
-        float *applied_forces;              /** Another [x,y,z,x,y,z...] array, this one containing the force vectors acting on each node in the rod. **/
-        bool *pinned_nodes;                 /** This array is the length of the number of nodes in the rod, and it contains a boolean stating whether that node is pinned (true) or not (false). **/
+        std::vector<float> applied_forces;              /** Another [x,y,z,x,y,z...] array, this one containing the force vectors acting on each node in the rod. **/
+        std::vector<bool> pinned_nodes;                 /** This array is the length of the number of nodes in the rod, and it contains a boolean stating whether that node is pinned (true) or not (false). **/
 
         bool interface_at_start = false;    /** if this is true, the positioning of the start node is being handled by a rod-blob interface, so its energies will be ignored. **/
         bool interface_at_end = false;      /** if this is true, the positioning of the end node is being handled by a rod-blob interface, so its energies will be ignored. **/
@@ -129,22 +129,22 @@ namespace rod
         Rod set_units();
         Rod compute_rest_energy();
         Rod do_timestep(std::shared_ptr<std::vector<RngStream>> &rng);
-        Rod add_force(float force[4], int node_index);
+        Rod add_force(const float4 &force, int node_index);
         Rod pin_node(bool pin_state, int node_index);
         Rod load_header(std::string filename);
         Rod load_contents(std::string filename);
         Rod load_vdw(const std::string filename);
         Rod write_frame_to_file();
-        Rod write_mat_params_array(float *array_ptr, int array_len, float stretch_scale_factor, float twist_scale_factor, float length_scale_factor);
+        Rod write_mat_params_vector(const std::vector<float> &vec, float stretch_scale_factor, float twist_scale_factor, float length_scale_factor);
         Rod change_filename(std::string new_filename);
         Rod equilibrate_rod(std::shared_ptr<std::vector<RngStream>> &rng);
-        Rod translate_rod(float *r, float translation_vec[3]);
-        Rod rotate_rod(float euler_angles[3]);
+        Rod translate_rod(std::vector<float> &r, const float3 &translation_vec);
+        Rod rotate_rod(const float3 &euler_angles);
         Rod scale_rod(float scale);
-        Rod get_centroid(float *r, float centroid[3]);
-        Rod get_min_max(float *r, OUT float min[3], float max[3]);
-        Rod get_p(int index, OUT float p[3], bool equil);
-        Rod get_r(int node_index, OUT float r[3], bool equil);
+        Rod get_centroid(const std::vector<float> &r, float3 &centroid);
+        Rod get_min_max(const std::vector<float> &r, OUT float3 &min, float3 &max);
+        Rod get_p(int index, OUT float3 &p, bool equil);
+        Rod get_r(int node_index, OUT float3 &r, bool equil);
         float get_radius(int node_index);
         float contour_length();
         float end_to_end_length();

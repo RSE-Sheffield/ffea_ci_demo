@@ -77,7 +77,7 @@ typedef std::array<geoscalar, 4> grr4;
 /** arr3_view has the spirit of "span" or "array_view" 
  *    allowing us to have long arrays 
  *    and use the arr3 functions in mat_vec_fns_II  */
-template <class t_scalar, class brr3>
+template <class t_scalar, class brr3 = std::array<t_scalar, 3>>
 class arr3_view
 {
 public:
@@ -90,7 +90,7 @@ public:
 
 private:
     t_scalar* data;
-}; 
+};
 
 
 /**

@@ -1,35 +1,35 @@
 #include "rod_math_v9.h"
 
 int main(){
-    float nodes[9] = {0,0,0, 1,0,0, 2,0,0};
-    float current_x[3] = {nodes[0], nodes[1], nodes[2]};
-    float current_xp1[3] = {nodes[3], nodes[4], nodes[5]};
-    float current_xp2[3] = {nodes[6], nodes[7], nodes[8]};
-    float e_i_equil[3];
-    float e_ip1_equil[3];
+    rod::float9 nodes = {0,0,0, 1,0,0, 2,0,0};
+    rod::float3 current_x = {nodes[0], nodes[1], nodes[2]};
+    rod::float3 current_xp1 = {nodes[3], nodes[4], nodes[5]};
+    rod::float3 current_xp2 = {nodes[6], nodes[7], nodes[8]};
+    rod::float3 e_i_equil;
+    rod::float3 e_ip1_equil;
     rod::get_p_i(current_x, current_xp1, e_i_equil);
     rod::get_p_i(current_xp1, current_xp2, e_ip1_equil);
     
-    float m_i[3] = {0,1,0};
-    float m_ip1[3] = {0,1,0};
+    rod::float3 m_i = {0,1,0};
+    rod::float3 m_ip1 = {0,1,0};
     
     nodes[5] += 0.5;
     
-    float new_x[3] = {nodes[0], nodes[1], nodes[2]};
-    float new_xp1[3] = {nodes[3], nodes[4], nodes[5]};
-    float new_xp2[3] = {nodes[6], nodes[7], nodes[8]};
-    float e_i[3];
-    float e_ip1[3];
+    rod::float3 new_x = {nodes[0], nodes[1], nodes[2]};
+    rod::float3 new_xp1 = {nodes[3], nodes[4], nodes[5]};
+    rod::float3 new_xp2 = {nodes[6], nodes[7], nodes[8]};
+    rod::float3 e_i;
+    rod::float3 e_ip1;
     rod::get_p_i(new_x, new_xp1, e_i);
     rod::get_p_i(new_xp1, new_xp2, e_ip1);
     
-    float m_i_prime[3];
-    float m_ip1_prime[3];
+    rod::float3 m_i_prime;
+    rod::float3 m_ip1_prime;
     
-    float t_i[3];
-    float t_ip1[3];
-    float t_i_equil[3];
-    float t_ip1_equil[3];    
+    rod::float3 t_i;
+    rod::float3 t_ip1;
+    rod::float3 t_i_equil;
+    rod::float3 t_ip1_equil;
     rod::normalize(e_i, t_i);
     rod::normalize(e_i_equil, t_i_equil);
     rod::normalize(e_ip1_equil, t_ip1_equil);

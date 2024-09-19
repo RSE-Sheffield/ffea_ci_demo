@@ -2,21 +2,21 @@
 
 int main(){
     float mathematica_result = 059.6893*2;
-    float bbar[4] = {1,0,0,1};
-    float eim1[3] = {0,0, 0.008};
-    float ei[3] = {0, 0.00841471, 0.00540302};
-    float eim1bar[3] = {0,0,0.01};
-    float eibar[3] = {0,0,0.01};
-    float mim12[3] = {1,0,0};
-    float mim1[3] = {0, 1, 0};
-    float mim12bar[3] = {1,0,0};
-    float mim1bar[3] = {0,1,0};
-    float mi2[3] = {1,0,0};
-    float mi[3] = {0, -0.540302, -0.841471};
-    float mi2bar[3] = {1,0,0};
-    float mibar[3] = {0,1,0};
-    //float kbi[3];
-    //float kbibar[3];
+    rod::float4 bbar = {1,0,0,1};
+    rod::float3 eim1 = {0,0, 0.008};
+    rod::float3 ei = {0, 0.00841471, 0.00540302};
+    rod::float3 eim1bar = {0,0,0.01};
+    rod::float3 eibar = {0,0,0.01};
+    rod::float3 mim12 = {1,0,0};
+    rod::float3 mim1 = {0, 1, 0};
+    rod::float3 mim12bar = {1,0,0};
+    rod::float3 mim1bar = {0,1,0};
+    rod::float3 mi2 = {1,0,0};
+    rod::float3 mi = {0, -0.540302, -0.841471};
+    rod::float3 mi2bar = {1,0,0};
+    rod::float3 mibar = {0,1,0};
+    //rod::float3 kbi;
+    //rod::float3 kbibar;
     
     float computed_energy = rod::get_bend_energy_from_p(
         eim1,

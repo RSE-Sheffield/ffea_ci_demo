@@ -504,7 +504,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             active_blob_array[i]->move(shift[0], shift[1], shift[2]);
             active_blob_array[i]->calc_all_centroids();
         }
-        float shift_rod[3] = {(float)shift[0], (float)shift[1], (float)shift[2]}; // this class is some historical junk
+        rod::float3 shift_rod = {(float)shift[0], (float)shift[1], (float)shift[2]}; // this class is some historical junk
         for (i = 0; i < params.num_rods; i++)
         {
             if (rod_array[i]->restarting == false)
@@ -524,7 +524,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
 
         if (rod::dbg_print)
         {
-            rod::print_array("shift", shift_rod, 3);
+            rod::print_array("shift", shift_rod);
         }
     }
 
@@ -3932,7 +3932,7 @@ void World::get_system_centroid(arr3 &centroid)
     /** Rod centroid */
     for (int i = 0; i < params.num_rods; i++)
     {
-        float rod_centroid[3];
+        rod::float3 rod_centroid;
         rod_array[i]->get_centroid(rod_array[i]->current_r, rod_centroid);
         /** I'm leaving it like this and there's nothing you can do about it */
         centroid[0] += rod_centroid[0] * rod_array[i]->num_nodes;
@@ -3993,7 +3993,7 @@ void World::get_system_dimensions(arr3 &dimension)
         }
     }
 
-    float rod_min[3], rod_max[3];
+    rod::float3 rod_min, rod_max;
     for (int i = 0; i < params.num_rods; i++)
     {
         rod_array[i]->get_min_max(rod_array[i]->current_r, rod_min, rod_max);
@@ -4167,12 +4167,12 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
     int rod_id;
     int rod_node_id;
     int blob_element_id;
-    int blob_node_ids[3];
+    rod::int3 blob_node_ids;
     int from_index;
     int to_index;
     int order;
-    float rotation[3];
-    float node_weighting[3];
+    rod::float3 rotation;
+    rod::float3 node_weighting;
 
     for (auto &tag_str : block)
     {
@@ -4229,7 +4229,7 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
                 if (sub_tag_out[0] == "blob_node_ids")
                 {
                     sub_tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(sub_tag_out[1], "("), ")");
-                    systemreader.split_string(sub_tag_out[1], blob_node_ids, ",", 3);
+                    systemreader.split_string(sub_tag_out[1], blob_node_ids.data(), ",", 3);
                 }
 
                 if ((sub_tag_out[0] == "order"))
@@ -4239,19 +4239,19 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
 
                 if (sub_tag_out[0] == "rotation")
                 {
-                    scalar rotation_scalar[3];
+                    arr3 rotation_scalar;
                     sub_tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(sub_tag_out[1], "("), ")");
-                    systemreader.split_string(sub_tag_out[1], rotation_scalar, ",", 3);
-                    std::transform(rotation_scalar, rotation_scalar + 3, rotation, [](scalar in) {return static_cast<float>(in);});
+                    systemreader.split_string(sub_tag_out[1], rotation_scalar.data(), ",", 3);
+                    std::transform(rotation_scalar.begin(), rotation_scalar.end(), rotation.begin(), [](scalar in) {return static_cast<float>(in);});
                 }
 
                 if (sub_tag_out[0] == "node_weighting")
                 {
-                    scalar node_weighting_scalar[3];
+                    arr3 node_weighting_scalar;
                     sub_tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(sub_tag_out[1], "("), ")");
-                    systemreader.split_string(sub_tag_out[1], node_weighting_scalar, ",", 3);
+                    systemreader.split_string(sub_tag_out[1], node_weighting_scalar.data(), ",", 3);
                     std::cout << "node weighting = [" << node_weighting_scalar[0] << ", " << node_weighting_scalar[1] << ", " << node_weighting_scalar[2] << "\n";
-                    std::transform(node_weighting_scalar, node_weighting_scalar + 3, node_weighting, [](scalar in) {return static_cast<float>(in); });
+                    std::transform(node_weighting_scalar.begin(), node_weighting_scalar.end(), node_weighting.begin(), [](scalar in) {return static_cast<float>(in); });
                 }
             }
             coupling_counter += 1;
@@ -4380,12 +4380,12 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
         if (tag_out[0] == "centroid_pos" && rod_parent && !restart)
         {
             // get centroid and convert it to array
-            scalar centroid_pos[3];
-            float converted_centroid[3];
+            arr3 centroid_pos;
+            rod::float3 converted_centroid;
             tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(tag_out[1], "("), ")");
-            systemreader.split_string(tag_out[1], centroid_pos, ",", 3);
+            systemreader.split_string(tag_out[1], centroid_pos.data(), ",", 3);
             // convert to floats
-            std::transform(centroid_pos, centroid_pos + 3, converted_centroid, [](scalar in) {return static_cast<float>(in);});
+            std::transform(centroid_pos.data(), centroid_pos.data() + 3, converted_centroid.data(), [](scalar in) {return static_cast<float>(in);});
             // set centroid
             current_rod->translate_rod(current_rod->current_r, converted_centroid);
             current_rod->translate_rod(current_rod->equil_r, converted_centroid);
@@ -4395,12 +4395,12 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
         if (tag_out[0] == "rotation" && rod_parent && !restart)
         {
             // get centroid and convert it to array
-            scalar rotation[3];
+            arr3 rotation;
             tag_out[1] = boost::erase_last_copy(boost::erase_first_copy(tag_out[1], "("), ")");
-            systemreader.split_string(tag_out[1], rotation, ",", 3);
+            systemreader.split_string(tag_out[1], rotation.data(), ",", 3);
             // convert to floats
-            float converted_rotation[3];
-            std::transform(rotation, rotation + 3, converted_rotation, [](scalar in) {return static_cast<float>(in);});
+            rod::float3 converted_rotation;
+            std::transform(rotation.begin(), rotation.end(), converted_rotation.begin(), [](scalar in) {return static_cast<float>(in); });
             // rotate that bad boy
             current_rod->rotate_rod(converted_rotation);
         }
@@ -4422,10 +4422,10 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
 */
 void World::update_rod_steric_nbr_lists(rod::Rod *rod_a, rod::Rod *rod_b)
 {
-    float r_a[3] = {0};
-    float r_b[3] = {0};
-    float p_a[3] = {0};
-    float p_b[3] = {0};
+    rod::float3 r_a = {0};
+    rod::float3 r_b = {0};
+    rod::float3 p_a = {0};
+    rod::float3 p_b = {0};
 
     rod_a->check_nbr_list_dim(rod_a->steric_nbrs);
     rod_b->check_nbr_list_dim(rod_b->steric_nbrs);
@@ -4465,10 +4465,10 @@ void World::update_rod_steric_nbr_lists(rod::Rod *rod_a, rod::Rod *rod_b)
 // ! - currently broken
 void World::update_rod_vdw_nbr_lists(rod::Rod *rod_a, rod::Rod *rod_b, SSINT_matrix *lj_matrix)
 {
-    float r_a[3] = {0};
-    float r_b[3] = {0};
-    float p_a[3] = {0};
-    float p_b[3] = {0};
+    rod::float3 r_a = {0};
+    rod::float3 r_b = {0};
+    rod::float3 p_a = {0};
+    rod::float3 p_b = {0};
 
     if (rod::dbg_print)
         std::cout << "Updating vdw neighbour lists of rods " << rod_a->rod_no << " and " << rod_b->rod_no << std::endl;
@@ -4519,8 +4519,8 @@ void World::rod_pbc_wrap(rod::Rod *current_rod, std::vector<float> dim)
 {
     for (int i = 0; i < params.num_rods; i++)
     {
-        float rod_centroid[3] = {0};
-        float rod_pbc_shift[3] = {0};
+        rod::float3 rod_centroid = {0};
+        rod::float3 rod_pbc_shift = {0};
         current_rod->get_centroid(current_rod->current_r, rod_centroid);
 
         if (rod_centroid[0] < 0)

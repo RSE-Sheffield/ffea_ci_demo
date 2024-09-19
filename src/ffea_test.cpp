@@ -180,9 +180,9 @@ int ffea_test::connection_test()
     rod::Rod_blob_interface *current_interface =
         world->rod_blob_interface_array[0];
 
-    float attachment_node_pos[3];
-    float attachment_node[3];
-    float attachment_material_axis[3];
+    rod::float3 attachment_node_pos;
+    rod::float3 attachment_node;
+    rod::float3 attachment_material_axis;
 
     std::cout << "Current blob index in ffea_test: "
               << world->rod_blob_interface_array[0]->connected_blob->blob_index
@@ -194,7 +194,7 @@ int ffea_test::connection_test()
     current_interface->get_attachment_material_axis(attachment_node,
                                                     attachment_material_axis);
 
-    float J[9];
+    rod::float9 J;
     rod::get_jacobian(current_interface->deformed_tet_nodes, J);
 
     for (int i = 0; i < 4; i++)
@@ -202,15 +202,14 @@ int ffea_test::connection_test()
         rod::print_array("Tetrahedron node",
                          current_interface->connected_tet->n[i]->pos);
     }
-    rod::print_array("attachment node position", attachment_node_pos, 3);
-    rod::print_array("attachment node", attachment_node, 3);
-    rod::print_array("attachment material axis", attachment_material_axis, 3);
-    rod::print_array("Undeformed jacobian", J, 9);
+    rod::print_array("attachment node position", attachment_node_pos);
+    rod::print_array("attachment node", attachment_node);
+    rod::print_array("attachment material axis", attachment_material_axis);
+    rod::print_array("Undeformed jacobian", J);
 
-    rod::print_array("Undeformed jacobian inverse", current_interface->J_inv_0,
-                     9);
+    rod::print_array("Undeformed jacobian inverse", current_interface->J_inv_0);
 
-    float rotmat[9];
+    rod::float9 rotmat;
     float rotation_angle = 0.55;
     rod::construct_euler_rotation_matrix(0, 0, rotation_angle, rotmat);
     rod::rotate_tet(rotmat, current_interface->connected_tet->n,
@@ -225,7 +224,7 @@ int ffea_test::connection_test()
     rod::print_array("connected tetrahedron node 3",
                      current_interface->connected_tet->n[3]->pos);
 
-    rod::print_array("rotation matrix", rotmat, 9);
+    rod::print_array("rotation matrix", rotmat);
     rod::print_array("Rotated tetrahedron node 1",
                      current_interface->deformed_tet_nodes[0]->pos);
     rod::print_array("Rotated tetrahedron node 2",
@@ -235,14 +234,14 @@ int ffea_test::connection_test()
     rod::print_array("Rotated tetrahedron node 4",
                      current_interface->deformed_tet_nodes[3]->pos);
 
-    float new_attachment_node[3];
-    float new_attachment_material_axis[3];
+    rod::float3 new_attachment_node;
+    rod::float3 new_attachment_material_axis;
 
     current_interface->reorientate_connection(
         attachment_node, attachment_material_axis, new_attachment_node,
         new_attachment_material_axis);
-    rod::print_array("Rotated node", new_attachment_node, 3);
-    rod::print_array("Rotated material axis", new_attachment_material_axis, 3);
+    rod::print_array("Rotated node", new_attachment_node);
+    rod::print_array("Rotated material axis", new_attachment_material_axis);
     float dotprod =
         new_attachment_material_axis[0] * attachment_material_axis[0] +
         new_attachment_material_axis[1] * attachment_material_axis[1] +
@@ -268,16 +267,16 @@ int ffea_test::arbitrary_equilibrium_twist()
 
     float beta = 1;
     float offset = 0.3333333333 * M_PI;
-    float pi[3] = {1, 0, 0};
-    float pim1[3] = {1, 0, 0};
-    float pi_equil[3] = {1, 0, 0};
-    float pim1_equil[3] = {1, 0, 0};
-    float mi[3] = {0, 1, 0};
-    float mim1[3] = {0, 1, 0};
-    float mi_equil[3] = {0, 1, 0};
-    float mim1_equil[3] = {0, 1, 0};
-    float mim1_equil_rotated[3];
-    float mi_rotated[3];
+    rod::float3 pi = {1, 0, 0};
+    rod::float3 pim1 = {1, 0, 0};
+    rod::float3 pi_equil = {1, 0, 0};
+    rod::float3 pim1_equil = {1, 0, 0};
+    rod::float3 mi = {0, 1, 0};
+    rod::float3 mim1 = {0, 1, 0};
+    rod::float3 mi_equil = {0, 1, 0};
+    rod::float3 mim1_equil = {0, 1, 0};
+    rod::float3 mim1_equil_rotated;
+    rod::float3 mi_rotated;
     rod::rodrigues_rotation(mim1_equil, pim1_equil, offset, mim1_equil_rotated);
     rod::rodrigues_rotation(mi, pi, 1., mi_rotated);
 
@@ -328,11 +327,11 @@ int ffea_test::connection_orientation_test()
         world->rod_blob_interface_array[0];
 
     rod::print_array("Old rod starting position",
-                     current_interface->connected_rod->current_r, 3);
+                     current_interface->connected_rod->current_r);
 
-    // float attachment_node_pos[3];
-    // float attachment_node[3];
-    // float attachment_material_axis[3];
+    // rod::float3 attachment_node_pos;
+    // rod::float3 attachment_node;
+    // rod::float3 attachment_material_axis;
 
     // std::cout << "Current blob index in ffea_test: " <<
     // world->rod_blob_interface_array[0]->connected_blob->blob_index << "\n";
@@ -355,15 +354,15 @@ int ffea_test::connection_orientation_test()
     // current_interface->get_attachment_material_axis(attachment_node,
     // attachment_material_axis);
 
-    // float J[9];
+    // rod::float9 J;
     // rod::get_jacobian(current_interface->deformed_tet_nodes, J);
 
     // for(int i = 0; i<4; i++){rod::print_array("Tetrahedron node",
-    // current_interface->connected_tet->n[i]->pos.data, 3);}
-    // rod::print_array("attachment node position", attachment_node_pos, 3);
-    // rod::print_array("attachment node", attachment_node, 3);
-    // rod::print_array("attachment material axis", attachment_material_axis, 3);
-    // rod::print_array("Undeformed jacobian", J, 9);
+    // current_interface->connected_tet->n[i]->pos.data);}
+    // rod::print_array("attachment node position", attachment_node_pos);
+    // rod::print_array("attachment node", attachment_node);
+    // rod::print_array("attachment material axis", attachment_material_axis);
+    // rod::print_array("Undeformed jacobian", J);
 
     // current_interface->connected_rod->write_frame_to_file();
 
@@ -371,34 +370,34 @@ int ffea_test::connection_orientation_test()
     world->print_trajectory_and_measurement_files(2, 2);
 
     rod::print_array("New rod starting position",
-                     current_interface->connected_rod->current_r, 3);
+                     current_interface->connected_rod->current_r);
 
     return 0;
 }
 
 int ffea_test::arbitrary_equilibrium_bend()
 {
-    float B_i_equil[4] = {1, 0, 0, 1};
-    float B_im1_equil[4]{1, 0, 0, 1};
-    float p_i[3] = {1, 0, 0};
-    float p_im1[3] = {1, 0, 0};
-    float m_i[3] = {0, 1, 0};
-    float m_im1[3]{0, 1, 0};
-    float n_i[3];
-    float n_im1[3];
+    rod::float4 B_i_equil = {1, 0, 0, 1};
+    rod::float4 B_im1_equil{1, 0, 0, 1};
+    rod::float3 p_i = {1, 0, 0};
+    rod::float3 p_im1 = {1, 0, 0};
+    rod::float3 m_i = {0, 1, 0};
+    rod::float3 m_im1{0, 1, 0};
+    rod::float3 n_i;
+    rod::float3 n_im1;
 
-    float p_i_equil[3] = {1, 0, 0};
-    float p_im1_equil[3] = {1, 0, 0};
-    float m_i_equil[3] = {0, 1, 0};
-    float m_im1_equil[3]{0, 1, 0};
-    float n_i_equil[3];
-    float n_im1_equil[3];
+    rod::float3 p_i_equil = {1, 0, 0};
+    rod::float3 p_im1_equil = {1, 0, 0};
+    rod::float3 m_i_equil = {0, 1, 0};
+    rod::float3 m_im1_equil{0, 1, 0};
+    rod::float3 n_i_equil;
+    rod::float3 n_im1_equil;
 
-    float rm[9];
-    float euler[3] = {0.25, 0.125, 0.2};
+    rod::float9 rm;
+    rod::float3 euler = {0.25, 0.125, 0.2};
     rod::get_rotation_matrix_from_euler(euler, rm);
-    float p_i_rotated[3];
-    float m_i_rotated[3];
+    rod::float3 p_i_rotated;
+    rod::float3 m_i_rotated;
     rod::apply_rotation_matrix(p_i, rm, p_i_rotated);
     rod::apply_rotation_matrix(m_i, rm, m_i_rotated);
 
@@ -412,21 +411,21 @@ int ffea_test::arbitrary_equilibrium_bend()
         m_im1_equil, n_i, m_i_rotated, n_i_equil, m_i_equil, B_i_equil,
         B_im1_equil);
     std::cout << "State 1:\n";
-    rod::print_array("  p_im1", p_im1, 3);
-    rod::print_array("  p_i", p_i_rotated, 3);
-    rod::print_array("  p_im1_equil", p_im1_equil, 3);
-    rod::print_array("  p_i_equil", p_i_equil, 3);
-    rod::print_array("  n_im1", n_im1, 3);
-    rod::print_array("  m_im1", m_im1, 3);
-    rod::print_array("  m_im1_equil", m_im1, 3);
-    rod::print_array("  n_im1_equil", n_im1_equil, 3);
-    rod::print_array("  n_i", n_i, 3);
-    rod::print_array("  m_i", m_i_rotated, 3);
-    rod::print_array("  n_i_equil", n_i_equil, 3);
-    rod::print_array("  m_i_equil", m_i_equil, 3);
+    rod::print_array("  p_im1", p_im1);
+    rod::print_array("  p_i", p_i_rotated);
+    rod::print_array("  p_im1_equil", p_im1_equil);
+    rod::print_array("  p_i_equil", p_i_equil);
+    rod::print_array("  n_im1", n_im1);
+    rod::print_array("  m_im1", m_im1);
+    rod::print_array("  m_im1_equil", m_im1);
+    rod::print_array("  n_im1_equil", n_im1_equil);
+    rod::print_array("  n_i", n_i);
+    rod::print_array("  m_i", m_i_rotated);
+    rod::print_array("  n_i_equil", n_i_equil);
+    rod::print_array("  m_i_equil", m_i_equil);
 
-    float p_i_rotated_2[3];
-    float m_i_rotated_2[3];
+    rod::float3 p_i_rotated_2;
+    rod::float3 m_i_rotated_2;
 
     vec3d(n) { p_i_equil[n] = p_i_rotated[n]; }
     vec3d(n) { m_i_equil[n] = m_i_rotated[n]; }
@@ -444,18 +443,18 @@ int ffea_test::arbitrary_equilibrium_bend()
         B_im1_equil);
 
     std::cout << "State 2:\n";
-    rod::print_array("  p_im1", p_im1, 3);
-    rod::print_array("  p_i", p_i_rotated_2, 3);
-    rod::print_array("  p_im1_equil", p_im1_equil, 3);
-    rod::print_array("  p_i_equil", p_i_equil, 3);
-    rod::print_array("  n_im1", n_im1, 3);
-    rod::print_array("  m_im1", m_im1, 3);
-    rod::print_array("  m_im1_equil", m_im1, 3);
-    rod::print_array("  n_im1_equil", n_im1_equil, 3);
-    rod::print_array("  n_i", n_i, 3);
-    rod::print_array("  m_i", m_i_rotated_2, 3);
-    rod::print_array("  n_i_equil", n_i_equil, 3);
-    rod::print_array("  m_i_equil", m_i_equil, 3);
+    rod::print_array("  p_im1", p_im1);
+    rod::print_array("  p_i", p_i_rotated_2);
+    rod::print_array("  p_im1_equil", p_im1_equil);
+    rod::print_array("  p_i_equil", p_i_equil);
+    rod::print_array("  n_im1", n_im1);
+    rod::print_array("  m_im1", m_im1);
+    rod::print_array("  m_im1_equil", m_im1);
+    rod::print_array("  n_im1_equil", n_im1_equil);
+    rod::print_array("  n_i", n_i);
+    rod::print_array("  m_i", m_i_rotated_2);
+    rod::print_array("  n_i_equil", n_i_equil);
+    rod::print_array("  m_i_equil", m_i_equil);
 
     std::cout << "Energy 1 = " << energy1 << "\n";
     std::cout << "Energy 2 = " << energy2 << "\n";
@@ -497,13 +496,13 @@ int ffea_test::identify_face()
     world->print_trajectory_and_measurement_files(1, 1);
     world->print_trajectory_and_measurement_files(2, 2);
 
-    float attachment_node[3];
-    float attachment_node_pos[3];
+    rod::float3 attachment_node;
+    rod::float3 attachment_node_pos;
     // int face_node_indices[3];
     // current_interface->select_face_nodes(face_node_indices);
-    float face_node_1[3];
-    float face_node_2[3];
-    float face_node_3[3];
+    rod::float3 face_node_1;
+    rod::float3 face_node_2;
+    rod::float3 face_node_3;
     vec3d(n)
     {
         face_node_1[n] =
@@ -529,9 +528,9 @@ int ffea_test::identify_face()
     current_interface->get_attachment_node(attachment_node, attachment_node_pos,
                                            true);
 
-    float face_element_1[3];
-    float face_element_2[3];
-    float face_element_3[3];
+    rod::float3 face_element_1;
+    rod::float3 face_element_2;
+    rod::float3 face_element_3;
 
     vec3d(n) { face_element_1[n] = face_node_2[n] - face_node_1[n]; }
     vec3d(n) { face_element_2[n] = face_node_3[n] - face_node_2[n]; }
@@ -585,13 +584,13 @@ int ffea_test::connection_energy()
     rod::Rod_blob_interface *current_interface =
         world->rod_blob_interface_array[0];
 
-    float attachment_node[3];
-    float attachment_node_pos[3];
-    float attachment_material_axis[3];
+    rod::float3 attachment_node;
+    rod::float3 attachment_node_pos;
+    rod::float3 attachment_material_axis;
 
-    float attachment_node_equil[3];
-    float attachment_node_pos_equil[3];
-    float attachment_material_axis_equil[3];
+    rod::float3 attachment_node_equil;
+    rod::float3 attachment_node_pos_equil;
+    rod::float3 attachment_material_axis_equil;
 
     current_interface->get_attachment_node(attachment_node, attachment_node_pos,
                                            false);
@@ -606,25 +605,25 @@ int ffea_test::connection_energy()
     std::cout << "Attachment material axis acquired.\n";
     current_interface->update_internal_state(true, true);
 
-    rod::print_array("Final attachment node", attachment_node, 3);
+    rod::print_array("Final attachment node", attachment_node);
 
     // current_interface->do_connection_timestep();
 
     int node_index = 1;
     // float displacement = current_interface->connected_rod->perturbation_amount;
     float displacement = 1;
-    float energy[6] = {0, 0, 0, 0, 0, 0};
+    rod::float6 energy = {0, 0, 0, 0, 0, 0};
 
     current_interface->get_node_energy(
         node_index, attachment_node_equil, attachment_material_axis_equil,
         attachment_node, attachment_material_axis, displacement, energy);
-    rod::print_array("energy", energy, 6);
+    rod::print_array("energy", energy);
 
-    float force[3];
+    rod::float3 force;
 
     vec3d(n) { force[n] = (energy[n] - energy[n + 3]) / displacement; }
 
-    rod::print_array("force", force, 3);
+    rod::print_array("force", force);
 
     world->print_trajectory_and_measurement_files(1, 1);
     world->print_trajectory_and_measurement_files(2, 2);
@@ -655,9 +654,9 @@ int ffea_test::connection_energy()
       std::cout << "Mirror world initialised... oooo! \n";
 
       rod::Rod_blob_interface *mirror_interface =
-     mirror_world->rod_blob_interface_array[0]; float mirror_attachment_node[3];
-      float mirror_attachment_node_pos[3];
-      float mirror_attachment_material_axis[3];
+     mirror_world->rod_blob_interface_array[0]; rod::float3 mirror_attachment_node;
+      rod::float3 mirror_attachment_node_pos;
+      rod::float3 mirror_attachment_material_axis;
       mirror_interface->get_attachment_node(mirror_attachment_node,
      mirror_attachment_node_pos);
       mirror_interface->get_attachment_material_axis(mirror_attachment_node,
@@ -665,7 +664,7 @@ int ffea_test::connection_energy()
       mirror_interface->update_internal_state(true, true);
       int mirror_node_index = 1;
       float mirror_displacement = 0;
-      float mirror_energy[6] = {0,0,0,0,0,0};
+      rod::float6 mirror_energy = {0,0,0,0,0,0};
       mirror_interface->get_node_energy(mirror_node_index,
      mirror_attachment_node, mirror_attachment_material_axis,
      mirror_displacement, mirror_energy); rod::print_array("mirror_energy",
@@ -703,13 +702,13 @@ int ffea_test::connection_energy_2()
     rod::Rod_blob_interface *current_interface =
         world->rod_blob_interface_array[0];
 
-    float attachment_node[3];
-    float attachment_node_pos[3];
-    float attachment_material_axis[3];
+    rod::float3 attachment_node;
+    rod::float3 attachment_node_pos;
+    rod::float3 attachment_material_axis;
 
-    float attachment_node_equil[3];
-    float attachment_node_pos_equil[3];
-    float attachment_material_axis_equil[3];
+    rod::float3 attachment_node_equil;
+    rod::float3 attachment_node_pos_equil;
+    rod::float3 attachment_material_axis_equil;
 
     current_interface->get_attachment_node(attachment_node, attachment_node_pos,
                                            false);
@@ -730,7 +729,7 @@ int ffea_test::connection_energy_2()
     {
         for (int i = 0; i < 500; i++)
         {
-            float energy[6] = {0, 0, 0, 0, 0, 0};
+            rod::float6 energy = {0, 0, 0, 0, 0, 0};
             current_interface->get_node_energy(
                 node_index, attachment_node_equil, attachment_material_axis_equil,
                 attachment_node, attachment_material_axis, displacement * i, energy);
@@ -741,7 +740,7 @@ int ffea_test::connection_energy_2()
         }
     }
 
-    // float force[3];
+    // rod::float3 force;
 
     // vec3d(n){force[n] = (energy[n] - energy[n+3])/displacement;}
 
@@ -761,8 +760,8 @@ int ffea_test::connection_energy_2()
     //    rod::Rod_blob_interface *current_interface =
     //    world->rod_blob_interface_array[0];
     //
-    //    float attachment_node[3];
-    //    float attachment_node_pos[3];
+    //    rod::float3 attachment_node;
+    //    rod::float3 attachment_node_pos;
     //    rod::print_array("    new attachment node (should still be 1,0,0)",
     //    current_interface->attachment_node, 3);
     //
@@ -796,9 +795,9 @@ int ffea_test::connection_energy_2()
 
     /**
 
-      float attachment_node[3];
-      float attachment_node_pos[3];
-      float attachment_material_axis[3];
+      rod::float3 attachment_node;
+      rod::float3 attachment_node_pos;
+      rod::float3 attachment_material_axis;
 
       current_interface->get_attachment_node(attachment_node,
      attachment_node_pos);
@@ -811,7 +810,7 @@ int ffea_test::connection_energy_2()
       current_interface->update_internal_state(true, true);
 
       float displacement = 0;
-      float energy[2][6] = {{0,0,0,0,0,0},{0,0,0,0,0,0}};
+      std::array<rod::float6, 2> energy = {rod::float6{0,0,0,0,0,0},rod::float6{0,0,0,0,0,0}};
 
       std::cout << "Attachment node acquired.\n";
 
@@ -875,14 +874,14 @@ int ffea_test::jacobian_rotate()
 
     // note: confirmed for same tetrahedron!
 
-    float J_up[9];
-    float J_forward[9];
+    rod::float9 J_up;
+    rod::float9 J_forward;
 
     rod::get_jacobian(node_up, J_up);
     rod::get_jacobian(node_forward, J_forward);
 
-    rod::print_array("  J up", J_up, 9);
-    rod::print_array("  J forward", J_forward, 9);
+    rod::print_array("  J up", J_up);
+    rod::print_array("  J forward", J_forward);
 
     return 0;
 }
@@ -965,9 +964,9 @@ int ffea_test::connection_propagation(
 
     current_rod->pinned_nodes[end_index] = true;
 
-    float curr_sample_edge_vec[3];
+    rod::float3 curr_sample_edge_vec;
 
-    float rotmat[9];
+    rod::float9 rotmat;
     float edgevec_dot_prod_pre;
 
     if (mode == 0)
@@ -981,9 +980,9 @@ int ffea_test::connection_propagation(
         rod::normalize(curr_sample_edge_vec, curr_sample_edge_vec);
 
         // twist end_p
-        float end_p[3];
-        float end_m_pre[3];
-        float end_m[3];
+        rod::float3 end_p;
+        rod::float3 end_m_pre;
+        rod::float3 end_m;
 
         current_rod->get_p(end_index, end_p, false);
         for (int n = 0; n < 3; n++)
@@ -998,9 +997,9 @@ int ffea_test::connection_propagation(
                                curr_sample_edge_vec[1] * end_m_pre[1] +
                                curr_sample_edge_vec[2] * end_m_pre[2];
 
-        rod::print_array("original m", end_m, 3);
+        rod::print_array("original m", end_m);
         rod::rodrigues_rotation(end_m_pre, end_p, M_PI * 0.5, end_m);
-        rod::print_array("rotated m", end_m, 3);
+        rod::print_array("rotated m", end_m);
 
         rod::get_rotation_matrix(end_m_pre, end_m, rotmat);
 
@@ -1016,8 +1015,8 @@ int ffea_test::connection_propagation(
         }
 
         // twist the next p over
-        float next_end_p[3];
-        float next_end_m[3];
+        rod::float3 next_end_p;
+        rod::float3 next_end_m;
 
         current_rod->get_p(1, next_end_p, false);
         for (int n = 0; n < 3; n++)
@@ -1037,22 +1036,22 @@ int ffea_test::connection_propagation(
 
     if (mode == 1)
     {
-        float end_p[3];
-        float end_m[3];
-        float end_p_rotated[3];
-        float end_m_rotated[3];
+        rod::float3 end_p;
+        rod::float3 end_m;
+        rod::float3 end_p_rotated;
+        rod::float3 end_m_rotated;
         current_rod->get_p(end_index, end_p, false);
-        float euler_angles[3] = {0, M_PI / 4.0, 0};
-        float rm[9];
+        rod::float3 euler_angles = {0, M_PI / 4.0, 0};
+        rod::float9 rm;
         rod::get_rotation_matrix_from_euler(euler_angles, rm);
-        rod::print_array("rotmat", rm, 9);
+        rod::print_array("rotmat", rm);
         float scale = rod::absolute(end_p);
         vec3d(n) { end_p[n] /= scale; }
         rod::apply_rotation_matrix(end_p, rm, end_p_rotated);
         rod::apply_rotation_matrix(end_m, rm, end_m_rotated);
         vec3d(n) { end_p_rotated[n] *= scale; }
-        rod::print_array("p", end_p, 3);
-        rod::print_array("p_rotated", end_p_rotated, 3);
+        rod::print_array("p", end_p);
+        rod::print_array("p_rotated", end_p_rotated);
         rod::normalize(end_m_rotated, end_m_rotated);
 
         for (int n = 0; n < 3; n++)
@@ -1086,15 +1085,15 @@ int ffea_test::connection_propagation(
 
     // get the first energies
 
-    float equil_attachment_node[3];
-    float equil_attachment_node_pos[3];
-    float equil_attachment_material_axis[3];
+    rod::float3 equil_attachment_node;
+    rod::float3 equil_attachment_node_pos;
+    rod::float3 equil_attachment_material_axis;
 
-    float init_energy[6];
+    rod::float6 init_energy;
 
-    float init_attachment_node[3];
-    float init_attachment_node_pos[3];
-    float init_attachment_material_axis[3];
+    rod::float3 init_attachment_node;
+    rod::float3 init_attachment_node_pos;
+    rod::float3 init_attachment_material_axis;
 
     current_interface->get_attachment_node(init_attachment_node,
                                            init_attachment_node_pos, false);
@@ -1132,9 +1131,9 @@ int ffea_test::connection_propagation(
     //}
     rod::dbg_print = false;
 
-    float attachment_node[3];
-    float attachment_node_pos[3];
-    float attachment_material_axis[3];
+    rod::float3 attachment_node;
+    rod::float3 attachment_node_pos;
+    rod::float3 attachment_material_axis;
 
     current_interface->get_attachment_node(attachment_node, attachment_node_pos,
                                            true);
@@ -1144,7 +1143,7 @@ int ffea_test::connection_propagation(
 
     // float displacement = current_interface->connected_rod->perturbation_amount;
 
-    float post_sample_edge_vec[3];
+    rod::float3 post_sample_edge_vec;
     for (int i = 0; i < 3; i++)
     {
         post_sample_edge_vec[i] =
@@ -1152,7 +1151,7 @@ int ffea_test::connection_propagation(
     }
     rod::normalize(post_sample_edge_vec, post_sample_edge_vec);
 
-    float end_m_post[3];
+    rod::float3 end_m_post;
     for (int n = 0; n < 3; n++)
     {
         end_m_post[n] = current_rod->current_m[n];
@@ -1166,7 +1165,7 @@ int ffea_test::connection_propagation(
 
     rod::dbg_print = false;
 
-    float energy[6];
+    rod::float6 energy;
 
     current_interface->get_node_energy(
         1, equil_attachment_node, equil_attachment_material_axis, attachment_node,
@@ -1190,8 +1189,8 @@ int ffea_test::connection_propagation(
                 rod::dbg_print = true;
             }
 
-            float energyplus[3] = {0, 0, 0};
-            float energyminus[3] = {0, 0, 0};
+            rod::float3 energyplus = {0, 0, 0};
+            rod::float3 energyminus = {0, 0, 0};
             int start_cutoff;
             int end_cutoff;
             rod::set_cutoff_values(node_index,
@@ -1239,7 +1238,7 @@ int ffea_test::connection_propagation(
     {
         for (int i = 0; i < 500; i++)
         {
-            float energy[6] = {0, 0, 0, 0, 0, 0};
+            rod::float6 energy = {0, 0, 0, 0, 0, 0};
             current_interface->get_node_energy(
                 node_index, equil_attachment_node, equil_attachment_material_axis,
                 attachment_node, attachment_material_axis, displacement * i, energy);
@@ -1254,15 +1253,13 @@ int ffea_test::connection_propagation(
 
     rod::dbg_print = true;
     std::cout << "\n";
-    rod::print_array("current_m", current_interface->connected_rod->current_m,
-                     30);
+    rod::print_array("current_m", current_interface->connected_rod->current_m);
     std::cout << "\n";
-    rod::print_array("equil_m", current_interface->connected_rod->equil_m, 30);
+    rod::print_array("equil_m", current_interface->connected_rod->equil_m);
     std::cout << "\n";
-    rod::print_array("current_r", current_interface->connected_rod->current_r,
-                     30);
+    rod::print_array("current_r", current_interface->connected_rod->current_r);
     std::cout << "\n";
-    rod::print_array("equil_r", current_interface->connected_rod->equil_r, 30);
+    rod::print_array("equil_r", current_interface->connected_rod->equil_r);
     std::cout << "\n";
 
     if (mode == 0)
@@ -1277,11 +1274,11 @@ int ffea_test::connection_propagation(
 
     if (mode == 1)
     {
-        float att_node_end[3];
-        float att_node_end_pos[3];
+        rod::float3 att_node_end;
+        rod::float3 att_node_end_pos;
         current_interface->get_attachment_node(att_node_end, att_node_end_pos,
                                                false);
-        float end_end_p[3];
+        rod::float3 end_end_p;
         current_rod->get_p(end_index, end_end_p, false);
         rod::normalize(att_node_end, att_node_end);
         rod::normalize(end_end_p, end_end_p);
@@ -1319,7 +1316,7 @@ int ffea_test::recover_normal()
 
     rod::dbg_print = true;
 
-    float equil_attachment_node[3];
+    rod::float3 equil_attachment_node;
 
     rod::equil_attachment_node_from_J(
         current_interface->J_inv_0, current_interface->face_node_indices,
@@ -1327,16 +1324,16 @@ int ffea_test::recover_normal()
         current_interface->tet_origin, current_interface->edge_vecs,
         current_interface->euler_angles, equil_attachment_node);
 
-    rod::print_array("current_interface->J_inv_0", current_interface->J_inv_0, 9);
-    rod::print_array("equil_attachment_node", equil_attachment_node, 3);
+    rod::print_array("current_interface->J_inv_0", current_interface->J_inv_0);
+    rod::print_array("equil_attachment_node", equil_attachment_node);
 
-    float attachment_node[3];
-    float attachment_node_pos[3];
+    rod::float3 attachment_node;
+    rod::float3 attachment_node_pos;
     rod::dbg_print = false;
     current_interface->get_attachment_node(attachment_node, attachment_node_pos,
                                            false);
     rod::dbg_print = true;
-    rod::print_array("attachment node      ", attachment_node, 3);
+    rod::print_array("attachment node      ", attachment_node);
 
     if (equil_attachment_node[0] > 0.99 && equil_attachment_node[1] < 0.01 &&
         equil_attachment_node[2] < 0.01)
@@ -1349,9 +1346,9 @@ int ffea_test::recover_normal()
 
 int ffea_test::dump_twist_info()
 {
-    float everything_rotmat[9] = {0.6092191, -0.7677125, -0.1986693,
-                                  0.6734007, 0.6331432, -0.3816559,
-                                  0.4187881, 0.0987280, 0.9027011};
+    rod::float9 everything_rotmat = {0.6092191, -0.7677125, -0.1986693,
+                                     0.6734007, 0.6331432, -0.3816559,
+                                     0.4187881, 0.0987280, 0.9027011};
     // x-axis: clear, works fine //float everything_rotmat[9] = {  1.0000000,
     // 0.0000000, 0.0000000, 0.0000000, 0.8775826, -0.4794255, 0.0000000,
     // 0.4794255, 0.8775826 }; y-axis clear float everything_rotmat[9] = {
@@ -1362,28 +1359,28 @@ int ffea_test::dump_twist_info()
 
     float im1_rotation_angle = 0.5;
     float i_rotation_angle = -0.5;
-    float i_rotmat[9] = {0.3469295, -0.6816330, 0.6442177, 0.9377583, 0.2636695,
-                         -0.2260263, -0.0157935, 0.6825356, 0.7306817};
+    rod::float9 i_rotmat = {0.3469295, -0.6816330, 0.6442177, 0.9377583, 0.2636695,
+                           -0.2260263, -0.0157935, 0.6825356, 0.7306817};
 
-    float p_i_equil[3] = {1, 0, 0};
-    float p_i[3] = {1, 0, 0};
-    float m_i_equil[3] = {0, 1, 0};
-    float m_i[3] = {0, 1, 0};
+    rod::float3 p_i_equil = {1, 0, 0};
+    rod::float3 p_i = {1, 0, 0};
+    rod::float3 m_i_equil = {0, 1, 0};
+    rod::float3 m_i = {0, 1, 0};
 
-    float p_im1_equil[3] = {1, 0, 0};
-    float p_im1[3] = {1, 0, 0};
-    float m_im1_equil[3] = {0, 1, 0};
-    float m_im1[3] = {0, 1, 0};
+    rod::float3 p_im1_equil = {1, 0, 0};
+    rod::float3 p_im1 = {1, 0, 0};
+    rod::float3 m_im1_equil = {0, 1, 0};
+    rod::float3 m_im1 = {0, 1, 0};
 
-    float p_i_equil_rot[3] = {1, 0, 0};
-    float p_i_rot[3] = {1, 0, 0};
-    float m_i_equil_rot[3] = {0, 1, 0};
-    float m_i_rot[3] = {0, 1, 0};
+    rod::float3 p_i_equil_rot = {1, 0, 0};
+    rod::float3 p_i_rot = {1, 0, 0};
+    rod::float3 m_i_equil_rot = {0, 1, 0};
+    rod::float3 m_i_rot = {0, 1, 0};
 
-    float p_im1_equil_rot[3] = {1, 0, 0};
-    float p_im1_rot[3] = {1, 0, 0};
-    float m_im1_equil_rot[3] = {0, 1, 0};
-    float m_im1_rot[3] = {0, 1, 0};
+    rod::float3 p_im1_equil_rot = {1, 0, 0};
+    rod::float3 p_im1_rot = {1, 0, 0};
+    rod::float3 m_im1_equil_rot = {0, 1, 0};
+    rod::float3 m_im1_rot = {0, 1, 0};
 
     rod::apply_rotation_matrix(p_i_equil, everything_rotmat, p_i_equil_rot);
     rod::apply_rotation_matrix(p_i_rot, everything_rotmat, p_i_rot);
@@ -1398,14 +1395,14 @@ int ffea_test::dump_twist_info()
 
     rod::dbg_print = true;
 
-    rod::print_array("p_i_equil_rot", p_i_equil_rot, 3);
-    rod::print_array("p_i_rot", p_i_rot, 3);
-    rod::print_array("m_i_equil_rot", m_i_equil_rot, 3);
-    rod::print_array("m_i_rot", m_i_rot, 3);
-    rod::print_array("p_im1_equil_rot", p_im1_equil_rot, 3);
-    rod::print_array("p_im1_rot", p_im1_rot, 3);
-    rod::print_array("m_im1_equil_rot", m_im1_equil_rot, 3);
-    rod::print_array("m_im1_rot", m_im1_rot, 3);
+    rod::print_array("p_i_equil_rot", p_i_equil_rot);
+    rod::print_array("p_i_rot", p_i_rot);
+    rod::print_array("m_i_equil_rot", m_i_equil_rot);
+    rod::print_array("m_i_rot", m_i_rot);
+    rod::print_array("p_im1_equil_rot", p_im1_equil_rot);
+    rod::print_array("p_im1_rot", p_im1_rot);
+    rod::print_array("m_im1_equil_rot", m_im1_equil_rot);
+    rod::print_array("m_im1_rot", m_im1_rot);
 
     float twenergy;
 
@@ -1413,7 +1410,7 @@ int ffea_test::dump_twist_info()
     {
         // int i = 65;
 
-        float new_mi[3];
+        rod::float3 new_mi;
         rod::rodrigues_rotation(m_i_rot, p_i_rot, ((float)i / 100) * 2 * 3.14159,
                                 new_mi);
         twenergy = rod::get_twist_energy(1, new_mi, m_im1_rot, m_i_equil_rot,
@@ -1469,18 +1466,17 @@ int ffea_test::lower_sphere()
 // where c = r2 when t = 1. t is a multiplier.
 int ffea_test::point_lies_within_rod_element()
 {
+    rod::float6 t = {-1, 0, 0.3, 0.7, 1, 1.5};
+    rod::float3 c_init = {0};
+    rod::float3 c_out = {0};
 
-    float t[6] = {-1, 0, 0.3, 0.7, 1, 1.5};
-    float c_init[3] = {0};
-    float c_out[3] = {0};
-
-    float c_answer[3] = {0};
-    float delta[3] = {0};
+    rod::float3 c_answer = {0};
+    rod::float3 delta = {0};
     int pass_count = 0;
 
 
-    float r1[3] = {0};
-    float p[3] = {0, 0, 1};
+    rod::float3 r1 = {0};
+    rod::float3 p = {0, 0, 1};
 
 
     //rod::dbg_print = true;
@@ -1524,9 +1520,9 @@ int ffea_test::point_lies_within_rod_element()
         }
 
         std::cout << "t = " << t[i] << std::endl;
-        rod::print_array("c initial", c_init, 3);
-        rod::print_array("c computed", c_out, 3);
-        rod::print_array("c expected", c_answer, 3);
+        rod::print_array("c initial", c_init);
+        rod::print_array("c computed", c_out);
+        rod::print_array("c expected", c_answer);
 
         vec3d(n) { delta[n] = c_out[n] - c_answer[n]; }
         if (rod::absolute(delta) < 0.01)
@@ -1562,37 +1558,37 @@ int ffea_test::line_connecting_rod_elements()
 {
     float radius_a = 0.25;
     float radius_b = 0.5;
-    float r_a1[3] = {0.0, 0.0, 0.0}; // fixed
-    float r_b1[7][3] = {{0.0, radius_a + radius_b, -0.25},
-                        {1.1456, radius_a, 0.25},
-                        {0.75, radius_a + radius_b, -0.5},
-                        {0.1, radius_b, 0.0},
-                        {1, -0.5, 0},
-                        {0.0, 0.0, 0.0},
-                        {0.0, 0.5, 0.0}};
-    float r_a2[3] = {1.0, 0.0, 0.0}; // fixed
-    float r_b2[3] = {0.0, 0.0, 0.0};
-    float p_a[3] = {1.0, 0.0, 0.0}; // point in x direction
-    float p_b[7][3] = {
-        {std::sin(M_PI / 4.0), 0.0, std::cos(M_PI / 4.0)},   // 45 deg x-z
-        {std::sin(M_PI / 12.0), 0.0, std::cos(M_PI / 12.0)}, // 15 deg x-z
-        {0.0, 0.0, 1.0},
-        {std::cos(M_PI / 12.0), std::sin(M_PI / 12.0), 0.0}, // 15 deg, x-y
-        {std::cos(M_PI / 3.0), std::sin(M_PI / 3.0), 0.0},   // 60 deg, x-y
-        {std::cos(M_PI / 12.0), std::sin(M_PI / 12.0), 0.0}, // 15 deg, x-y
-        {std::cos(M_PI / 3.0), -std::sin(M_PI / 3.0), 0.0}}; // -60 deg, x-y
-    float l_a[3] = {0, 0, 0};
-    float l_b[3] = {0, 0, 0};
-    float l_a_cross_l_b[3] = {0.0, 0.0, 0.0};
-    float c_a[3] = {0.0, 0.0, 0.0};
-    float c_b[3] = {0.0, 0.0, 0.0};
+    rod::float3 r_a1 = {0.0, 0.0, 0.0}; // fixed
+    std::array<rod::float3, 7> r_b1 = { rod::float3{0.0, radius_a + radius_b, -0.25},
+                        rod::float3{1.1456, radius_a, 0.25},
+                        rod::float3{0.75, radius_a + radius_b, -0.5},
+                        rod::float3{0.1, radius_b, 0.0},
+                        rod::float3{1, -0.5, 0},
+                        rod::float3{0.0, 0.0, 0.0},
+                        rod::float3{0.0, 0.5, 0.0}};
+    rod::float3 r_a2 = {1.0, 0.0, 0.0}; // fixed
+    rod::float3 r_b2 = {0.0, 0.0, 0.0};
+    rod::float3 p_a = {1.0, 0.0, 0.0}; // point in x direction
+    std::array<rod::float3, 7> p_b = {
+        rod::float3{(float)std::sin(M_PI / 4.0), 0.0, (float)std::cos(M_PI / 4.0)},   // 45 deg x-z
+        rod::float3{(float)std::sin(M_PI / 12.0), 0.0, (float)std::cos(M_PI / 12.0)}, // 15 deg x-z
+        rod::float3{0.0, 0.0, 1.0},
+        rod::float3{(float)std::cos(M_PI / 12.0), (float)std::sin(M_PI / 12.0), 0.0}, // 15 deg, x-y
+        rod::float3{(float)std::cos(M_PI / 3.0), (float)std::sin(M_PI / 3.0), 0.0},   // 60 deg, x-y
+        rod::float3{(float)std::cos(M_PI / 12.0), (float)std::sin(M_PI / 12.0), 0.0}, // 15 deg, x-y
+        rod::float3{(float)std::cos(M_PI / 3.0), (float)-std::sin(M_PI / 3.0), 0.0}}; // -60 deg, x-y
+    rod::float3 l_a = {0, 0, 0};
+    rod::float3 l_b = {0, 0, 0};
+    rod::float3 l_a_cross_l_b = {0.0, 0.0, 0.0};
+    rod::float3 c_a = {0.0, 0.0, 0.0};
+    rod::float3 c_b = {0.0, 0.0, 0.0};
 
     // Expected results
-    float c_a_answer[3] = {0.0, 0.0, 0.0};
-    float c_b_answer[3] = {0.0, 0.0, 0.0};
+    rod::float3 c_a_answer = {0.0, 0.0, 0.0};
+    rod::float3 c_b_answer = {0.0, 0.0, 0.0};
 
-    float delta_a[3] = {0.0, 0.0, 0.0};
-    float delta_b[3] = {0.0, 0.0, 0.0};
+    rod::float3 delta_a = {0.0, 0.0, 0.0};
+    rod::float3 delta_b = {0.0, 0.0, 0.0};
     int num_tests = sizeof(r_b1) / sizeof(r_b1[0]);
     int pass_count = 0; // count number of cases that have passed
 
@@ -1666,11 +1662,11 @@ int ffea_test::line_connecting_rod_elements()
             pass_count++;
         }
 
-        rod::print_array("c_a computed", c_a, 3);
-        rod::print_array("c_a expected", c_a_answer, 3);
+        rod::print_array("c_a computed", c_a);
+        rod::print_array("c_a expected", c_a_answer);
         std::cout << "|delta_a| = " << rod::absolute(delta_a) << std::endl;
-        rod::print_array("c_b computed", c_b, 3);
-        rod::print_array("c_b expected", c_b_answer, 3);
+        rod::print_array("c_b computed", c_b);
+        rod::print_array("c_b expected", c_b_answer);
         std::cout << "|delta_b| = " << rod::absolute(delta_b) << std::endl;
 
         std::cout << "CASES PASSED: " << pass_count << "/" << num_tests << "\n"
@@ -1700,13 +1696,13 @@ int ffea_test::rod_neighbour_list_construction()
     std::string filename;
     rod::Rod **rod_array = nullptr;
 
-    float r1[3] = {0, 0, 0};
-    float r2[3] = {0, 0, 0};
+    rod::float3 r1 = {0, 0, 0};
+    rod::float3 r2 = {0, 0, 0};
     float distance = 0;
-    float c_a[3] = {0, 0, 0};
-    float c_b[3] = {0, 0, 0};
+    rod::float3 c_a = {0, 0, 0};
+    rod::float3 c_b = {0, 0, 0};
     float radius = 0;
-    float c_ba[3] = {0, 0, 0};
+    rod::float3 c_ba = {0, 0, 0};
     int num_neighbours = 0;
     int num_interactions = 0;
     int expected_num_interactions = 14;
@@ -1755,8 +1751,8 @@ int ffea_test::rod_neighbour_list_construction()
             vec3d(n) { r1[n] = rod_array[i]->current_r[3 * j + n]; }
             vec3d(n) { r2[n] = rod_array[i]->current_r[3 * (j + 1) + n]; }
             std::cout << "  element " << j << std::endl;
-            rod::print_array("  r1", r1, 3);
-            rod::print_array("  r2", r2, 3);
+            rod::print_array("  r1", r1);
+            rod::print_array("  r2", r2);
             std::cout << "  num_neighbours: "
                       << rod_array[i]->get_num_nbrs(j, rod_array[i]->steric_nbrs) << std::endl;
             // rod::print_vector("  all coords: ",
@@ -1768,8 +1764,8 @@ int ffea_test::rod_neighbour_list_construction()
                 vec3d(n) { c_ba[n] = c_b[n] - c_a[n]; }
                 distance = rod::absolute(c_ba);
 
-                rod::print_array("  c_a", c_a, 3);
-                rod::print_array("  c_b", c_b, 3);
+                rod::print_array("  c_a", c_a);
+                rod::print_array("  c_b", c_b);
                 std::cout << "  |c_ba|: " << distance << std::endl;
             }
             num_neighbours += rod_array[i]->get_num_nbrs(j, rod_array[i]->steric_nbrs);
@@ -1877,17 +1873,17 @@ int ffea_test::nearest_image_pbc()
     float xmax = 0.9;
     rod::print_vector("box dim", dim);
 
-    auto nimg_test = [&dim](float a[3], float b[3], int answer[3])
+    auto nimg_test = [&dim](rod::float3 &a, rod::float3 &b, rod::int3 &answer)
     {
-        float ab[3] = {0};
-        int diff[3] = {0};
+        rod::float3 ab = {0};
+        rod::int3 diff = {0};
         vec3d(n) { ab[n] = b[n] - a[n]; }
         std::vector<int> result = rod::nearest_periodic_image(a, b, dim);
 
-        rod::print_array("a", a, 3);
-        rod::print_array("b", b, 3);
-        rod::print_array("ab", ab, 3);
-        rod::print_array("expected image", answer, 3);
+        rod::print_array("a", a);
+        rod::print_array("b", b);
+        rod::print_array("ab", ab);
+        rod::print_array("expected image", answer);
         rod::print_vector("computed image", result);
         std::cout << "\n";
 
@@ -1899,9 +1895,9 @@ int ffea_test::nearest_image_pbc()
 
     struct args
     {
-        float a[3];
-        float b[3];
-        int img[3];
+        rod::float3 a;
+        rod::float3 b;
+        rod::int3 img;
 
         args(std::vector<float> a_in, std::vector<float> b_in, std::vector<int> img_in)
         {
@@ -1910,7 +1906,7 @@ int ffea_test::nearest_image_pbc()
             vec3d(n) { img[n] = img_in[n]; }
         }
 
-        args(float a_in[3], float b_in[3], int img_in[3])
+        args(const rod::float3 &a_in, const rod::float3 &b_in, const rod::int3 &img_in)
         {
             vec3d(n) { a[n] = a_in[n]; }
             vec3d(n) { b[n] = b_in[n]; }
@@ -1925,9 +1921,9 @@ int ffea_test::nearest_image_pbc()
         // 3 pairs along 6 axes: +/- x, y, z
         vec3d(n)
         {
-            float a[3];
-            float b[3];
-            int img[3] = { 0 };
+            rod::float3 a;
+            rod::float3 b;
+            rod::int3 img = { 0 };
             vec3d(n)
             {
                 a[n] = 0.5*dim[n];
@@ -1951,9 +1947,9 @@ int ffea_test::nearest_image_pbc()
         // 4 pairs occupying 8 corners
         for (int i=0; i<4; i++)
         {
-            float a[3] = {xmin, xmin, xmin};
-            float b[3] = {xmin, xmin, xmin};
-            int img[3] = {-1, -1, -1};
+            rod::float3 a = {xmin, xmin, xmin};
+            rod::float3 b = {xmin, xmin, xmin};
+            rod::int3 img = {-1, -1, -1};
 
             vec3d(n){
                 a[n] = std::max(xmin, octants_a[i][n] * xmax);
@@ -2028,9 +2024,9 @@ int ffea_test::rod_vdw_site_placement()
         std::ifstream in_file;
         std::string row;
         std::string coord;
-        float pos_from_file[3] = {0};
-        float pos_from_rod[3] = {0};
-        float diff[3] = {0};
+        rod::float3 pos_from_file = {0};
+        rod::float3 pos_from_rod = {0};
+        rod::float3 diff = {0};
 
         in_file.open(rod_names[i] + "_vdw_pos.csv");
 
@@ -2055,9 +2051,9 @@ int ffea_test::rod_vdw_site_placement()
 
             vec3d(n){diff[n] = pos_from_file[n] - pos_from_rod[n];}
 
-            rod::print_array("  pos_from_file",pos_from_file,3);
-            rod::print_array("  pos_from_rod",pos_from_rod,3);
-            rod::print_array("  diff",diff,3);
+            rod::print_array("  pos_from_file",pos_from_file);
+            rod::print_array("  pos_from_rod",pos_from_rod);
+            rod::print_array("  diff",diff);
             std::cout << "  |diff| : " << rod::absolute(diff) << "\n";
             std::cout << "\n";
 
