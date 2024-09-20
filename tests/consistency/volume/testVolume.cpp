@@ -30,8 +30,8 @@ using namespace std;
 
 int main() {
 
-  arr3 tetA[4], tetB[4];
-  arr3 tetC[4], tetD[4]; 
+  std::array<arr3, 4> tetA, tetB;
+  std::array<arr3, 4> tetC, tetD;
   // set up tetA and tetB:
   for (int i=0; i<4; i++) {
     for (int j=0; j<3; j++) {
@@ -78,7 +78,7 @@ int main() {
   } 
 
   arr3 cm; 
-  scalar vol = volumeIntersectionII<scalar,arr3>(tetA[0], tetA[1], tetA[2], tetA[3], tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
+  scalar vol = volumeIntersectionII(tetA[0], tetA[1], tetA[2], tetA[3], tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
   stringstream ss;
   ss.precision(14);
   ss << vol;
@@ -126,7 +126,7 @@ int main() {
     // return 1;
   } 
 
-  vol = volumeIntersection<scalar,arr3>(tetC, tetD, false, cm);
+  vol = volumeIntersection(tetC, tetD, false, cm);
   if (vol == 0) {
     cout << " intersecting volume should not be zero for these tetrahedra" << endl; 
     return 1;

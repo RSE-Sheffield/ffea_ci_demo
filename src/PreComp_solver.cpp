@@ -376,7 +376,7 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
        //   as a fraction of the basis vectors length.
        b_elems[mj]->calculate_jacobian(J); 
        mat3_invert(J, J_inv, &det);
-       arr3arr3Substract<scalar,arr3>(v, b_elems[mj]->n[0]->pos, w);
+       sub(v, b_elems[mj]->n[0]->pos, w);
        vec3_mat3_mult(w, J_inv, u); 
        // now u has the relative coordinates, not under unit vectors
        //    but under full length vectors. And we store them:
@@ -445,9 +445,9 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
        b_types[swap_low] = b_types[swap_high];
        b_types[swap_high] = tmp_type;
 
-       arr3Store<scalar,arr3>( arr3_view<scalar,arr3>(b_rel_pos+3*swap_low,3), tmp_pos); 
-       arr3Store<scalar,arr3>( arr3_view<scalar,arr3>(b_rel_pos+3*swap_high,3), arr3_view<scalar,arr3>(b_rel_pos+3*swap_low,3) ); 
-       arr3Store<scalar,arr3>( tmp_pos, arr3_view<scalar,arr3>(b_rel_pos+3*swap_high,3)); 
+       store( arr_view<scalar,3>(b_rel_pos, 3*swap_low), tmp_pos); 
+       store( arr_view<scalar,3>(b_rel_pos, 3*swap_high), arr_view<scalar,3>(b_rel_pos, 3*swap_low) ); 
+       store( tmp_pos, arr_view<scalar,3>(b_rel_pos, 3*swap_high)); 
 
        for (int k=j; k<n; k++) {
          if (sorting_pattern[k][1] == swap_low) {
@@ -671,7 +671,7 @@ int PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=null
  
            f_ij = get_F(d, type_i, b_types[b_index_j]); 
            // += the force: 
-           arr3Resize3<scalar,arr3>(f_ij, dx, arr3_view<scalar,arr3>(b_forces+3*b_index_i, 3) );
+           resize3(f_ij, dx, arr_view<scalar,3>(b_forces, 3*b_index_i) );
 
            // e_j = b_elems[b_index_j];
            // fieldenergy[(thread_id*num_blobs + e_i->daddy_blob->blob_index) * num_blobs + e_j->daddy_blob->blob_index] += 0.5*get_U(d, type_i, b_types[b_index_j]);
@@ -696,7 +696,7 @@ int PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=null
 
         // fix input force:
         for (int k=0; k<4; k++) {
-          arr3Resize2<scalar,arr3>(-phi_i[k], arr3_view<scalar,arr3>(b_forces+3*b_index_i, 3), dxik); 
+          resize2(-phi_i[k], arr_view<scalar,3>(b_forces, 3*b_index_i), dxik); 
           e_i->add_force_to_node(k, dxik);
         } // close k, nodes for the elements.
       }
@@ -787,7 +787,7 @@ int PreComp_solver::solve_using_neighbours(){
            e_j = b_elems[b_index_j];
            fieldenergy[(thread_id*num_blobs + e_i->daddy_blob->blob_index) * num_blobs + e_j->daddy_blob->blob_index] += get_U(d, type_i, b_types[b_index_j]);
 
-           arr3Resize<scalar,arr3>(f_ij, dx);
+           resize(f_ij, dx);
 
            phi_j[1] = b_rel_pos[3*b_index_j];
            phi_j[2] = b_rel_pos[3*b_index_j+1];
@@ -798,10 +798,10 @@ int PreComp_solver::solve_using_neighbours(){
            #pragma omp critical
            {
            for (int k=0; k<4; k++) {
-             arr3Resize2<scalar,arr3>(-phi_i[k], dx, dxik); 
-             arr3Resize2<scalar,arr3>(phi_j[k], dx, dxjk); 
-             e_i->add_force_to_node(k, dxik);
-             e_j->add_force_to_node(k, dxjk); 
+               resize2(-phi_i[k], dx, dxik);
+               resize2(phi_j[k], dx, dxjk);
+               e_i->add_force_to_node(k, dxik);
+               e_j->add_force_to_node(k, dxjk); 
            } // close k, nodes for the elements.
            } // close critical
 
@@ -889,8 +889,8 @@ int PreComp_solver::solve(scalar *blob_corr/*=nullptr*/) {
 	// Add energies to record 
    fieldenergy[(thread_id*num_blobs + e_i->daddy_blob->blob_index) * num_blobs + e_j->daddy_blob->blob_index] += get_U(d, type_i, b_types[j]);
 
-        arr3Resize<scalar,arr3>(f_ij, dx);
-        arr3Store<scalar,arr3>(dx, dtemp); 
+        resize(f_ij, dx);
+        store(dx, dtemp); 
 
         phi_j[1] = b_rel_pos[3*j];
         phi_j[2] = b_rel_pos[3*j+1];
@@ -901,13 +901,13 @@ int PreComp_solver::solve(scalar *blob_corr/*=nullptr*/) {
         // and apply the force to all the nodes in the elements i and j:
         for (int k=0; k<4; k++) {
           // forces for e_i
-          arr3Resize<scalar,arr3>(-phi_i[k], dx);
+          resize(-phi_i[k], dx);
           e_i->add_force_to_node(k, dx);
-          arr3Store<scalar,arr3>(dtemp, dx); 
+          store(dtemp, dx); 
           // forces for e_j
-          arr3Resize<scalar,arr3>(phi_j[k], dx);
+          resize(phi_j[k], dx);
           e_j->add_force_to_node(k, dx);
-          arr3Store<scalar,arr3>(dtemp, dx); 
+          store(dtemp, dx); 
 
         } 
         }

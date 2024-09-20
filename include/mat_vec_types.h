@@ -29,6 +29,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath> 
 #include <array>
+#include <vector>
 
 /*
  * Defines what is meant by a scalar (essentially sets the precision of
@@ -77,6 +78,7 @@ typedef std::array<geoscalar, 4> grr4;
 /** arr3_view has the spirit of "span" or "array_view" 
  *    allowing us to have long arrays 
  *    and use the arr3 functions in mat_vec_fns_II  */
+
 template <class t_scalar, class brr3 = std::array<t_scalar, 3>>
 class arr3_view
 {
@@ -90,6 +92,49 @@ public:
 
 private:
     t_scalar* data;
+};
+
+template <typename T, size_t N>
+class arr_view {
+ public:
+    template<size_t X>
+    arr_view(std::array<T, X> &in, size_t offset)
+        : _data(in.data() + offset) { }
+    arr_view(std::vector<T>& in, const size_t offset)
+        : _data(in.data() + offset) { }
+    arr_view(T* in, const size_t offset)
+        : _data(in + offset) { }
+    constexpr size_t size() { return N; }
+    T* data() { return _data; }
+    T* begin() { return _data; }
+    T* end() { return _data + N; }
+    T& operator [](std::size_t i) { return _data[i]; }
+    const T* data() const { return _data; }
+    const T* cbegin() const { return _data; }
+    const T* cend() const { return _data + N; }
+    const T& operator [](std::size_t i) const { return _data[i]; }
+
+ private:
+    T *const _data;
+};
+template <typename T, size_t N>
+class const_arr_view {
+ public:
+    template<size_t X>
+    const_arr_view(const std::array<T, X>& in, const size_t offset)
+        : _data(in.data() + offset) { }
+    const_arr_view(const std::vector<T>& in, const size_t offset)
+        : _data(in.data() + offset) { }
+    const_arr_view(const T *in, const size_t offset)
+        : _data(in + offset) { }
+    static size_t size() { return N; }
+    const T* data() const { return _data; }
+    const T* cbegin() const { return _data; }
+    const T* cend() const { return _data + N; }
+    const T& operator [](std::size_t i) const { return _data[i]; }
+
+private:
+    const T *const _data;
 };
 
 

@@ -406,7 +406,7 @@ bool Face::checkTetraIntersection(Face *f2) {
 scalar Face::getTetraIntersectionVolume(Face *f2) {
 
     grr3 cm;
-    return volumeIntersectionII<geoscalar,grr3>(n[0]->pos, n[1]->pos, n[2]->pos,
+    return volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos,
                                          n[3]->pos, f2->n[0]->pos, f2->n[1]->pos,
                                          f2->n[2]->pos, f2->n[3]->pos, false, cm);
 
@@ -418,7 +418,7 @@ scalar Face::checkTetraIntersectionAndGetVolume(Face *f2) {
     if (!tet_a_tetII(    n[0]->pos,     n[1]->pos,     n[2]->pos,     n[3]->pos,
                          f2->n[0]->pos, f2->n[1]->pos, f2->n[2]->pos, f2->n[3]->pos)) return 0.0;
 
-    return volumeIntersectionII<scalar,arr3>(n[0]->pos, n[1]->pos, n[2]->pos,
+    return volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos,
             n[3]->pos, f2->n[0]->pos, f2->n[1]->pos,
             f2->n[2]->pos, f2->n[3]->pos, false, cm);
 
@@ -427,7 +427,7 @@ scalar Face::checkTetraIntersectionAndGetVolume(Face *f2) {
 }
 
 void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar &area) {
-    grr3 tetA[4], tetB[4];
+    std::array<grr3, 4> tetA, tetB;
 
     for (int i=0; i<4; i++) {
         tetA[i][0] = n[i]->pos[0];
@@ -437,7 +437,7 @@ void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar
         tetB[i][1] = f2->n[i]->pos[1];
         tetB[i][2] = f2->n[i]->pos[2];
     }
-    volumeAndAreaIntersection<geoscalar,grr3>(tetA, tetB, vol, area);
+    volumeAndAreaIntersection(tetA, tetB, vol, area);
 }
 
 
@@ -446,7 +446,7 @@ void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar
 bool Face::checkTetraIntersection(Face *f2,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     // V1 = n
     // V2 = f2->n
-    arr3 tetA[4], tetB[4];
+    std::array<arr3, 4> tetA, tetB;
     double /*tempx=0, tempy=0,tempz=0,*/assx=0, assy=0, assz=0;
     for (int i=0; i<4; i++) {
         /* tetA[i][0] = this->n[i]->pos[0];
@@ -465,31 +465,31 @@ bool Face::checkTetraIntersection(Face *f2,scalar *blob_corr,int f1_daddy_blob_i
 }
 
 
-bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, geoscalar dr, grr3 (&dVdr), geoscalar &vol, grr4 (&phi1), grr4 (&phi2)) {
+bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2) {
 
-    grr3 tetA[4], tetB[4];
+    std::array<grr3, 4> tetA, tetB;
     grr3 ap1, ap2, cm;
     geoscalar vol_m, vol_M;
 
     // GET THE VOLUME AND THE DIRECTION OF THE GRADIENT:
 
     // GET THE VOLUME, the CM for the intersection, and the direction of the gradient:
-    vol = volumeIntersectionII<geoscalar,grr3>(n[0]->pos, n[1]->pos,
+    vol = volumeIntersectionII(n[0]->pos, n[1]->pos,
             n[2]->pos, n[3]->pos,
             f2->n[0]->pos, f2->n[1]->pos,
             f2->n[2]->pos, f2->n[3]->pos, true, cm);
     if (vol == 0) return false;  // Zero check floating point is considered unsafe, consider an epsilon
 
     // GET THE LOCAL COORDINATES where the force will be applied.
-    getLocalCoordinatesForLinTet<geoscalar,grr3,grr4>(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, cm, phi1);
-    getLocalCoordinatesForLinTet<geoscalar,grr3,grr4>(f2->n[0]->pos, f2->n[1]->pos, f2->n[2]->pos, f2->n[3]->pos, cm, phi2);
+    getLocalCoordinatesForLinTet(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, cm, phi1);
+    getLocalCoordinatesForLinTet(f2->n[0]->pos, f2->n[1]->pos, f2->n[2]->pos, f2->n[3]->pos, cm, phi2);
 
 
     // GET THE GRADIENT
     // 1st Order:
     grr3 dx;
     for (int dir=0; dir<3; dir++) {
-        arr3Initialise<grr3>(dx);
+        initialise(dx);
         dx[dir] = dr;
         for (int i=0; i<4; i++) {
             for (int j=0; j<3; j++) {
@@ -498,9 +498,9 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, ge
             }
         }
 
-        vol_M = volumeIntersectionII<geoscalar,grr3>(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
+        vol_M = volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
         dVdr[dir] = (vol_M - vol)/dr;
-        vol_M = volumeIntersectionII<geoscalar,grr3>(f2->n[0]->pos, f2->n[1]->pos, f2->n[2]->pos, f2->n[3]->pos, tetA[0], tetA[1], tetA[2], tetA[3], false, cm);
+        vol_M = volumeIntersectionII(f2->n[0]->pos, f2->n[1]->pos, f2->n[2]->pos, f2->n[3]->pos, tetA[0], tetA[1], tetA[2], tetA[3], false, cm);
         dVdr[dir] -= (vol_M - vol)/dr;
     }
 
@@ -509,9 +509,8 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, ge
 }
 
 
-bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, geoscalar dr, grr3 (&dVdr), geoscalar &vol, grr4 (&phi1), grr4 (&phi2), scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
-
-    grr3 tetB[4], tetC[4], tetD[4];
+bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+    std::array<grr3, 4> tetB, tetC, tetD;
     grr3 ap1, ap2, cm;
     geoscalar vol_m, vol_M;
 
@@ -523,19 +522,19 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, ge
     }
 
     // get the volume, the CM for the intersection, and the direction of the gradient:
-    vol = volumeIntersectionII<geoscalar,grr3>(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], true, cm);
+    vol = volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], true, cm);
     if (vol == 0) return false;
 
     // GET THE LOCAL COORDINATES where the force will be applied.
-    getLocalCoordinatesForLinTet<geoscalar,grr3,grr4>(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, cm, phi1);
-    getLocalCoordinatesForLinTet<geoscalar,grr3,grr4>(tetB[0], tetB[1], tetB[2], tetB[3], cm, phi2);
+    getLocalCoordinatesForLinTet(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, cm, phi1);
+    getLocalCoordinatesForLinTet(tetB[0], tetB[1], tetB[2], tetB[3], cm, phi2);
 
 
     // GET THE GRADIENT
     // 1st Order:
     grr3 dx;
     for (int dir=0; dir<3; dir++) {
-        arr3Initialise<grr3>(dx);
+        initialise(dx);
         dx[dir] = dr;
         for (int i=0; i<4; i++) {
             for (int j=0; j<3; j++) {
@@ -544,9 +543,9 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, ge
                 tetC[i][j] = n[i]->pos[j] + dx[j];
             }
         }
-        vol_M = volumeIntersectionII<geoscalar,grr3>(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetD[0], tetD[1], tetD[2], tetD[3], false, cm);
+        vol_M = volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetD[0], tetD[1], tetD[2], tetD[3], false, cm);
         dVdr[dir] = (vol_M - vol)/dr;
-        vol_M = volumeIntersection<geoscalar,grr3>(tetB, tetC, false, cm);
+        vol_M = volumeIntersection(tetB, tetC, false, cm);
         dVdr[dir] -= (vol_M - vol)/dr;
     }
 
@@ -557,21 +556,22 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, ge
 
 scalar Face::getTetraIntersectionVolume(Face *f2, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
 
-    grr3 cm, tetB[4];
+    grr3 cm;
+    std::array<grr3, 4> tetB;
     double assx=0, assy=0, assz=0;
     for (int i=0; i<4; i++) {
         for (int j=0; j<3; j++) {
             tetB[i][j] = f2->n[i]->pos[j] - blob_corr[f1_daddy_blob_index*(this->num_blobs)*3 + f2_daddy_blob_index*3 + j];
         }
     }
-    return volumeIntersectionII<geoscalar,grr3>(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
+    return volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
 
 
 }
 
 scalar Face::checkTetraIntersectionAndGetVolume(Face *f2, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
-
-    arr3 cm, tetB[4];
+    arr3 cm;
+    std::array<arr3, 4> tetB;
 
     for (int i=0; i<4; i++) {
         for (int j=0; j<3; j++) {
@@ -581,16 +581,12 @@ scalar Face::checkTetraIntersectionAndGetVolume(Face *f2, scalar *blob_corr,int 
 
     if (!tet_a_tetII(   n[0]->pos,     n[1]->pos,     n[2]->pos,     n[3]->pos,
                         tetB[0], tetB[1], tetB[2], tetB[3])) return 0.0;
-    return volumeIntersectionII<scalar,arr3>(n[0]->pos, n[1]->pos, n[2]->pos,
+    return volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos,
             n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
-
-
-
 }
 
 void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar &area,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
-
-    grr3 tetA[4], tetB[4];
+    std::array<grr3, 4> tetA, tetB;
     double assx=0, assy=0, assz=0;
     for (int i=0; i<4; i++) {
         tetA[i][0] = n[i]->pos[0];
@@ -602,14 +598,12 @@ void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar
         tetB[i][1] = f2->n[i]->pos[1]-blob_corr[f1_daddy_blob_index*(this->num_blobs)*3 + f2_daddy_blob_index*3+1];
         tetB[i][2] = f2->n[i]->pos[2]-blob_corr[f1_daddy_blob_index*(this->num_blobs)*3 + f2_daddy_blob_index*3+2];
     }
-    volumeAndAreaIntersection<geoscalar,grr3>(tetA, tetB, vol, area);
+    volumeAndAreaIntersection(tetA, tetB, vol, area);
     //printf("Face %d and Face %d volume is %f area is %f\n",f2->index,this->index,vol,area);
-
 }
 
 
 scalar Face::length_of_longest_edge() {
-
     scalar d2=0, di2=0;
     for (int i=0; i<3; i++) { // for the double loop of all the 3 nodes on the face:
         for (int j=i+1; j<3; j++) {
@@ -623,12 +617,11 @@ scalar Face::length_of_longest_edge() {
 
         }
     }
-
     return sqrt(d2);
-
 }
 
-template <class brr3> void Face::vec3Vec3SubsToArr3Mod(Face *f2, brr3 (&w),scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+template <class brr3>
+void Face::vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     //this->get_centroid();
     //f2->get_centroid();
     for(int i =0; i <3; ++i)

@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
 
      b1.center_of_coord(cm1);
      b2.center_of_coord(cm2);
-     d = arr3arr3Distance<scalar,arr3>(cm2, cm1);
+     d = distance(cm2, cm1);
      if ( (d - d0) > 1e-4) {
        cout << " CMs separating... something went wrong! t: " << t << endl; 
        cout << " cm1: " << cm1[0] << endl;
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
      // calculate if there is any tetrahedra intersecting:
      checks = 0;
      i_vol = 0; 
-     arr3 tet1[4], tet2[4];
+     std::array<arr3, 4> tet1, tet2;
      for (int i=0; i<b1.num_elements; i++){ 
        // set up tetrahedron 1:
        for (int nn = 0; nn<4; nn++) {
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
            }
          }
          checks += 1;
-         if (volumeIntersection<scalar,arr3>(tet1, tet2, false, aux)){
+         if (volumeIntersection(tet1, tet2, false, aux)){
            // cout << " ivol " << endl;
            i_vol += 1;
          }

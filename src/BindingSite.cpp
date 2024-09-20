@@ -139,7 +139,6 @@ BindingSite::~BindingSite() {
 }
 
 void BindingSite::print_to_screen() {
-
 	vector<Face*>::iterator it;
 	cout << "Binding Site:";
 	cout << "type = " << site_type << ", num_faces = " << num_faces << endl;
@@ -158,7 +157,6 @@ void BindingSite::set_type(int site_type) {
 }
 
 int BindingSite::get_type() {
-
 	return site_type;
 }
 
@@ -166,13 +164,11 @@ void BindingSite::add_face(Face *aface) {
 	faces.push_back(aface);
 }
 
-void BindingSite::get_centroid(arr3 &v) {
-	
-   arr3Store<scalar,arr3>(centroid, v);
+void BindingSite::get_centroid(arr3 &v) {	
+   store(centroid, v);
 }
 
-void BindingSite::calculate_centroid() {
-	
+void BindingSite::calculate_centroid() {	
 	arr3_set_zero(centroid);
 	vector<Face*>::iterator it;
 	for(it = faces.begin(); it != faces.end(); ++it) {
@@ -181,11 +177,10 @@ void BindingSite::calculate_centroid() {
 		centroid[1] += face_centroid[1];
 		centroid[2] += face_centroid[2];
 	}
-	arr3Resize<scalar,arr3>(1.0/num_faces, centroid);
+	resize(1.0/num_faces, centroid);
 }
 
-set<int> BindingSite::get_nodes() {
-	
+set<int> BindingSite::get_nodes() {	
 	set<int> nodes;
 	vector<Face*>::iterator it;
 	for(it = faces.begin(); it != faces.end(); ++it) {
@@ -198,7 +193,6 @@ set<int> BindingSite::get_nodes() {
 }
 
 void BindingSite::calculate_area() {
-
 	area = 0.0;
 	vector<Face*>::iterator it;
 	for(it = faces.begin(); it != faces.end(); ++it) {
@@ -207,7 +201,6 @@ void BindingSite::calculate_area() {
 }
 
 scalar BindingSite::get_area() {
-
 	return area;
 }
 

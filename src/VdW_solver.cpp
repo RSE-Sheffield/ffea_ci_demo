@@ -321,8 +321,8 @@ bool VdW_solver::consider_interaction(Face *f_i, int l_index_i, int motion_state
                 for (int i = 0; i < 3; ++i)
                     sep[i] = f_j->centroid[i] - f_i->centroid[i] - blob_corr[f_i->daddy_blob->blob_index * (num_blobs) * 3 + f_j->daddy_blob->blob_index * 3 + i];
             }
-            if ((arr3arr3DotProduct<scalar,arr3>(sep, f_i->normal) < 0) &&
-                    arr3arr3DotProduct<scalar,arr3>(sep, f_j->normal) > 0) return false;
+            if ((dot(sep, f_i->normal) < 0) &&
+                dot(sep, f_j->normal) > 0) return false;
 
 
             // 2.2 - Check that no nodes are shared,
@@ -428,7 +428,7 @@ bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     vol *= steric_factor;
 
     // Force is proportional to the gradient, i. e.:
-    arr3Resize<geoscalar,grr3>(steric_factor, dVdr);
+    resize(steric_factor, dVdr);
 
     grr3 ftmp1, ftmp2;
     #pragma omp critical
@@ -437,11 +437,11 @@ bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr) {
         fieldenergy[f1_daddy_blob_index][f2_daddy_blob_index] += vol;
         // Finally, apply the force onto the nodes:
         for (int j = 0; j < 4; j++) {
-            arr3Resize2<geoscalar,grr3>(phi1[j], dVdr, ftmp1);
+            resize2(phi1[j], dVdr, ftmp1);
             f1->add_force_to_node(j, ftmp1);
             // f1->add_bb_vdw_force_to_record(ftmp1, f2->daddy_blob->blob_index); // DEPRECATED
 
-            arr3Resize2<geoscalar,grr3>(ffea_const::mOne*phi2[j], dVdr, ftmp2);
+            resize2(ffea_const::mOne*phi2[j], dVdr, ftmp2);
             f2->add_force_to_node(j, ftmp2);
             // f2->add_bb_vdw_force_to_record(ftmp2, f1->daddy_blob->blob_index); // DEPRECATED
         }

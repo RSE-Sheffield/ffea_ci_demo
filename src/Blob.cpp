@@ -1477,7 +1477,7 @@ arr3 Blob::get_CoG() {
 }
  */
 void Blob::get_stored_centroid(arr3 &cog){
-    arr3Store<scalar,arr3>(CoG, cog);
+    store(CoG, cog);
 }
 
 Face * Blob::get_face(int i) {
@@ -1502,7 +1502,7 @@ tetra_element_linear *Blob::get_element(int i) {
  * @ingroup FMM
  **/
 void Blob::get_bead_position(int i, arr3 &v) {
-    arr3Store<scalar,arr3>(bead_position[i], v);
+    store(bead_position[i], v);
 }
 
 /**
@@ -1923,10 +1923,10 @@ int Blob::apply_ctforces() {
         // 2.1.1 - if it is defined by points:
         if (ctf_r_type[2*i] == 'p') {
             // get r, and its length rsize
-            intersectingPointToLine<scalar,arr3>(node[ctf_r_nodes[i]].pos,// point out of the line
-                                                 arr3_view<scalar,arr3>(ctf_r_axis.data() + 6 * i, 3), //  point
-                                                 arr3_view<scalar,arr3>(ctf_r_axis.data() +(6*i+3), 3), r); // vector, axis
-            arr3arr3Substract<scalar,arr3>(r, node[ctf_r_nodes[i]].pos, r);
+            intersectingPointToLine(node[ctf_r_nodes[i]].pos,// point out of the line
+                                         arr_view<scalar, 3>(ctf_r_axis, 6 * i), //  point
+                                    arr_view<scalar, 3>(ctf_r_axis, (6*i+3)), r); // vector, axis
+            sub(r, node[ctf_r_nodes[i]].pos, r);
         } /* else if (ctf_l_type[2*i] == 'n') {
         // not working yet!
         that should read:
@@ -1937,14 +1937,14 @@ int Blob::apply_ctforces() {
         arr3Normalize(axis);
         // We do not have this information in "Blob"!!
       } */
-        arr3arr3VectorProduct<scalar,arr3>(r, arr3_view<scalar,arr3>(ctf_r_axis.data() +(6*i+3), 3), f);
+        arr3arr3VectorProduct(r, arr_view<scalar, 3>(ctf_r_axis, +(6*i+3)), f);
         // 2.2.a - apply a constant circular force:
         if ( ctf_r_type[2*i + 1] == 'f' ) {
-            arr3Resize<scalar,arr3>(ctf_r_forces[i], f);
+            resize(ctf_r_forces[i], f);
             // 2.2.b - apply a constant torque:
         } else if (ctf_r_type[2*i + 1] == 't') {
-            rsize = mag<scalar,arr3>(r);
-            arr3Resize<scalar,arr3>(ctf_r_forces[i]/rsize, f);
+            rsize = magnitude(r);
+            resize(ctf_r_forces[i]/rsize, f);
         }
         force[ctf_r_nodes[i]][0] += f[0];
         force[ctf_r_nodes[i]][1] += f[1];
@@ -1964,7 +1964,7 @@ int Blob::apply_ctforces() {
             totalArea += faceAreas[j];
         }
         for (int j=0; j<ctf_sl_surfsize[i]; j++) {
-            arr3Resize2<scalar,arr3>(faceAreas[j]/(3*totalArea), arr3_view<scalar,arr3>(ctf_sl_forces.data() +3*i, 3), traction);
+            resize2(faceAreas[j]/(3*totalArea), arr_view<scalar,3>(ctf_sl_forces, 3*i), traction);
             surface[ctf_sl_faces[auxndx+j]].add_force_to_node(0, traction);
             surface[ctf_sl_faces[auxndx+j]].add_force_to_node(1, traction);
             surface[ctf_sl_faces[auxndx+j]].add_force_to_node(2, traction);
@@ -1996,11 +1996,11 @@ void Blob::set_forces_to_zero() {
 }
 
 void Blob::get_node(int index, arr3 &v) {
-    arr3Store<scalar,arr3>(node[index].pos, v);
+    store(node[index].pos, v);
 }
 
 void Blob::get_node_0(int index, arr3 &v) {
-    arr3Store<scalar,arr3>(node[index].pos_0, v);
+    store(node[index].pos_0, v);
 }
 
 void Blob::add_force_to_node(const arr3& f, int index) {
@@ -2996,7 +2996,7 @@ int Blob::load_ctforces(const string& ctforces_fname) {
         ctf_d[0] = boost::lexical_cast<scalar>(line_split[1]);
         ctf_d[1] = boost::lexical_cast<scalar>(line_split[2]);
         ctf_d[2] = boost::lexical_cast<scalar>(line_split[3]);
-        arr3Normalise<scalar,arr3>(ctf_d);  // normalise the direction of the force.
+        normalize(ctf_d);  // normalise the direction of the force.
         scalar Fx = F * ctf_d[0] / mesoDimensions::force;
         scalar Fy = F * ctf_d[1] / mesoDimensions::force;
         scalar Fz = F * ctf_d[2] / mesoDimensions::force;
@@ -3084,8 +3084,8 @@ int Blob::load_ctforces(const string& ctforces_fname) {
         ctf_d[1] = boost::lexical_cast<scalar>(line_split[6]);
         ctf_d[2] = boost::lexical_cast<scalar>(line_split[7]);
         if (type.compare(0,1,"p") == 0) {    // store as point + direction:
-            arr3Normalise<scalar,arr3>(ctf_d);  //  and thus normalise.
-            arr3Resize<scalar,arr3>(mdlm1, ctf_p);  // and rescale CTFPENDING: check!!!
+            normalize(ctf_d);  //  and thus normalise.
+            resize(mdlm1, ctf_p);  // and rescale CTFPENDING: check!!!
         } else if (type.compare(0,1,"n")) { // otherwise store as pairs of nodes, or complain.
             FFEA_ERROR_MESSG("Invalid rotational force: %s, in line read: %s\n", type.substr(0).c_str(), my_lines[i].c_str());
         }
@@ -3182,7 +3182,7 @@ int Blob::load_ctforces(const string& ctforces_fname) {
         ctf_d[0] = boost::lexical_cast<scalar>(line_split[1]);
         ctf_d[1] = boost::lexical_cast<scalar>(line_split[2]);
         ctf_d[2] = boost::lexical_cast<scalar>(line_split[3]);
-        arr3Normalise<scalar,arr3>(ctf_d);  // normalise the direction of the force.
+        normalize(ctf_d);  // normalise the direction of the force.
         ctf_sl_forces[3*i   ]  = F * ctf_d[0] / mesoDimensions::force;
         ctf_sl_forces[3*i +1]  = F * ctf_d[1] / mesoDimensions::force;
         ctf_sl_forces[3*i +2]  = F * ctf_d[2] / mesoDimensions::force;
