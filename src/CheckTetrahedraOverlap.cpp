@@ -255,7 +255,6 @@ bool tet_a_tetII(arr3 &V1_0, arr3 &V1_1, arr3 &V1_2, arr3 &V1_3,
                  arr3 &V2_0, arr3 &V2_1, arr3 &V2_2, arr3 &V2_3) {
   
   // First, we must define the variable object for this call (to ensure thread safety)
-  //checkVars vars = new checkVars();
   checkVars vars;
   
   SUB(vars.P_V1[0] ,V2_0,V1_0);	

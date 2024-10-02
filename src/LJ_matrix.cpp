@@ -34,13 +34,11 @@ LJ_pair::~LJ_pair() {
 }
 
 SSINT_matrix::SSINT_matrix() {
-    params = nullptr;
     num_ssint_face_types = 0;
 }
 
 SSINT_matrix::~SSINT_matrix() {
-    delete[] params;
-    params = nullptr;
+    params.clear();
     num_ssint_face_types = 0;
 }
 
@@ -61,8 +59,9 @@ int SSINT_matrix::init_steric() {
 
     num_ssint_face_types = 1;
     // Allocate the memory for that LJ pair
-    params = new(std::nothrow) map<string,scalar>[num_ssint_face_types * num_ssint_face_types];
-    if (!params) {
+    try {
+        params = std::vector<map<string, scalar>>(num_ssint_face_types * num_ssint_face_types);
+    } catch (std::bad_alloc &) {
         FFEA_ERROR_MESSG("Unable to allocate memory for LJ matrix.\n")
     }
     params[LJI(0, 0)]["Emin"] = 0;
@@ -110,11 +109,11 @@ int SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scala
     printf("\t\tNumber of VDW interaction types = %d\n", num_ssint_face_types);
 
     // Allocate the memory for all these LJ pairs
-    params = new(std::nothrow) map<string, scalar>[num_ssint_face_types * num_ssint_face_types];
-    if (!params)
-    {
+    try {
+        params = std::vector<map<string, scalar>>(num_ssint_face_types * num_ssint_face_types);
+    } catch (std::bad_alloc &) {
         in.close();
-        FFEA_ERROR_MESSG("Unable to allocate memory for VDW forcefield parameter matrix.\n")
+        FFEA_ERROR_MESSG("Unable to allocate memory for LJ matrix.\n")
     }
 
     // Fill the matrix (with an as yet unknown number of parameters)

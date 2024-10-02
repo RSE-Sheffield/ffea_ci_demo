@@ -74,11 +74,11 @@ private:
   int msg(string whatever); 
   int msg(int whatever); 
   
-  int read_tabulated_values(PreComp_params &pc_params, string kind, scalar *Z, scalar scale_Z);
+  int read_tabulated_values(PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z);
 
   int calc_force_from_pot();
   
-  scalar finterpolate(scalar *Z, scalar x, int typei, int typej);
+  scalar finterpolate(std::vector<scalar> &Z, scalar x, int typei, int typej);
 
   // stuff related to the LinkedLists:
   LinkedListCube<int> pcLookUp; ///< the linkedlist itself
@@ -100,40 +100,40 @@ private:
   /** number of types of "beads */
   int ntypes; 
   /** pointer to array containing all the values for all the pair potentials. */
-  scalar *U;
+  std::vector<scalar> U;
   /** pointer to array containing all the values for all the pair forces. */
-  scalar *F;
+  std::vector<scalar> F;
   /** interacting elements */
   typedef tetra_element_linear* TELPtr;
-  TELPtr *b_elems;
-  TELPtr *b_unq_elems; 
+  std::vector<TELPtr> b_elems;
+  std::vector<TELPtr> b_unq_elems;
   /** bead types */
-  int *b_types; 
+  std::vector<int> b_types;
   /** map b_unq_elems to beads */
-  int *map_e_to_b;
+  std::vector<int> map_e_to_b;
   /** number of beads */ 
   int n_beads; 
   /** number of different elements */
   int num_diff_elems; 
   /** relative position of the beads to the element they belong, xyzxyzxyz... */
-  scalar *b_rel_pos;
+  std::vector<scalar> b_rel_pos;
   /** absolute position of the beads */
-  scalar *b_pos; 
+  std::vector<scalar> b_pos;
   /** forces to be applied */
-  scalar *b_forces;
+  std::vector<scalar> b_forces;
   /** list of the daddy blob */
-  int *b_daddyblob; 
+  std::vector<int> b_daddyblob;
   /** bool "matrix" (array) storing for every pair if it is active or not */
-  bool *isPairActive;
+  std::vector<bool> isPairActive;
 
   /** variables stypes, b_elems_ndx, and b_blob_ndx will only be used if writing traj */ 
   vector<string> stypes; ///< string types for the beads; sorry it is a c++ vector
-  int *b_elems_ndx; ///< array with the corresponding element index.
-  int *b_blob_ndx; ///< array with the corresponding blob index.
+  std::vector<int> b_elems_ndx; ///< array with the corresponding element index.
+  std::vector<int> b_blob_ndx; ///< array with the corresponding blob index.
   
 
   /** Variables to store the energy field data between each pair of blobs */
-  scalar *fieldenergy;
+  std::vector<scalar> fieldenergy;
   int num_blobs;
   int num_threads;
 

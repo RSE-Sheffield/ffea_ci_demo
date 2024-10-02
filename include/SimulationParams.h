@@ -81,8 +81,8 @@ public:
     int num_blobs;          ///< Number of blobs in the system
     int num_rods;           ///< Number of rods in the system
     int num_interfaces;     ///< Number of rod-blob or rod-rod interfaces
-    int *num_conformations; ///< Number of conformations for each blob
-    int *num_states;        ///< Number of states for each blob
+    std::vector<int> num_conformations; ///< Number of conformations for each blob
+    std::vector<int>  num_states;        ///< Number of states for each blob
     int state_array_size;
     int conformation_array_size;
     int rng_seed; ///< Seed for random number generator

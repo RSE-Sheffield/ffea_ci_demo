@@ -42,37 +42,29 @@ BEM_Poisson_Boltzmann::BEM_Poisson_Boltzmann() {
     num_faces = 0;
     lookup = nullptr;
     kappa = 0;
-    mat_C = nullptr;
-    mat_D = nullptr;
 }
 
 BEM_Poisson_Boltzmann::~BEM_Poisson_Boltzmann() {
     num_faces = 0;
     lookup = nullptr;
     kappa = 0;
-
-    delete mat_C;
-    delete mat_D;
-    mat_C = nullptr;
-    mat_D = nullptr;
+    
+    mat_C.reset();
+    mat_D.reset();
 }
 
 int BEM_Poisson_Boltzmann::init(NearestNeighbourLinkedListCube *lookup) {
     this->lookup = lookup;
     this->num_faces = lookup->get_pool_size();
 
-    //			int n2 = num_faces * num_faces;
-    //			mat_C = new scalar[n2];
-    //			mat_D = new scalar[n2];
-
     /* Create and initialise our sparse matrices */
-    mat_C = new(std::nothrow) SparseMatrixUnknownPattern();
+    mat_C = std::make_unique<SparseMatrixUnknownPattern>();
     if (!mat_C) FFEA_ERROR_MESSG("Could not allocate C matrix\n");
     if (mat_C->init(num_faces, 100) == FFEA_ERROR) {
         FFEA_ERROR_MESSG("Could not allocate memory for C matrix\n")
     }
 
-    mat_D = new(std::nothrow) SparseMatrixUnknownPattern();
+    mat_D = std::make_unique<SparseMatrixUnknownPattern>();
     if (!mat_D) FFEA_ERROR_MESSG("Could not allocate D matrix\n");
     if (mat_D->init(num_faces, 100) == FFEA_ERROR) {
         FFEA_ERROR_MESSG("Could not allocate memory for D matrix\n")
@@ -189,11 +181,11 @@ void BEM_Poisson_Boltzmann::print_matrices() {
     mat_D->print();
 }
 
-SparseMatrixUnknownPattern * BEM_Poisson_Boltzmann::get_C() {
+std::unique_ptr<SparseMatrixUnknownPattern> &BEM_Poisson_Boltzmann::get_C() {
     return mat_C;
 }
 
-SparseMatrixUnknownPattern * BEM_Poisson_Boltzmann::get_D() {
+std::unique_ptr<SparseMatrixUnknownPattern> &BEM_Poisson_Boltzmann::get_D() {
     return mat_D;
 }
 

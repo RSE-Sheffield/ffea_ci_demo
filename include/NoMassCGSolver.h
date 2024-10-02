@@ -100,7 +100,7 @@ private:
     void check(const std::vector<arr3> &x);
 
     /* */
-    void apply_matrix(scalar *in, scalar *result) { }
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) { }
 
 };
 

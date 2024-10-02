@@ -24,6 +24,7 @@
 #ifndef BICGSTAB_SOLVER_H_INCLUDED
 #define BICGSTAB_SOLVER_H_INCLUDED
 
+#include <memory>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -39,9 +40,9 @@ public:
 
     int init(int N, scalar tol, int max_num_iterations);
 
-    int solve(SparseMatrixUnknownPattern *A, std::vector<scalar> &x, std::vector<scalar> &b);
+    int solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b);
 
-    int solve(SparseMatrixUnknownPattern *A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations);
+    int solve(unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations);
 
 private:
 
@@ -68,7 +69,7 @@ private:
     //@}
 
     /** Calculates the residual vector, r, for the matrix equation Ax = b. Specifically, r = b - Ax. */
-    void get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, SparseMatrixUnknownPattern *A, std::vector<scalar> &x, int N);
+    void get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, int N);
 
     /** Copies the contents of vector b into vector a (a <- b) */
     void copy_vector(std::vector<scalar> &a, const std::vector<scalar> &b, int N);

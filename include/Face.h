@@ -76,16 +76,11 @@ public:
     SecondOrderFunctions::stu centroid_stu;
 
     bool ssint_xz_interaction_flag;
-    // bool *ssint_bb_interaction_flag; // DEPRECATED
     bool kinetically_active;
 
     //@{
     /** vdw measurement info **/
     int num_blobs;
-    // arr3 *vdw_bb_force; // DEPRECATED
-    // scalar *vdw_bb_energy; // DEPRECATED
-    // arr3 *vdw_xz_force; // DEPRECATED
-    // scalar vdw_xz_energy; // DEPRECATED
     //@}
 
     /** Check whether the tetrahedron formed by this face an the opposite
@@ -172,24 +167,9 @@ public:
      */
     void add_force_to_node_atomic(int i, arr3 &f);
 
-    // void add_bb_vdw_force_to_record(arr3 *f, int other_blob_index); // DEPRECATED
-    // template <class brr3> void add_bb_vdw_force_to_record(brr3 &f, int other_blob_index); // DEPRECATED
-
-    // void add_bb_vdw_energy_to_record(scalar energy, int other_blob_index); // DEPRECATED
-
-    // void add_xz_vdw_force_to_record(arr3 *f); // DEPRECATED
-
-    // void add_xz_vdw_energy_to_record(scalar energy); // DEPRECATED
-
     void zero_force();
 
-    // void zero_vdw_bb_measurement_data(); // DEPRECATED
-
-    // void zero_vdw_xz_measurement_data(); // DEPRECATED
-
     void set_ssint_xz_interaction_flag(bool state);
-
-    // void set_vdw_bb_interaction_flag(bool state, int other_blob_index); // DEPRECATED
 
     template <class brr3> void vec3Vec3SubsToArr3Mod(Face *f2, brr3 (&w), scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 

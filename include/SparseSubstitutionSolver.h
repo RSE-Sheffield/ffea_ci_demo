@@ -60,7 +60,7 @@ public:
      */
     int solve(std::vector<arr3> &x);
 
-    void apply_matrix(scalar *in, scalar *result);
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result);
 
 private:
 
@@ -74,14 +74,14 @@ private:
      * in that column, that starts from the diagonal (travelling downwards or upwards for
      * the L and U matrices respectively).
      */
-    int *L_key, *U_key;
+    std::vector<int> L_key, U_key;
     //@}
 
     /** Stores the number of entries stored in the upper triangle */
     int total_entries_in_U;
 
     /** Stores the inverse of the diagonal elements (need for LU solving) */
-    scalar *inverse_diag;
+    std::vector<scalar> inverse_diag;
 
     //@{
     /**
@@ -91,7 +91,7 @@ private:
      *
      * The off-diagonal data for the lower and upper triangles are stored in L and U respectively.
      */
-    scalar *L, *U;
+    std::vector<scalar> L, U;
     //@}
 };
 

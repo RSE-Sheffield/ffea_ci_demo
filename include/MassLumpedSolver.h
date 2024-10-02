@@ -51,7 +51,7 @@ public:
     int solve(std::vector<arr3> &x);
 
     /** Applies the mass matrix to the given vector, 'in', putting the result in 'result'*/
-    void apply_matrix(scalar *in, scalar *result);
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result);
 
 private:
 
@@ -59,7 +59,7 @@ private:
     int num_rows;
 
     /** Mass matrix diagonal inversed */
-    scalar *inv_M;
+    std::vector<scalar> inv_M;
 };
 
 #endif

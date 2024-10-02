@@ -56,7 +56,7 @@ protected:
     arr3 box_size;
     SSINT_matrix *ssint_matrix;
 
-    scalar **fieldenergy;
+    std::vector<std::vector<scalar>> fieldenergy;
     int num_blobs;
     int inc_self_ssint;  ///< whether to include interactions between faces within the same blob, or not.
     int calc_kinetics; 

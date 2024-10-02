@@ -94,7 +94,7 @@ class BindingSite_matrix{
 		int num_interaction_types;
 		
 		/** 2D matrix defining allowed interactions between site types */
-		bool **interaction;
+		std::vector<std::vector<bool>> interaction;
 };
 
 #endif

@@ -24,21 +24,15 @@
 #include "Spring.h"
 
 Spring::Spring() {
-    blob_index = new int[2];
-    conformation_index = new int[2];
-    node_index = new int[2];
+    blob_index = {};
+    conformation_index = {};
+    node_index = {};
     k = 0.0;
     l = 0.0;
     am_i_active = false;
 }
 
 Spring::~Spring() {
-    delete[] blob_index;
-    blob_index = nullptr;
-    delete[] conformation_index;
-    conformation_index = nullptr;
-    delete[] node_index;
-    node_index = nullptr;
     k = 0.0;
     l = 0.0;
     am_i_active = false;

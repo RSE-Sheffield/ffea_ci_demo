@@ -66,25 +66,19 @@ PreComp_solver::PreComp_solver() {
   msgc = 0;
   n_beads = 0;
   num_blobs = 0;
-  U = nullptr;
-  F = nullptr; 
-  isPairActive = nullptr;
-  b_types = nullptr;
-  fieldenergy = nullptr;
 } 
 
 /** @brief destructor: deallocates pointers. */
 PreComp_solver::~PreComp_solver() {
-  delete[] U;
-  delete[] F;
-  delete[] isPairActive;
-  delete[] b_types;
-  if (n_beads > 0) {
-    delete[] b_elems; 
-  }
-  delete[] fieldenergy;
-  fieldenergy = nullptr;
-  num_blobs = 0;
+    U.clear();
+    F.clear();
+    isPairActive.clear();
+    b_types.clear();
+
+    b_elems.clear();
+
+    fieldenergy.clear();
+    num_blobs = 0;
 }
 
 
@@ -168,8 +162,11 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
     num_threads = 1;
 #endif 
     num_blobs = params->num_blobs;
-    fieldenergy = new(std::nothrow) scalar[num_threads*num_blobs*num_blobs];
-    if (!fieldenergy) FFEA_ERROR_MESSG("Failed to allocate memory for fieldenergy in PreCompSolver\n");
+    try {
+        fieldenergy = std::vector<scalar>(num_threads * num_blobs * num_blobs);
+    } catch (std::bad_alloc &) {
+       FFEA_ERROR_MESSG("Failed to allocate memory for fieldenergy in PreCompSolver\n");
+    }
 
    stringstream ssfile; 
    ifstream fin;
@@ -252,10 +249,13 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
 
    /*--------- SECONDLY ----------*/ 
    // allocate:
-   U = new(std::nothrow) scalar[n_values * nint];    
-   F = new(std::nothrow) scalar[n_values * nint];    
-   isPairActive = new(std::nothrow) bool[ntypes * ntypes]; 
-   if (!U || !F || !isPairActive) FFEA_ERROR_MESSG("Failed to allocate memory for arrays in PreComp_solver::init\n"); 
+   try {
+       U = std::vector<scalar>(n_values * nint);
+       F = std::vector<scalar>(n_values * nint);
+       isPairActive = std::vector<bool>(n_values * nint);
+   } catch (std::bad_alloc &) {
+       FFEA_ERROR_MESSG("Failed to allocate memory for arrays in PreComp_solver::init\n");
+   }
       
    // and load potentials and forces:
    if (read_tabulated_values(*pc_params, "pot", U, pc_params->E_to_J / mesoDimensions::Energy)) return FFEA_ERROR;
@@ -295,15 +295,18 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
       msg(" ABORTING: The total number of beads is 0, but PreComp_calc was set to 1.");
       return FFEA_ERROR;
    }
-   b_elems = new(std::nothrow) TELPtr[n_beads];
-   // allocate the array that store the relative positions 
-   //    of the beads to the elements where they belong to. 
-   b_rel_pos = new(std::nothrow) scalar[n_beads*3];
-   // allocate the array to compute the absolute positions of the beads:
-   b_pos = new(std::nothrow) scalar[n_beads*3];
-   // and allocate the bead types: 
-   b_types = new(std::nothrow) int[n_beads]; 
-   if (!b_elems || !b_rel_pos || !b_pos || !b_types) FFEA_ERROR_MESSG("Failed to allocate memory for array beads in PreComp_solver::init\n"); 
+   try {
+       b_elems = std::vector<TELPtr>(n_beads);
+       // allocate the array that store the relative positions 
+       //    of the beads to the elements where they belong to. 
+       b_rel_pos = std::vector<scalar>(n_beads * 3);
+       // allocate the array to compute the absolute positions of the beads:
+       b_pos = std::vector<scalar>(n_beads * 3);
+       // and allocate the bead types: 
+       b_types = std::vector<int>(n_beads);
+   } catch (std::bad_alloc &) {
+       FFEA_ERROR_MESSG("Failed to allocate memory for array beads in PreComp_solver::init\n");
+   }
    
 
    /*------------ FOURTHLY --------*/
@@ -461,10 +464,13 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    }
 
    // now set up the map and create a list of unique elements.
-   b_forces = new(std::nothrow) scalar[3*n_beads]; 
-   map_e_to_b = new(std::nothrow) int[2*num_diff_elems]; 
-   b_unq_elems = new(std::nothrow) TELPtr[num_diff_elems];
-   if (!b_forces || !b_unq_elems || !map_e_to_b) FFEA_ERROR_MESSG("Failed to allocate memory for supplementary array beads in PreComp_solver::init\n"); 
+   try {
+       b_forces = std::vector<scalar>(3 * n_beads);
+       map_e_to_b = std::vector<int>(2 * num_diff_elems);
+       b_unq_elems = std::vector<TELPtr>(num_diff_elems);
+   } catch (std::bad_alloc &) {
+       FFEA_ERROR_MESSG("Failed to allocate memory for supplementary array beads in PreComp_solver::init\n");
+   }
    m = 0; 
    int cnt = 0;
    for (int i=0; i < params->num_blobs; i ++) {
@@ -498,8 +504,11 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    // even if we have the elems, pointing to blob_index, 
    //   it may better to just store the indices, 
    //   so that b_elems can be removed some day (and used only for debugging purposes). 
-   b_daddyblob = new(std::nothrow) int[n_beads]; 
-   if (!b_daddyblob) FFEA_ERROR_MESSG("Failed to allocate memory for daddy beads array in PreComp_solver::init\n");
+   try {
+       b_daddyblob = std::vector<int>(n_beads); 
+   } catch (std::bad_alloc &) {
+       FFEA_ERROR_MESSG("Failed to allocate memory for daddy beads array in PreComp_solver::init\n");
+   }
    for (int i=0; i<n_beads; i++) {
       b_daddyblob[i] = b_elems[i]->daddy_blob->blob_index;
    } 
@@ -571,10 +580,13 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    /*------------ SIXTHLY ---:O---*/
    //  in case we're writing the trajectory for the beads we need to keep some data:
    if (params->trajbeads_fname_set == 1) {
-      stypes = pc_params->types; 
-      b_blob_ndx = new(std::nothrow) int[n_beads];
-      b_elems_ndx = new(std::nothrow) int[n_beads];
-      if (!b_blob_ndx || !b_elems_ndx) FFEA_ERROR_MESSG("Failed to allocate memory for beads details to write trajectory in PreComp_solver::init\n"); 
+      stypes = pc_params->types;
+       try {
+           b_blob_ndx = std::vector<int>(n_beads);
+           b_elems_ndx = std::vector<int>(n_beads);
+       } catch (std::bad_alloc &) {
+           FFEA_ERROR_MESSG("Failed to allocate memory for beads details to write trajectory in PreComp_solver::init\n");
+       }
       for (int i=0; i<n_beads; i++){ 
         b_elems_ndx[i] = b_elems[i]->index;
         b_blob_ndx[i] = b_elems[i]->daddy_blob->blob_index;
@@ -967,7 +979,7 @@ int PreComp_solver::calc_force_from_pot() {
 
 /** Read either the .pot or .force files
   * and store its contents either in U or F */
-int PreComp_solver::read_tabulated_values(PreComp_params &pc_params, string kind, scalar *Z, scalar scale_Z){
+int PreComp_solver::read_tabulated_values(PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z){
 
    stringstream ssfile; 
    ifstream fin;
@@ -1100,7 +1112,7 @@ scalar PreComp_solver::get_F(scalar x, int typei, int typej) {
   * For production purposes it may be reasonable to move it to public, and 
   * remove get_U and get_F
   */
-scalar PreComp_solver::finterpolate(scalar *Z, scalar x, int typei, int typej){
+scalar PreComp_solver::finterpolate(std::vector<scalar> &Z, scalar x, int typei, int typej){
 
    //scalar y0, y1;
    scalar x0, x1;

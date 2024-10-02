@@ -26,25 +26,15 @@
 SparseSubstitutionSolver::SparseSubstitutionSolver() {
     // Initialise everything to zero
     num_rows = 0;
-    L_key = nullptr;
-    U_key = nullptr;
-    inverse_diag = nullptr;
-    L = nullptr;
-    U = nullptr;
 }
 
 SparseSubstitutionSolver::~SparseSubstitutionSolver() {
     num_rows = 0;
-    delete[] L_key;
-    delete[] U_key;
-    delete[] inverse_diag;
-    delete[] L;
-    delete[] U;
-    L_key = nullptr;
-    U_key = nullptr;
-    inverse_diag = nullptr;
-    L = nullptr;
-    U = nullptr;
+    L_key.clear();
+    U_key.clear();
+    inverse_diag.clear();
+    L.clear();
+    U.clear();
 }
 
 int SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) {
@@ -52,17 +42,9 @@ int SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<tet
     num_rows = node.size();
 
     printf("Allocating memory for mass matrix...\n");
-    scalar *mass = new(std::nothrow) scalar[num_rows * num_rows];
-    scalar *mass_LU = new(std::nothrow) scalar[num_rows * num_rows];
-    if (!mass || !mass_LU) FFEA_ERROR_MESSG("Failed to store mass matrix in SparseSubstitutionSolver::init\n");
+    std::vector<scalar> mass = std::vector<scalar>(num_rows * num_rows, 0);
+    std::vector<scalar> mass_LU = std::vector<scalar>(num_rows * num_rows, 0);
     printf("...done.\n");
-
-    printf("Zeroing...\n");
-    for (int i = 0; i < num_rows * num_rows; i++) {
-        mass[i] = 0;
-        mass_LU[i] = 0;
-    }
-    printf("...done\n");
 
     // Create a temporary lookup for checking if a node is 'pinned' or not.
     // if it is, then only a 1 on the diagonal corresponding to that node should
@@ -126,7 +108,7 @@ int SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<tet
         }
         mass_LU[INDEX(k, k)] = sqrt(mass[INDEX(k, k)] - sum_kj_2);
     }
-    delete[] mass;
+    mass.clear();
     printf("...done.\n");
 
     // Copy the lower matrix into upper
@@ -137,16 +119,22 @@ int SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<tet
     }
 
     // Allocate and fill the 'inverse_diag' array
-    inverse_diag = new(std::nothrow) scalar[num_rows];
-    if (!inverse_diag) FFEA_ERROR_MESSG("Failed to alloc 'inverse_diag' in SparseSubstitutionSolver::init\n");
+    try {
+        inverse_diag = std::vector<scalar>(num_rows);
+    } catch(std::bad_alloc &) {
+        FFEA_ERROR_MESSG("Failed to alloc 'inverse_diag' in SparseSubstitutionSolver::init\n");
+    }
 
     for (int i = 0; i < num_rows; i++)
         inverse_diag[i] = 1.0 / mass_LU[i * num_rows + i];
 
     // Allocate the 'key' arrays
-    L_key = new(std::nothrow) int[num_rows];
-    U_key = new(std::nothrow) int[num_rows];
-    if (!L_key || !U_key) FFEA_ERROR_MESSG("Failed to alloc 'key' arrays in SparseSubstitutionSolver::init\n");
+    try {
+        L_key = std::vector<int>(num_rows);
+        U_key = std::vector<int>(num_rows);
+    } catch(std::bad_alloc &) {
+        FFEA_ERROR_MESSG("Failed to alloc 'key' arrays in SparseSubstitutionSolver::init\n");
+    }
 
     // Build the lower triangular matrix key
     int total_L = 0;
@@ -171,9 +159,12 @@ int SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<tet
             }
 
     // Allocate the off-diagonal entry arrays
-    L = new(std::nothrow) scalar[total_L];
-    U = new(std::nothrow) scalar[total_entries_in_U];
-    if (!L || !U) FFEA_ERROR_MESSG("Failed to alloc off-diagonal entry arrays in SparseSubstitutionSolver::init\n"); 
+    try {
+        L = std::vector<scalar>(total_L);
+        U = std::vector<scalar>(total_entries_in_U);
+    } catch(std::bad_alloc &) {
+        FFEA_ERROR_MESSG("Failed to alloc off-diagonal entry arrays in SparseSubstitutionSolver::init\n");
+    }
 
     // Fill up the L and U sparse triangular matrices
     int off_diag_data_index = 0;
@@ -188,8 +179,6 @@ int SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<tet
             U[off_diag_data_index] = mass_LU[i * num_rows + j];
             off_diag_data_index++;
         }
-
-    delete[] mass_LU;
 
     return FFEA_OK;
 }
@@ -234,6 +223,6 @@ int SparseSubstitutionSolver::solve(std::vector<arr3> &x) {
     return FFEA_OK;
 }
 
-void SparseSubstitutionSolver::apply_matrix(scalar *in, scalar *result) {
+void SparseSubstitutionSolver::apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) {
 }
 

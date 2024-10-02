@@ -84,8 +84,8 @@ SimulationParams::SimulationParams()
     num_blobs = 0;
     num_rods = 0;
     num_interfaces = 0;
-    num_conformations = nullptr;
-    num_states = nullptr;
+    num_conformations = {};
+    num_states = {};
     state_array_size = 0;
     conformation_array_size = 0;
     es_N_x = -1;
@@ -124,10 +124,8 @@ SimulationParams::~SimulationParams()
     num_blobs = 0;
     num_rods = 0;
     num_interfaces = 0;
-    delete[] num_conformations;
-    num_conformations = nullptr;
-    delete[] num_states;
-    num_states = nullptr;
+    num_conformations.clear();
+    num_states.clear();
     state_array_size = 0;
     conformation_array_size = 0;
     rng_seed = 0;
@@ -209,8 +207,8 @@ int SimulationParams::extract_params(vector<string> script_vector)
 
     // Extract param string from script string
     vector<string> param_vector;
-    FFEA_input_reader *paramreader = new FFEA_input_reader();
-    if (paramreader->extract_block("param", 0, script_vector, &param_vector) == FFEA_ERROR)
+    FFEA_input_reader paramreader = FFEA_input_reader();
+    if (paramreader.extract_block("param", 0, script_vector, &param_vector) == FFEA_ERROR)
     {
         return FFEA_ERROR;
     }
@@ -220,7 +218,7 @@ int SimulationParams::extract_params(vector<string> script_vector)
     string lrvalue[2];
     for (it = param_vector.begin(); it != param_vector.end(); ++it)
     {
-        if (paramreader->parse_tag(*it, lrvalue) == FFEA_ERROR)
+        if (paramreader.parse_tag(*it, lrvalue) == FFEA_ERROR)
             return FFEA_ERROR;
 
         // Assign if possible
@@ -231,8 +229,7 @@ int SimulationParams::extract_params(vector<string> script_vector)
             return FFEA_ERROR;
         }
     }
-
-    delete paramreader;
+    
     return FFEA_OK;
 }
 
@@ -329,9 +326,11 @@ int SimulationParams::assign(string lvalue, string rvalue)
         // Now assign them to an array
         vector<string>::iterator it;
         conformation_array_size = conformation_vector.size();
-        num_conformations = new (std::nothrow) int[conformation_array_size];
-        if (!num_conformations)
+        try {
+            num_conformations.resize(conformation_array_size);
+        } catch (std::bad_alloc &) {
             FFEA_ERROR_MESSG("Failed to allocate meory for the number of conformations in SimulationParams\n");
+        }
         int i = 0;
         for (it = conformation_vector.begin(); it != conformation_vector.end(); ++it)
         {
@@ -352,9 +351,11 @@ int SimulationParams::assign(string lvalue, string rvalue)
         // Now assign them to an array
         vector<string>::iterator it;
         state_array_size = state_vector.size();
-        num_states = new (std::nothrow) int[state_array_size];
-        if (!num_states)
+        try {
+            num_states.resize(state_array_size);
+        } catch (std::bad_alloc &) {
             FFEA_ERROR_MESSG("Failed to allocate memory for the number of states in SimulationParams\n");
+        }
         int i = 0;
         for (it = state_vector.begin(); it != state_vector.end(); ++it)
         {
@@ -1110,8 +1111,7 @@ int SimulationParams::validate(int sim_mode)
     {
         FFEA_ERROR_MESSG("steric_dr can only be >=0.\n");
     }
-
-    bool using_conformations = true;
+    
     if (calc_kinetics == 1)
     {
         if (conformation_array_size != num_blobs)
@@ -1133,20 +1133,14 @@ int SimulationParams::validate(int sim_mode)
     }
     else
     {
-        if (!num_conformations)
+        if (num_conformations.empty())
         {
-
-            using_conformations = false;
             // Default num_conformations array
             conformation_array_size = num_blobs;
-            num_conformations = new (std::nothrow) int[conformation_array_size];
-            if (!num_conformations)
-            {
+            try {
+                num_conformations.resize(conformation_array_size, 1);
+            } catch(std::bad_alloc &) {
                 FFEA_ERROR_MESSG("Failed to allocate memory for the number of conformations in SimulationParams\n");
-            }
-            for (int i = 0; i < num_blobs; ++i)
-            {
-                num_conformations[i] = 1;
             }
         }
 

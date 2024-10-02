@@ -78,7 +78,6 @@ VdW_solver::VdW_solver() {
     box_size[1] = 0;
     box_size[2] = 0;
     num_blobs = 0;
-    fieldenergy = nullptr;
     ssint_type = SSINT_TYPE_UNDEFINED;
 }
 
@@ -88,11 +87,7 @@ VdW_solver::~VdW_solver() {
     box_size[0] = 0;
     box_size[1] = 0;
     box_size[2] = 0;
-    for(int i = 0; i < num_blobs; ++i) {
-        delete[] fieldenergy[i];
-    }
-    delete[] fieldenergy;
-    fieldenergy = nullptr;
+    fieldenergy.clear();
     num_blobs = 0;
     ssint_type = SSINT_TYPE_UNDEFINED;
 }
@@ -122,11 +117,17 @@ int VdW_solver::init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &
     this->num_blobs = num_blobs;
     this->calc_kinetics = calc_kinetics;
     this->working_w_static_blobs = working_w_static_blobs;
-    fieldenergy = new scalar*[num_blobs];
-    if (!fieldenergy) FFEA_ERROR_MESSG("Failed to allocate fieldenergy in VdW_solver::init\n");
+    try {
+        fieldenergy = std::vector<std::vector<scalar>>(num_blobs);
+    } catch (std::bad_alloc &) {
+        FFEA_ERROR_MESSG("Failed to allocate fieldenergy in VdW_solver::init\n");
+    }
     for(int i = 0; i < num_blobs; ++i) {
-        fieldenergy[i] = new scalar[num_blobs];
-        if (!fieldenergy[i]) FFEA_ERROR_MESSG("Failed to allocate fieldenergy[%d] in VdW_solver::init\n", i);
+        try {
+            fieldenergy[i] = std::vector<scalar>(num_blobs);
+        } catch (std::bad_alloc &) {
+            FFEA_ERROR_MESSG("Failed to allocate fieldenergy[%d] in VdW_solver::init\n", i);
+        }
     }
     return FFEA_OK;
 }

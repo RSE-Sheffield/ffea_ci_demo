@@ -68,7 +68,7 @@ int BiCGSTAB_solver::init(int N, scalar tol, int max_num_iterations) {
     return FFEA_OK;
 }
 
-int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern* A, std::vector<scalar> &x, std::vector<scalar> &b) {
+int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b) {
     scalar rho_last = 1, alpha = 1, omega = 1, rho, beta;
 
     // Get the inverse of the diagonal of the matrix to use as a preconditioner
@@ -142,7 +142,7 @@ int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern* A, std::vector<scalar> &x
     FFEA_ERROR_MESSG("Bi-Conjugate Gradient Stabilised solver could not converge in max_num_iterations.\n");
 }
 
-int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations) {
+int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations) {
     scalar rho_last = 1, alpha = 1, omega = 1, rho, beta;
 
     // Get the inverse of the diagonal of the matrix to use as a preconditioner
@@ -210,7 +210,7 @@ int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, std::vector<scalar> &x
     return FFEA_OK;
 }
 
-void BiCGSTAB_solver::get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, SparseMatrixUnknownPattern *A, std::vector<scalar> &x, const int N) {
+void BiCGSTAB_solver::get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, const int N) {
     // Ax
     A->apply(x, r);
 

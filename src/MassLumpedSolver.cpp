@@ -26,13 +26,11 @@
 /**/
 MassLumpedSolver::MassLumpedSolver() {
     num_rows = 0;
-    inv_M = nullptr;
 }
 
 /* */
 MassLumpedSolver::~MassLumpedSolver() {
-    delete[] inv_M;
-    inv_M = nullptr;
+    inv_M.clear();
     num_rows = 0;
 }
 
@@ -41,9 +39,9 @@ int MassLumpedSolver::init(std::vector<mesh_node> &node, std::vector<tetra_eleme
     // Store the number of rows, error threshold (stopping criterion for solver) and max
     // number of iterations, on this Solver (these quantities will be used a lot)
     this->num_rows = node.size();
-    inv_M = new scalar[num_rows];
-
-    if (!inv_M) {
+    try {
+        inv_M = std::vector<scalar>(num_rows);
+    } catch(std::bad_alloc &) {
         FFEA_ERROR_MESSG("could not allocate inv_M\n");
     }
 
@@ -88,7 +86,7 @@ int MassLumpedSolver::solve(std::vector<arr3> &x) {
 }
 
 /* */
-void MassLumpedSolver::apply_matrix(scalar *in, scalar *result) {
+void MassLumpedSolver::apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) {
     for (int i = 0; i < num_rows; i++) {
         result[i] *= 1.0 / inv_M[i];
     }

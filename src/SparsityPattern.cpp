@@ -24,30 +24,26 @@
 #include "SparsityPattern.h"
 
 SparsityPattern::SparsityPattern() {
-    num_rows = 0;
-    row = nullptr;
+    row = {};
     num_nonzero_elements = 0;
 }
 
 SparsityPattern::~SparsityPattern() {
     list<sparse_contribution_location*>::iterator it;
-    for(int i = 0; i < num_rows; ++i) {
+    for(int i = 0; i < row.size(); ++i) {
         for (it = row[i].begin(); it != row[i].end(); ++it) {
 	    delete (*it);
 	}	
     }
-    delete[] row;
-    num_rows = 0;
-    row = nullptr;
+    row.clear();
     num_nonzero_elements = 0;
 }
 
 int SparsityPattern::init(int num_rows) {
-    this->num_rows = num_rows;
-    row = new(std::nothrow) list<sparse_contribution_location*>[num_rows];
-    if (!row) {
-        printf("Could not allocate memory for 'row' array in SparsityPattern\n");
-        return FFEA_ERROR;
+    try {
+        row = std::vector<list<sparse_contribution_location*>>(num_rows);
+    } catch (std::bad_alloc) {
+        FFEA_ERROR_MESSG("Could not allocate memory for 'row' array in SparsityPattern\n");
     }
 
     return FFEA_OK;
@@ -100,13 +96,13 @@ std::shared_ptr<SparseMatrixFixedPattern> SparsityPattern::create_sparse_matrix(
     std::vector<sparse_entry> entry = std::vector<sparse_entry>(num_nonzero_elements);
 
     // Also generate the key (array of pointers that take us to the start of each row)
-    std::vector<int> key = std::vector<int>(num_rows + 1, 0);
+    std::vector<int> key = std::vector<int>(row.size() + 1, 0);
 
     // Generate the array of sources for each element in the sparse matrix
     std::vector<sparse_entry_sources> source_list = std::vector<sparse_entry_sources>(num_nonzero_elements);
 
     int pos = 0;
-    for (int i = 0; i < num_rows; i++) {
+    for (int i = 0; i < row.size(); i++) {
         // Store the index of the start of each row in the key
         key[i] = pos;
 
@@ -126,18 +122,18 @@ std::shared_ptr<SparseMatrixFixedPattern> SparsityPattern::create_sparse_matrix(
     }
 
     // Last index in the key array should contain the total number of nonzero elements in the matrix
-    key[num_rows] = pos;
+    key[row.size()] = pos;
 
     // Initialise the sparse matrix with the array of entries and the row access key
     // Use of std::move() here moves the local scope entry/key into the method (converts them to rval)
-    sm->init(num_rows, num_nonzero_elements, std::move(entry), std::move(key), source_list);
+    sm->init(row.size(), num_nonzero_elements, std::move(entry), std::move(key), source_list);
 
     // Return pointer to the newly allocated and initialised sparse matrix
     return sm;
 }
 
 void SparsityPattern::print() {
-    for (int i = 0; i < num_rows; i++) {
+    for (int i = 0; i < row.size(); i++) {
         printf("= ");
         for (list<sparse_contribution_location*>::iterator it = row[i].begin(); it != row[i].end(); ++it) {
             printf("[%d %d] ", (*it)->column_index, (int) ((*it)->source_list.size()));

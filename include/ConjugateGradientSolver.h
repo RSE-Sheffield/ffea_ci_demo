@@ -51,7 +51,7 @@ public:
     int solve(std::vector<arr3> &x);
 
     /** Applies the mass matrix to the given vector, 'in', putting the result in 'result'*/
-    void apply_matrix(scalar *in, scalar *result);
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result);
 
 private:
 
@@ -67,7 +67,7 @@ private:
     /** Array of all non-zero entries comprising the mass matrix, in the order they appear in the matrix
      * when scanned left to right across rows first (and columns secondary)
      */
-    sparse_entry *entry;
+    std::vector<sparse_entry> entry;
 
     /**
      * Array of size (num_nodes+1) containing the index (in the sparse_entry array above)
@@ -75,10 +75,10 @@ private:
      * The final entry in this vector, key[num_nodes], is the total number of non-zero entries
      * in the entire matrix.
      */
-    int *key;
+    std::vector<int> key;
 
     /** Jacobi preconditioner (inverse of the mass matrix diagonal) */
-    scalar *preconditioner;
+    std::vector<scalar> preconditioner;
 
     /** Work vectors */
     std::vector<arr3> d, r, q, s, f;

@@ -37,11 +37,11 @@ public:
 
     scalar l; ///< Equilibrium length
 
-    int *blob_index; ///< Blobs connected to
+    std::array<int, 2> blob_index; ///< Blobs connected to
 
-    int *conformation_index; ///< Conformations connected to
+    std::array<int, 2> conformation_index; ///< Conformations connected to
 
-    int *node_index; ///< Nodes connected to
+    std::array<int, 2> node_index; ///< Nodes connected to
 
     bool am_i_active; ///< Check if spring is active
 };

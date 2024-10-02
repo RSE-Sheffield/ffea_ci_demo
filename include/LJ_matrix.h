@@ -71,7 +71,7 @@ private:
     int init_ssint(string ssint_params_fname, string ssint_type, scalar ssint_cutoff);
     int init_steric(); 
     //LJ_pair *params;
-    map<string, scalar> *params;
+    std::vector<map<string, scalar>> params;
     int num_ssint_face_types;
 };
 

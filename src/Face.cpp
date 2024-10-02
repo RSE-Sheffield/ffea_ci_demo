@@ -34,12 +34,7 @@ Face::Face() {
     zero_force();
     num_blobs = 0;
     ssint_xz_interaction_flag = false;
-    // vdw_bb_interaction_flag = nullptr; // DEPRECATED
     kinetically_active = false;
-    // vdw_bb_force = nullptr; // DEPRECATED
-    // vdw_bb_energy = nullptr; // DEPRECATED
-    // vdw_xz_force = nullptr;
-    // vdw_xz_energy = 0.0; // DEPRECATED
     daddy_blob = nullptr;
     dealloc_n3 = false;
 }
@@ -57,16 +52,7 @@ Face::~Face() {
     zero_force();
     num_blobs = 0;
     ssint_xz_interaction_flag = false;
-    // delete[] vdw_bb_interaction_flag; // DEPRECATED
-    // vdw_bb_interaction_flag = nullptr; // DEPRECATED
     kinetically_active = false;
-    // delete[] vdw_bb_force; // DEPRECATED
-    // vdw_bb_force = nullptr; // DEPRECATED
-    // delete[] vdw_bb_energy; // DEPRECATED
-    // vdw_bb_energy = nullptr; // DEPRECATED
-    // delete[] vdw_xz_force; // DEPRECATED
-    // vdw_xz_force = nullptr; // DEPRECATED
-    // vdw_xz_energy = 0.0; // DEPRECATED
     daddy_blob = nullptr;
 }
 
@@ -87,21 +73,6 @@ int Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1,
     this->centroid_stu.u = centroid_stu.u;
 
     this->num_blobs = params.num_blobs;
-    // vdw_bb_force = new(std::nothrow) arr3[num_blobs]; // DEPRECATED
-    // vdw_bb_energy = new(std::nothrow) scalar[num_blobs]; // DEPRECATED
-    // vdw_bb_interaction_flag = new bool[num_blobs]; // DEPRECATED
-    // vdw_xz_force = new(std::nothrow) arr3; // DEPRECATED
-    // if (!vdw_bb_force || !vdw_bb_energy || !vdw_bb_interaction_flag || !vdw_xz_force) FFEA_ERROR_MESSG("Failed to store vectors in Face::init\n"); // DEPRECATED
-    // if (!vdw_xz_force) FFEA_ERROR_MESSG("Failed to store vectors in Face::init\n");
-
-    /* for(int i = 0; i < num_blobs; ++i) {
-    // arr3_set_zero(vdw_bb_force[i]); // DEPRECATED
-        // vdw_bb_energy[i] = 0.0; // DEPRECTATED
-    // vdw_bb_interaction_flag[i] = false; // DEPRECATED
-    } */
-    // vdw_xz_force->assign( 0., 0., 0. );
-    // vdw_xz_energy = 0.0; // DEPRECATED
-
 
     this->daddy_blob = daddy_blob;
 
@@ -125,19 +96,6 @@ int Face::init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node
     this->centroid_stu.u = 0;
 
     this->num_blobs = params.num_blobs;
-    // vdw_bb_force = new(std::nothrow) arr3[num_blobs]; // DEPRECATED
-    // vdw_bb_energy = new(std::nothrow) scalar[num_blobs]; // DEPRECATED
-    // vdw_bb_interaction_flag = new bool[num_blobs]; // DEPRECATED
-    // vdw_xz_force = new(std::nothrow) arr3; // DEPRECATED
-    // if (!vdw_bb_force || !vdw_bb_energy || !vdw_bb_interaction_flag || !vdw_xz_force) FFEA_ERROR_MESSG("Failed to store vectors in Face::init\n"); // DEPRECATED
-
-    /* for(int i = 0; i < num_blobs; ++i) {
-        // arr3_set_zero(vdw_bb_force[i]); // DEPRECATED
-        // vdw_bb_energy[i] = 0.0; // DEPRECATED
-        // vdw_bb_interaction_flag[i] = false; // DEPRECATED
-    }*/
-    // vdw_xz_force->assign(0.,0.,0.); // DEPRECATED
-    // vdw_xz_energy = 0.0; // DEPRECATED
 
     zero_force();
 
@@ -323,32 +281,6 @@ void Face::add_force_to_node_atomic(int i, arr3 &f) {
         force[i][j] += f[j];
 }
 
-/* void Face::add_bb_vdw_force_to_record(arr3 *f, int other_blob_index) {
-    vdw_bb_force[other_blob_index].x += f->x;
-    vdw_bb_force[other_blob_index].y += f->y;
-    vdw_bb_force[other_blob_index].z += f->z;
-}*/
-
-/* template <class brr3> void Face::add_bb_vdw_force_to_record(brr3 &f, int other_blob_index) {
-    vdw_bb_force[other_blob_index].x += f[0];
-    vdw_bb_force[other_blob_index].y += f[1];
-    vdw_bb_force[other_blob_index].z += f[2];
-}*/
-
-/* void Face::add_bb_vdw_energy_to_record(scalar energy, int other_blob_index) {
-    vdw_bb_energy[other_blob_index] += energy;
-} */
-
-/* void Face::add_xz_vdw_force_to_record(arr3 *f) {
-    vdw_xz_force->x += f->x;
-    vdw_xz_force->y += f->y;
-    vdw_xz_force->z += f->z;
-}*/
-
-/* void Face::add_xz_vdw_energy_to_record(scalar energy) {
-    vdw_xz_energy += energy;
-} */
-
 void Face::zero_force() {
     for (int i = 0; i < 4; i++) {
         force[i][0] = 0;
@@ -358,31 +290,10 @@ void Face::zero_force() {
 
 }
 
-/* void Face::zero_vdw_bb_measurement_data() {
-    for (int i = 0; i < num_blobs; ++i) {
-        vdw_bb_force[i].x = 0.0;
-        vdw_bb_force[i].y = 0.0;
-        vdw_bb_force[i].z = 0.0;
-        // vdw_bb_energy[i] = 0.0; // DEPRECATED
-    }
-} */
-
-/* void Face::zero_vdw_xz_measurement_data() {
-    vdw_xz_force->x = 0.0;
-    vdw_xz_force->y = 0.0;
-    vdw_xz_force->z = 0.0;
-    // vdw_xz_energy = 0.0; // DEPRECATED
-}*/
-
 void Face::set_ssint_xz_interaction_flag(bool state) {
     ssint_xz_interaction_flag = state;
 }
 
-/* DEPRECATED
- *  Will be removed
-void Face::set_vdw_bb_interaction_flag(bool state, int other_blob_index) {
-    vdw_bb_interaction_flag[other_blob_index] = state;
-}*/
 
 bool Face::is_ssint_active() {
     if (ssint_interaction_type == -1) {

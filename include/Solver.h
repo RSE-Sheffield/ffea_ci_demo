@@ -51,6 +51,6 @@ public:
      */
     virtual int solve(std::vector<arr3> &x) = 0;
 
-    virtual void apply_matrix(scalar *in, scalar *result) = 0;
+    virtual void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) = 0;
 };
 #endif

@@ -50,8 +50,8 @@ public:
     void perform_integrals_for_lookup_cell_self(LinkedListNode<Face> *l_i, arr3 gqp[4]);
     void perform_integrals_for_lookup_cell_relative(LinkedListNode<Face> *l_i, arr3 gqp[4], int dx, int dy, int dz);
     void print_matrices();
-    SparseMatrixUnknownPattern * get_C();
-    SparseMatrixUnknownPattern * get_D();
+    std::unique_ptr<SparseMatrixUnknownPattern> &get_C();
+    std::unique_ptr<SparseMatrixUnknownPattern> &get_D();
 
 private:
 
@@ -63,7 +63,7 @@ private:
 
     //@{
     /** BEM matrices */
-    SparseMatrixUnknownPattern *mat_C, *mat_D;
+    std::unique_ptr<SparseMatrixUnknownPattern> mat_C, mat_D;
     //@}
 
     /** The inverse Debye-screening length, kappa */
