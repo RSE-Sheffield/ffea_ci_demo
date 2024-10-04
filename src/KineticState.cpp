@@ -41,7 +41,7 @@ KineticState::~KineticState() {
 	target_site = nullptr;
 }
 
-int KineticState::init() {
+void KineticState::init() {
 
 	// Set conformation index
 	conformation_index = 0;
@@ -50,11 +50,9 @@ int KineticState::init() {
 	base = -1;
 	target = -1;
 	bound = false;
-
-	return FFEA_OK;
 }
 
-int KineticState::init(int conf_index, int base, int target) {
+void KineticState::init(int conf_index, int base, int target) {
 
 	// Set conformation index
 	conformation_index = conf_index;
@@ -66,12 +64,10 @@ int KineticState::init(int conf_index, int base, int target) {
 	if(base == -1 && target == -1) {
 		bound = false;
 	} else if (base == -1 && target != -1 || base != -1 && target == -1) {
-		FFEA_ERROR_MESSG("Either both site types must be -1 (not bound) or neither should be -1 (bound)")
+		throw FFEAException("Either both site types must be -1 (not bound) or neither should be -1 (bound).");
 	} else {
 		bound = true;
 	}
-
-	return FFEA_OK;
 }
 
 int KineticState::get_conformation_index() {

@@ -37,12 +37,12 @@ public:
 
     ~VdW_solver();
 
-    int init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs);
+    void init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs);
 
-    int solve(scalar *blob_corr);
+    void solve(scalar *blob_corr);
 
     /** Allow protein VdW interactions along the top and bottom x-z planes */
-    int solve_sticky_wall(scalar h);
+    void solve_sticky_wall(scalar h);
 
     scalar get_field_energy(int i, int j);
 

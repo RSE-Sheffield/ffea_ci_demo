@@ -168,7 +168,7 @@ World::~World()
  * initialise BEM PBE solver
  * */
 
-int World::init(string FFEA_script_filename, int frames_to_delete, int mode, bool writeDetail)
+void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bool writeDetail)
 {
 
     // Set some constants and variables
@@ -185,30 +185,17 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
 
     // Copy entire script into string
     vector<string> script_vector;
-    if (ffeareader.file_to_lines(FFEA_script_filename, &script_vector) == FFEA_ERROR)
-    {
-        return FFEA_ERROR;
-    }
+    ffeareader.file_to_lines(FFEA_script_filename, &script_vector);
 
     // Get params section
     cout << "Extracting Parameters..." << endl;
     params.FFEA_script_filename = FFEA_script_filename; // includes absolute path.
-    if (params.extract_params(script_vector) != 0)
-    {
-        FFEA_error_text();
-        printf("Error parsing parameters in SimulationParams::extract_params()\n");
-        return FFEA_ERROR;
-    }
+    params.extract_params(script_vector);
     cout << "...done!" << endl;
 
     // Check for consistency
     cout << "\nVerifying Parameters..." << endl;
-    if (params.validate(mode) != 0)
-    {
-        FFEA_error_text();
-        printf("Parameters found to be inconsistent in SimulationParams::validate()\n");
-        return FFEA_ERROR;
-    }
+    params.validate(mode);
     if ((params.num_blobs) == 1)
     {
         writeDetailed = false;
@@ -220,10 +207,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
     {
 
         // Load the binding params matrix
-        if (binding_matrix.init(params.bsite_in_fname) == FFEA_ERROR)
-        {
-            FFEA_ERROR_MESSG("Error when reading from binding site params file.\n")
-        }
+        binding_matrix.init(params.bsite_in_fname);
 
         // A 3D matrix describing the switching rates for each blob i.e. kinetic_rate[blob_index][from_conf][to_conf]
         kinetic_rate = std::vector<std::vector<std::vector<scalar>>>(params.num_blobs);
@@ -254,17 +238,12 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
     }
 
     // Load the vdw forcefield params matrix
-    if (params.calc_ssint == 1 || params.calc_steric == 1)
-    {
-        if (ssint_matrix.init(params.ssint_in_fname, params.ssint_type, params.calc_ssint, params.ssint_cutoff) == FFEA_ERROR)
-            FFEA_ERROR_MESSG("Error when reading from vdw forcefield params file.\n");
+    if (params.calc_ssint == 1 || params.calc_steric == 1) {
+        ssint_matrix.init(params.ssint_in_fname, params.ssint_type, params.calc_ssint, params.ssint_cutoff);
     }
 
-    if (params.calc_vdw_rod == 1)
-    {
-        if (rod_lj_matrix.init(params.rod_lj_in_fname, "ljsteric", params.calc_vdw_rod, params.ssint_cutoff) == FFEA_ERROR)
-            FFEA_ERROR_MESSG("Error when reading from rod Lennard-Jones params file (.rodlj).\n");
-
+    if (params.calc_vdw_rod == 1) {
+        rod_lj_matrix.init(params.rod_lj_in_fname, "ljsteric", params.calc_vdw_rod, params.ssint_cutoff);
     }
 
     // detect how many threads we have for openmp
@@ -331,7 +310,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         checkpoint_in.open(params.icheckpoint_fname, ifstream::in);
         if (checkpoint_in.fail())
         {
-            FFEA_FILE_ERROR_MESSG(params.icheckpoint_fname.c_str())
+            throw FFEAFileException(params.icheckpoint_fname);
         }
         // RNG.1.2 - readlines, and num_seeds:
         vector<string> checkpoint_v;
@@ -349,7 +328,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         }
         catch (invalid_argument &ia)
         {
-            FFEA_ERROR_MESSG("Error reading the number of stress seeds: %s\n", ia.what());
+            throw FFEAException("Error reading the number of stress seeds: %s\n", ia.what());
         }
         int num_stress_seeds_read = num_seeds_read;
         if (params.calc_kinetics)
@@ -376,7 +355,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             // there must be 6 integers per line:
             if (vline.size() != 6)
             {
-                FFEA_ERROR_MESSG("ERROR reading seeds\n")
+                throw FFEAException("ERROR reading seeds");
             }
             for (int j = 0; j < 6; j++)
             {
@@ -386,7 +365,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
                 }
                 catch (invalid_argument &ia)
                 {
-                    FFEA_ERROR_MESSG("Error reading seeds as integers: %s\n", ia.what());
+                    throw FFEAException("Error reading seeds as integers: %s", ia.what());
                 }
             }
             cnt_seeds += 1;
@@ -403,7 +382,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             // there must be 6 integers per line:
             if (vline.size() != 6)
             {
-                FFEA_ERROR_MESSG("ERROR reading seeds\n")
+                throw FFEAException("ERROR reading seeds");
             }
             for (int j = 0; j < 6; j++)
             {
@@ -413,7 +392,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
                 }
                 catch (invalid_argument &ia)
                 {
-                    FFEA_ERROR_MESSG("Error reading seeds as integers: %s\n", ia.what());
+                    throw FFEAException("Error reading seeds as integers: %s", ia.what());
                 }
             }
         }
@@ -449,24 +428,14 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
     }
 
     // Build system of blobs, conformations, kinetics etc
-    if (read_and_build_system(script_vector) != 0)
-    {
-        FFEA_error_text();
-        cout << "System could not be built in World::read_and_build_system()" << endl;
-        return FFEA_ERROR;
-    }
+    read_and_build_system(script_vector);
 
     // If requested, initialise the PreComp_solver.
     //   Because beads need to be related to elements, it is much easier if
     //   it is done before moving the blobs to the latest trajectory step in
     //   case of "restart".
-    if (params.calc_preComp == 1)
-    {
-        if (pc_solver.init(&pc_params, &params, blob_array) == FFEA_ERROR)
-        {
-            cout << "Failed to initialise PreComp_solver" << endl;
-            return FFEA_ERROR;
-        }
+    if (params.calc_preComp == 1) {
+        pc_solver.init(&pc_params, &params, blob_array);
     }
 
     // Set up a Box:
@@ -554,7 +523,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         // In any case, open the output checkpoint file for writing
         if (!(checkpoint_out = fopen(params.ocheckpoint_fname.c_str(), "wb")))
         {
-            FFEA_FILE_ERROR_MESSG(params.ocheckpoint_fname.c_str());
+            throw FFEAFileException(params.ocheckpoint_fname);
         }
 #ifdef FFEA_PARALLEL_FUTURE
         // And launch a first trajectory thread, that will be catched up at print_traj time
@@ -567,7 +536,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             // Open the trajectory output file for writing
             if (!(trajectory_out = fopen(params.trajectory_out_fname.c_str(), "wb")))
             {
-                FFEA_FILE_ERROR_MESSG(params.trajectory_out_fname.c_str())
+                throw FFEAFileException(params.trajectory_out_fname);
             }
 
             // HEADER FOR TRAJECTORY
@@ -596,7 +565,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             // Open the measurement output file for writing
             if (!(measurement_out = fopen(params.measurement_out_fname.c_str(), "wb")))
             {
-                FFEA_FILE_ERROR_MESSG(params.measurement_out_fname.c_str())
+                throw FFEAFileException(params.measurement_out_fname);
             }
 
             // HEADER FOR MEASUREMENTS
@@ -683,7 +652,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             {
                 if (!(trajbeads_out = fopen(params.trajectory_beads_fname.c_str(), "wb")))
                 {
-                    FFEA_FILE_ERROR_MESSG(params.trajectory_beads_fname.c_str())
+                    throw FFEAFileException(params.trajectory_beads_fname);
                 }
             }
 
@@ -692,7 +661,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             {
                 if (!(kinetics_out = fopen(params.kinetics_out_fname.c_str(), "wb")))
                 {
-                    FFEA_FILE_ERROR_MESSG(params.kinetics_out_fname.c_str())
+                    throw FFEAFileException(params.kinetics_out_fname);
                 }
                 fprintf(kinetics_out, "FFEA_kinetic_trajectory_file\n\nNumber of Blobs %d\n\n", params.num_blobs);
                 for (i = 0; i < params.num_blobs; ++i)
@@ -722,7 +691,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             printf("Restarting from trajectory file %s\n", params.trajectory_out_fname.c_str());
             if (!(trajectory_out = fopen(params.trajectory_out_fname.c_str(), "rb")))
             {
-                FFEA_FILE_ERROR_MESSG(params.trajectory_out_fname.c_str())
+                throw FFEAFileException(params.trajectory_out_fname);
             }
 
             printf("Reverse searching for 4 asterisks ");
@@ -733,7 +702,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             printf("(denoting %d completely written snapshots)...\n", frames_to_delete + 1);
             if (fseek(trajectory_out, 0, SEEK_END) != 0)
             {
-                FFEA_ERROR_MESSG("Could not seek to end of file\n")
+                throw FFEAException("Could not seek to end of file");
             }
 
             // Variable to store position of last asterisk in trajectory file (initialise it at end of file)
@@ -747,7 +716,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
                 if (fseek(trajectory_out, -2, SEEK_CUR) != 0)
                 {
                     //perror(nullptr);
-                    //FFEA_ERROR_MESSG("It is likely we have reached the begininng of the file whilst trying to delete frames. You can't delete %d frames.\n", frames_to_delete)
+                    //throw FFEAException("It is likely we have reached the begininng of the file whilst trying to delete frames. You can't delete %d frames.\n", frames_to_delete)
                     printf("Found beginning of file. Searching forwards for next asterisk...");
                     singleframe = true;
 
@@ -813,17 +782,14 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             {
                 if (fscanf(trajectory_out, "Blob %d, Conformation %d, step %lld\n", &blob_id, &conformation_id, &rstep) != 3)
                 {
-                    FFEA_ERROR_MESSG("Error reading header info for Blob %d\n", b)
+                    throw FFEAException("Error reading header info for Blob %d", b);
                 }
                 if (blob_id != b)
                 {
-                    FFEA_ERROR_MESSG("Mismatch in trajectory file - found blob id = %d, was expecting blob id = %d\n", blob_id, b)
+                    throw FFEAException("Mismatch in trajectory file - found blob id = %d, was expecting blob id = %d", blob_id, b);
                 }
                 printf("Loading node position, velocity and potential from restart trajectory file, for blob %d, step %lld\n", blob_id, rstep);
-                if (active_blob_array[b]->read_nodes_from_file(trajectory_out) == FFEA_ERROR)
-                {
-                    FFEA_ERROR_MESSG("Error restarting blob %d\n", blob_id)
-                }
+                active_blob_array[b]->read_nodes_from_file(trajectory_out);
             }
 
             // Final conformation bit
@@ -846,7 +812,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             filesystem::resize_file(params.trajectory_out_fname, last_asterisk_pos, ec1);
             if (ec1)
             {
-                FFEA_ERROR_MESSG("Error when trying to truncate trajectory file %s\n", params.trajectory_out_fname.c_str())
+                throw FFEAException("Error when trying to truncate trajectory file %s\n", params.trajectory_out_fname.c_str());
             }
 
             /*
@@ -855,14 +821,12 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
 
             // Global
 
-            if (!(measurement_out = fopen(params.measurement_out_fname.c_str(), "rb")))
-            {
-                FFEA_FILE_ERROR_MESSG(params.measurement_out_fname.c_str())
+            if (!(measurement_out = fopen(params.measurement_out_fname.c_str(), "rb"))) {
+                throw FFEAFileException(params.measurement_out_fname);
             }
 
-            if (fseek(measurement_out, 0, SEEK_END) != 0)
-            {
-                FFEA_ERROR_MESSG("Could not seek to end of file\n")
+            if (fseek(measurement_out, 0, SEEK_END) != 0) {
+                throw FFEAException("Could not seek to end of file");
             }
 
             last_asterisk_pos = ftell(measurement_out);
@@ -874,7 +838,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             {
                 if (fseek(measurement_out, -2, SEEK_CUR) != 0)
                 {
-                    FFEA_ERROR_MESSG("Error when trying to find last frame from file %s\n", params.measurement_out_fname.c_str())
+                    throw FFEAException("Error when trying to find last frame from file %s", params.measurement_out_fname.c_str());
                 }
                 c = fgetc(measurement_out);
                 if (c == '\n')
@@ -892,7 +856,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             filesystem::resize_file(params.measurement_out_fname, last_asterisk_pos, ec2);
             if (ec2)
             {
-                FFEA_ERROR_MESSG("Error when trying to truncate measurment file %s\n", params.measurement_out_fname.c_str())
+                throw FFEAException("Error when trying to truncate measurment file %s", params.measurement_out_fname.c_str());
             }
 
             // Append a newline to the end of this truncated measurement file (to replace the one that may or may not have been there)
@@ -906,12 +870,12 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
 
                 if (!(detailed_meas_out = fopen(params.detailed_meas_out_fname.c_str(), "rb")))
                 {
-                    FFEA_FILE_ERROR_MESSG(params.detailed_meas_out_fname.c_str())
+                    throw FFEAFileException(params.detailed_meas_out_fname);
                 }
 
                 if (fseek(detailed_meas_out, 0, SEEK_END) != 0)
                 {
-                    FFEA_ERROR_MESSG("Could not seek to end of file\n")
+                    throw FFEAException("Could not seek to end of file");
                 }
 
                 last_asterisk_pos = ftell(detailed_meas_out);
@@ -923,7 +887,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
                 {
                     if (fseek(detailed_meas_out, -2, SEEK_CUR) != 0)
                     {
-                        FFEA_ERROR_MESSG("Error when trying to find last frame from file %s\n", params.detailed_meas_out_fname.c_str())
+                        throw FFEAException("Error when trying to find last frame from file %s", params.detailed_meas_out_fname.c_str());
                     }
                     c = fgetc(detailed_meas_out);
                     if (c == '\n')
@@ -941,7 +905,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
                 filesystem::resize_file(params.detailed_meas_out_fname, last_asterisk_pos, ec3);
                 if (ec3)
                 {
-                    FFEA_ERROR_MESSG("Error when trying to truncate measurment file %s\n", params.detailed_meas_out_fname.c_str())
+                    throw FFEAException("Error when trying to truncate measurment file %s", params.detailed_meas_out_fname.c_str());
                 }
             }
 
@@ -949,11 +913,11 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             printf("Opening trajectory and measurement files for appending.\n");
             if (!(trajectory_out = fopen(params.trajectory_out_fname.c_str(), "ab")))
             {
-                FFEA_FILE_ERROR_MESSG(params.trajectory_out_fname.c_str())
+                throw FFEAFileException(params.trajectory_out_fname);
             }
             if (!(measurement_out = fopen(params.measurement_out_fname.c_str(), "ab")) )
             {
-                FFEA_FILE_ERROR_MESSG(params.measurement_out_fname.c_str())
+                throw FFEAFileException(params.measurement_out_fname);
             }
 
             // And the detailed meas file, maybe
@@ -961,7 +925,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             {
                 if (!(detailed_meas_out = fopen(params.detailed_meas_out_fname.c_str(), "ab")))
                 {
-                    FFEA_FILE_ERROR_MESSG(params.detailed_meas_out_fname.c_str())
+                    throw FFEAFileException(params.detailed_meas_out_fname);
                 }
             }
 
@@ -970,7 +934,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             {
                 if (!(kinetics_out = fopen(params.kinetics_out_fname.c_str(), "ab")))
                 {
-                    FFEA_FILE_ERROR_MESSG(params.kinetics_out_fname.c_str())
+                    throw FFEAFileException(params.kinetics_out_fname);
                 }
                 //fprintf(kinetics_out, "#==RESTART==\n");
             }
@@ -983,7 +947,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             */
             // traj beads do not work yet:
             if (params.trajbeads_fname_set == 1)
-                FFEA_ERROR_MESSG("FFEA cannot still restart and keep writing on the beads file. Just remove it from your input file.");
+                throw FFEAException("FFEA cannot still restart and keep writing on the beads file. Just remove it from your input file.");
         }
     }
 
@@ -1016,7 +980,7 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
             vdw_solver = std::make_unique<GenSoftSSINT_solver>();
 
         if (!vdw_solver)
-            FFEA_ERROR_MESSG("World::init failed to initialise the ssint_solver.\n");
+            throw FFEAException("World::init failed to initialise the ssint_solver.\n");
 
         vdw_solver->init(&lookup, box_dim, &ssint_matrix, params.steric_factor, params.num_blobs, params.inc_self_ssint, params.ssint_type, params.steric_dr, params.calc_kinetics, there_are_static_blobs);
     }
@@ -1039,16 +1003,11 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
         // Allocate memory for an NxNxN grid, with a 'pool' for the required number of surface faces
         printf("Allocating memory for nearest neighbour lookup grid...\n");
 #ifdef FFEA_PARALLEL_FUTURE
-        int lookup_error = lookup.alloc_dual(params.es_N_x, params.es_N_y, params.es_N_z, total_num_surface_faces);
+        lookup.alloc_dual(params.es_N_x, params.es_N_y, params.es_N_z, total_num_surface_faces);
 #else
-        int lookup_error = lookup.alloc(params.es_N_x, params.es_N_y, params.es_N_z, total_num_surface_faces);
+        lookup.alloc(params.es_N_x, params.es_N_y, params.es_N_z, total_num_surface_faces);
 #endif
-        if (lookup_error == FFEA_ERROR)
-        {
-            FFEA_error_text();
-            printf("When allocating memory for nearest neighbour lookup grid\n");
-            return FFEA_ERROR;
-        }
+
         printf("...done\n");
 
         printf("Box has volume %e cubic angstroms\n", (box_dim[0]* box_dim[1]* box_dim[2])* mesoDimensions::volume * 1e30);
@@ -1066,16 +1025,10 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
                     if (b_face != nullptr)
                     {
 #ifdef FFEA_PARALLEL_FUTURE
-                        lookup_error = lookup.add_to_pool_dual(b_face);
+                        lookup.add_to_pool_dual(b_face);
 #else
-                        lookup_error = lookup.add_to_pool(b_face);
+                        lookup.add_to_pool(b_face);
 #endif
-                        if (lookup_error == FFEA_ERROR)
-                        {
-                            FFEA_error_text();
-                            printf("When attempting to add a face to the lookup pool\n");
-                            return FFEA_ERROR;
-                        }
                         num_faces_added++;
                     }
                 }
@@ -1131,8 +1084,6 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
     et = MPI::Wtime() - st;
     cout << "benchmarking--------Initialising time of ffea :" << et << "seconds" << endl;
 #endif
-
-    return FFEA_OK;
 }
 
 /**
@@ -1141,9 +1092,8 @@ int World::init(string FFEA_script_filename, int frames_to_delete, int mode, boo
  *   algebra using the Eigen libraries to find the largest allowed timestep for
  *   ffea numerical integration.
  * */
-int World::get_smallest_time_constants()
+void World::get_smallest_time_constants()
 {
-
     // This is currently only for active blob, as inactive blobs are all at infinity due to linked list problems
 
     // Global variables
@@ -1186,28 +1136,12 @@ int World::get_smallest_time_constants()
 
         // Build viscosity matrix, K
         cout << "\r\t\tCalculating the Viscosity Matrix, K (task 1/5)..." << flush;
-        if (active_blob_array[i]->build_linear_node_viscosity_matrix(&K) == FFEA_ERROR)
-        {
-            cout << endl
-                 << "\t\t";
-            FFEA_error_text();
-            cout << endl
-                 << endl
-                 << "In function 'Blob::build_linear_node_viscosity_matrix' from blob " << i << endl;
-            return FFEA_ERROR;
-        }
+        active_blob_array[i]->build_linear_node_viscosity_matrix(&K);
         cout << "done!" << flush;
         //cout << K * (mesoDimensions::force / mesoDimensions::velocity) << endl;
         // Build elasticity matrix, A
         cout << "\r\t\tCalculating the Elasticity Matrix, A (task 2/5)..." << flush;
-        if (active_blob_array[i]->build_linear_node_elasticity_matrix(&A) == FFEA_ERROR)
-        {
-            cout << endl
-                 << "\t\t";
-            FFEA_error_text();
-            cout << "In function 'Blob::build_linear_node_elasticity_matrix'" << i << endl;
-            return FFEA_ERROR;
-        }
+        active_blob_array[i]->build_linear_node_elasticity_matrix(&A);
         cout << "done!" << flush;
 
         // Invert K (it's symmetric! Will not work if stokes_visc == 0)
@@ -1221,15 +1155,12 @@ int World::get_smallest_time_constants()
         }
         else if (Cholesky.info() == Eigen::NumericalIssue)
         {
-            cout << endl
-                 << "\t\t"
-                 << "Viscosity Matrix could not be inverted via Cholesky factorisation due to numerical issues. You possibly don't have an external solvent set, or it is too low." << endl;
-            return FFEA_ERROR;
+            throw FFEAException("\n\t\t"
+                 "Viscosity Matrix could not be inverted via Cholesky factorisation due to numerical issues. You possibly don't have an external solvent set, or it is too low.");
         }
         else if (Cholesky.info() == Eigen::NoConvergence)
         {
-            cout << "\nInversion iteration couldn't converge. K must be a crazy matrix. Possibly has zero eigenvalues?" << endl;
-            return FFEA_ERROR;
+            throw FFEAException("\nInversion iteration couldn't converge. K must be a crazy matrix. Possibly has zero eigenvalues?");
         }
 
         // Apply to A
@@ -1269,16 +1200,7 @@ int World::get_smallest_time_constants()
 
             // Build mass matrix, M
             cout << "\r\t\tCalculating the Mass Matrix, M (task 1/4)..." << flush;
-            if (active_blob_array[i]->build_linear_node_mass_matrix(&M) == FFEA_ERROR)
-            {
-                cout << endl
-                     << "\t\t";
-                FFEA_error_text();
-                cout << endl
-                     << endl
-                     << "In function 'Blob::build_linear_node_viscosity_matrix' from blob " << i << endl;
-                return FFEA_ERROR;
-            }
+            active_blob_array[i]->build_linear_node_mass_matrix(&M);
             cout << "done!" << flush;
             //cout << endl << flush << mesoDimensions::mass * (Mev.transpose() * M * Mev) << endl;
             //cout << (4.0 / 3.0) * 3.1415926535 * 125e-27 * 1500 << endl;
@@ -1290,23 +1212,12 @@ int World::get_smallest_time_constants()
             cout << "\r\t\tAttempting to invert M to form M_inv (task 2/4)..." << flush;
             Eigen::SimplicialCholesky<Eigen::SparseMatrix<scalar>> Cholesky(M); // performs a Cholesky factorization of M
             M_inv = Cholesky.solve(I);
-            if (Cholesky.info() == Eigen::Success)
-            {
+            if (Cholesky.info() == Eigen::Success) {
                 cout << "done!" << flush;
-            }
-            else if (Cholesky.info() == Eigen::NumericalIssue)
-            {
-                cout << endl
-                     << "\t\t"
-                     << "Mass Matrix could not be inverted via Cholesky factorisation due to numerical issues. This...should not be the case. You have a very odd mass distribution. Try the CG_nomass solver" << endl;
-                return FFEA_ERROR;
-            }
-            else if (Cholesky.info() == Eigen::NoConvergence)
-            {
-                cout << endl
-                     << "\t\t"
-                     << "Inversion iteration couldn't converge. M must be a crazy matrix. Possibly has zero eigenvalues? Try the CG_nomass solver." << endl;
-                return FFEA_ERROR;
+            } else if (Cholesky.info() == Eigen::NumericalIssue) {
+                throw FFEAException("\t\tMass Matrix could not be inverted via Cholesky factorisation due to numerical issues. This...should not be the case. You have a very odd mass distribution. Try the CG_nomass solver");
+            } else if (Cholesky.info() == Eigen::NoConvergence) {
+                throw FFEAException("\t\tInversion iteration couldn't converge. M must be a crazy matrix. Possibly has zero eigenvalues? Try the CG_nomass solver.");
             }
 
             // Apply to K
@@ -1407,10 +1318,9 @@ int World::get_smallest_time_constants()
     cout << "but because a single timestep, with the average size of the noise, causes a step size larger than your smallest element. You must therefore coarsen your mesh further for the ";
     cout << "continuum approximation to be valid. Thanks :)" << endl
          << endl;
-    return FFEA_OK;
 }
 
-/*int World::get_smallest_time_constants() {
+/*void World::get_smallest_time_constants() {
 
 	int blob_index;
 	int num_nodes, num_rows;
@@ -1442,22 +1352,12 @@ int World::get_smallest_time_constants()
 
 		// Build K
 		cout << "\tCalculating the Global Viscosity Matrix, K...";
-		if(active_blob_array[blob_index]->build_linear_node_viscosity_matrix(&K) == FFEA_ERROR) {
-			cout << endl;
-			FFEA_error_text();
-			cout << "In function 'Blob::build_linear_node_viscosity_matrix' from blob " << blob_index << endl;
-			return FFEA_ERROR;
-		}
+		active_blob_array[blob_index]->build_linear_node_viscosity_matrix(&K);
 		cout << "done!" << endl;
 
 		// Build A
 		cout << "\tCalculating the Global Linearised Elasticity Matrix, A...";
-		if(active_blob_array[blob_index]->build_linear_node_elasticity_matrix(&A) == FFEA_ERROR) {
-			cout << endl;
-			FFEA_error_text();
-			cout << "In function 'Blob::build_linear_node_elasticity_matrix'" << blob_index << endl;
-			return FFEA_ERROR;
-		}
+		active_blob_array[blob_index]->build_linear_node_elasticity_matrix(&A);
 		cout << "done!" << endl;
 
 		// Invert K (it's symmetric! Will not work if stokes_visc == 0)
@@ -1469,10 +1369,10 @@ int World::get_smallest_time_constants()
 			cout << "done! Successful inversion of K!" << endl;
 		} else if (Cholesky.info() == Eigen::NumericalIssue) {
 			cout << "\nK cannot be inverted via Cholesky factorisation due to numerical issues. You possible don't have an external solvent set." << endl;
-			return FFEA_OK;
+			return;
 		} else if (Cholesky.info() == Eigen::NoConvergence) {
 			cout << "\nInversion iteration couldn't converge. K must be a crazy matrix. Possibly has zero eigenvalues?" << endl;
-			return FFEA_OK;
+			return;
 		}
 
 		// Apply to A
@@ -1509,7 +1409,6 @@ int World::get_smallest_time_constants()
 	cout << "The time-constant of the slowest mode in all blobs, tau_max = " << dt_max * mesoDimensions::time << "s, from Blob " << dt_max_bin << endl;
 	cout << "The time-constant of the fastest mode in all blobs, tau_min = " << dt_min * mesoDimensions::time << "s, from Blob " << dt_min_bin << endl << endl;
 	cout << "Remember, the energies in your system will begin to be incorrect long before the dt = tau_min. I'd have dt << tau_min if I were you." << endl;
-	return FFEA_OK;
 }*/
 
 /**
@@ -1520,9 +1419,8 @@ int World::get_smallest_time_constants()
  * this function performs matrix algebra using the Eigen libraries to diagonalise
  * elasticity matrix and output pseudo-trajectories based upon these eigenvectors
  * */
-int World::lem(set<int> blob_indices, int num_modes)
+void World::lem(set<int> blob_indices, int num_modes)
 {
-
     int i, j;
     int num_nodes, num_rows;
     set<int>::iterator it;
@@ -1554,13 +1452,7 @@ int World::lem(set<int> blob_indices, int num_modes)
         Eigen::SparseMatrix<scalar> A(num_rows, num_rows);
 
         cout << "\t\tCalculating the Linearised Elasticity Matrix, A...";
-        if (active_blob_array[i]->build_linear_node_elasticity_matrix(&A) == FFEA_ERROR)
-        {
-            cout << endl;
-            FFEA_error_text();
-            cout << "In function 'Blob::build_linear_node_elasticity_matrix'" << i << endl;
-            return FFEA_ERROR;
-        }
+        active_blob_array[i]->build_linear_node_elasticity_matrix(&A);
         cout << "done!" << endl;
 
         // Diagonalise to find the elastic modes
@@ -1624,8 +1516,6 @@ int World::lem(set<int> blob_indices, int num_modes)
         print_evecs_to_file(evecs_out_fname, es.eigenvectors(), num_rows, num_modes);
         print_evals_to_file(evals_out_fname, es.eigenvalues(), num_modes, unitscaler);
     }
-
-    return FFEA_OK;
 }
 
 /**
@@ -1638,7 +1528,7 @@ int World::lem(set<int> blob_indices, int num_modes)
  * pseudo-trajectories based upon these eigenvectors
  * */
 
-int World::dmm(set<int> blob_indices, int num_modes)
+void World::dmm(set<int> blob_indices, int num_modes)
 {
 
     int i, j, k;
@@ -1673,13 +1563,7 @@ int World::dmm(set<int> blob_indices, int num_modes)
         Eigen::SparseMatrix<scalar> K(num_rows, num_rows);
 
         cout << "\t\tCalculating the Global Linearised Viscosity Matrix, K...";
-        if (active_blob_array[i]->build_linear_node_viscosity_matrix(&K) == FFEA_ERROR)
-        {
-            cout << endl;
-            FFEA_error_text();
-            cout << "In function 'Blob::build_linear_node_viscosity_matrix'" << i << endl;
-            return FFEA_ERROR;
-        }
+        active_blob_array[i]->build_linear_node_viscosity_matrix(&K);
         cout << "done!" << endl;
 
         // Diagonalise the thing
@@ -1701,13 +1585,7 @@ int World::dmm(set<int> blob_indices, int num_modes)
         // Get an elasticity matrix
         Eigen::SparseMatrix<scalar> A(num_rows, num_rows);
         cout << "\t\tCalculating the Global Linearised Elasticity Matrix, A...";
-        if (active_blob_array[i]->build_linear_node_elasticity_matrix(&A) == FFEA_ERROR)
-        {
-            cout << endl;
-            FFEA_error_text();
-            cout << "In function 'Blob::build_linear_node_elasticity_matrix'" << i << endl;
-            return FFEA_ERROR;
-        }
+        active_blob_array[i]->build_linear_node_elasticity_matrix(&A);
         cout << "done!" << endl;
 
         // From A, build the transformation Ahat
@@ -1792,7 +1670,6 @@ int World::dmm(set<int> blob_indices, int num_modes)
         print_evecs_to_file(evecs_out_fname, R, num_rows, num_modes);
         print_evals_to_file(evals_out_fname, esAhat.eigenvalues(), num_modes, 1.0);
     }
-    return FFEA_OK;
 }
 
 /**
@@ -1805,7 +1682,7 @@ int World::dmm(set<int> blob_indices, int num_modes)
  * pseudo-trajectories based upon these eigenvectors
  * */
 
-int World::dmm_rp(set<int> blob_indices, int num_modes)
+void World::dmm_rp(set<int> blob_indices, int num_modes)
 {
 
     int i, j, k, l;
@@ -1840,25 +1717,13 @@ int World::dmm_rp(set<int> blob_indices, int num_modes)
         Eigen_MatrixX D(num_rows, num_rows);
 
         cout << "\t\tCalculating the Rotne-Prager diffusion matrix, D..." << flush;
-        if (active_blob_array[i]->build_linear_node_rp_diffusion_matrix(&D) == FFEA_ERROR)
-        {
-            cout << endl;
-            FFEA_error_text();
-            cout << "In function 'Blob::build_rp_diffusion_matrix'" << i << endl;
-            return FFEA_ERROR;
-        }
+        active_blob_array[i]->build_linear_node_rp_diffusion_matrix(&D);
         cout << "done!" << endl;
 
         // Get an elasticity matrix
         Eigen::SparseMatrix<scalar> A(num_rows, num_rows);
         cout << "\t\tCalculating the Global Linearised Elasticity Matrix, A..." << flush;
-        if (active_blob_array[i]->build_linear_node_elasticity_matrix(&A) == FFEA_ERROR)
-        {
-            cout << endl;
-            FFEA_error_text();
-            cout << "In function 'Blob::build_linear_node_elasticity_matrix'" << i << endl;
-            return FFEA_ERROR;
-        }
+        active_blob_array[i]->build_linear_node_elasticity_matrix(&A);
         cout << "done!" << endl;
 
         // Diagonalise DA to find the dynamic modes
@@ -2001,13 +1866,12 @@ int World::dmm_rp(set<int> blob_indices, int num_modes)
         print_evecs_to_file(evecs_out_fname, Rvecs, num_rows, num_modes);
         print_evals_to_file(evals_out_fname, Rvals, num_modes, 1.0);
     }
-    return FFEA_OK;
 }
 
 /**
  * Update entire World for num_steps time steps
  * */
-int World::run()
+void World::run()
 {
 
     int es_count = params.es_update;
@@ -2038,14 +1902,12 @@ int World::run()
                 if (updatingVdWLL() == true)
                 {
                     cout << "Waiting for thread VdW LL" << endl;
-                    if (catch_thread_updatingVdWLL(step, wtime, 1))
-                        return FFEA_ERROR;
+                    catch_thread_updatingVdWLL(step, wtime, 1);
                 }
                 if (updatingPCLL() == true)
                 {
                     cout << "Waiting for thread PC LL" << endl;
-                    if (catch_thread_updatingPCLL(step, wtime, 1))
-                        return FFEA_ERROR;
+                    catch_thread_updatingPCLL(step, wtime, 1);
                 }
 #endif
             }
@@ -2147,22 +2009,20 @@ int World::run()
         {
             // REFRESH LINKED LISTS:
             // Refresh the VdW-LinkedList
+            try {
 #ifdef FFEA_PARALLEL_FUTURE
-            // Thread out to update the LinkedLists,
-            //   after calculating the centroids of the faces.
-            // Catching up the thread should be done through catch_thread_updatingVdWLL,
-            //   which will to lookup.safely_swap_layers().
-            if (updatingVdWLL() == false)
-            {
-                thread_updatingVdWLL = std::async(std::launch::async, &World::prebuild_nearest_neighbour_lookup_wrapper, this, params.ssint_cutoff);
-            }
-            else // die with dignity
+                // Thread out to update the LinkedLists,
+                //   after calculating the centroids of the faces.
+                // Catching up the thread should be done through catch_thread_updatingVdWLL,
+                //   which will to lookup.safely_swap_layers().
+                if (updatingVdWLL() == false)
+                {
+                    thread_updatingVdWLL = std::async(std::launch::async, &World::prebuild_nearest_neighbour_lookup_wrapper, this, params.ssint_cutoff);
+                }
+                else { throw FFEAException(); }
 #else
-            if (lookup.build_nearest_neighbour_lookup(params.ssint_cutoff) == FFEA_ERROR)
+                lookup.build_nearest_neighbour_lookup(params.ssint_cutoff);
 #endif
-            {
-                return die_with_dignity(step, wtime);
-            }
 
             // Refresh the PreComp-LinkedList
 #ifdef FFEA_PARALLEL_FUTURE
@@ -2171,12 +2031,13 @@ int World::run()
             {
                 thread_updatingPCLL = std::async(std::launch::async, &PreComp_solver::prebuild_pc_nearest_neighbour_lookup, &pc_solver);
             }
-            else // die with dignity
+            else { throw FFEAException(); }
 #else
-            if (pc_solver.build_pc_nearest_neighbour_lookup() == FFEA_ERROR)
+                pc_solver.build_pc_nearest_neighbour_lookup();
 #endif
-            {
-                return die_with_dignity(step, wtime);
+            } catch (...) {
+                die_with_dignity(step, wtime);
+                throw;
             }
             // FINSHED REFRESHING LINKED LISTS.
 
@@ -2251,8 +2112,7 @@ int World::run()
         // Get the thread updating the VdW-LinkedLists if it has finished.
         if (updatingPCLL_ready_to_swap() == true)
         {
-            if (catch_thread_updatingPCLL(step, wtime, 3))
-                return die_with_dignity(step, wtime);
+            catch_thread_updatingPCLL(step, wtime, 3);
         }
 #endif
 
@@ -2283,8 +2143,7 @@ int World::run()
         // #pragma omp master // Then a single thread does the catching and swapping
         if (updatingVdWLL_ready_to_swap() == true)
         {
-            if (catch_thread_updatingVdWLL(step, wtime, 3))
-                return die_with_dignity(step, wtime);
+            catch_thread_updatingVdWLL(step, wtime, 3);
         }
         // #pragma omp barrier // the barrier holds people off, before catching the thread
 #endif
@@ -2311,19 +2170,18 @@ int World::run()
         }
 
         // Update Blobs, while tracking possible errors.
-        int fatal_errors = 0;
+        try {
 #ifdef FFEA_PARALLEL_PER_BLOB
-#pragma omp parallel for default(none) reduction(+ \
-                                                 : fatal_errors) schedule(static)
+#pragma omp parallel for default(none) schedule(static)
 #endif
-        for (int i = 0; i < params.num_blobs; i++)
-        {
-            if (active_blob_array[i]->update_internal_forces() == FFEA_ERROR)
-                fatal_errors++;
+            for (int i = 0; i < params.num_blobs; i++)
+            {
+                active_blob_array[i]->update_internal_forces();
+            }
+        } catch (...) {
+            die_with_dignity(step, wtime);
+            throw;
         }
-
-        if (fatal_errors > 0)
-            return die_with_dignity(step, wtime);
 
         // Now, for this step, all forces and positions are correct, as are the kinetic states
         if ((step) % params.check == 0)
@@ -2354,10 +2212,7 @@ int World::run()
         {
 
             // Calculate the kinetic switching probablilites. These are scaled from the base rates provided
-            if (calculate_kinetic_rates() != FFEA_OK)
-            {
-                FFEA_ERROR_MESSG("'calculate_kinetic_rates()' failed.\n")
-            }
+            calculate_kinetic_rates();
 
             // Now we can treat each blob separately
             int target;
@@ -2366,15 +2221,8 @@ int World::run()
 
                 // Find out what the state change should be based on the rates
                 target = active_blob_array[i]->get_state_index();
-                if (choose_new_kinetic_state(i, &target) != FFEA_OK)
-                {
-                    FFEA_ERROR_MESSG("'calculate_kinetic_rates()' failed.\n")
-                }
-
-                if (change_kinetic_state(i, target) != FFEA_OK)
-                {
-                    FFEA_ERROR_MESSG("'change_kinetic_state()' failed.\n")
-                }
+                choose_new_kinetic_state(i, &target);
+                change_kinetic_state(i, target);
             }
         }
 
@@ -2407,8 +2255,6 @@ int World::run()
 #endif
 
     printf("\n\nTime taken: %2f seconds\n", (omp_get_wtime() - wtime));
-
-    return FFEA_OK;
 }
 
 /**
@@ -2421,14 +2267,14 @@ int World::run()
  * For a binding / unbinding event, the binding sites are activated.
  * */
 
-int World::change_kinetic_state(int blob_index, int target_state)
+void World::change_kinetic_state(int blob_index, int target_state)
 {
 
     // Do we even need to change anything?
     int current_state = active_blob_array[blob_index]->get_state_index();
     if (current_state == target_state)
     {
-        return FFEA_OK;
+        return;
     }
 
     int current_conformation = active_blob_array[blob_index]->get_conformation_index();
@@ -2438,8 +2284,6 @@ int World::change_kinetic_state(int blob_index, int target_state)
     if (kinetic_state[blob_index][current_state].get_conformation_index() != kinetic_state[blob_index][target_state].get_conformation_index())
     {
         // Conformation change!
-        int inversionCheck;
-
         // Get current nodes
         std::vector<arr3*> current_nodes = active_blob_array[blob_index]->get_actual_node_positions();
 
@@ -2450,20 +2294,17 @@ int World::change_kinetic_state(int blob_index, int target_state)
         kinetic_map[blob_index][current_conformation][target_conformation]->block_apply(current_nodes, target_nodes);
 
         // Check inversion
-        inversionCheck = blob_array[blob_index][target_conformation].check_inversion();
-
-        if (inversionCheck == FFEA_ERROR)
+        if (blob_array[blob_index][target_conformation].check_inversion())
         {
             printf("Conformational change rejected.\n");
 
             // Move target conformation back to infinity
             blob_array[blob_index][target_conformation].position(blob_array[blob_index][target_conformation].get_RandU01() * 1e10, blob_array[blob_index][target_conformation].get_RandU01() * 1e10, blob_array[blob_index][target_conformation].get_RandU01() * 1e10);
 
-            return FFEA_OK;
+            return;
         }
         else
         {
-
             // Change active conformation and activate all faces
             active_blob_array[blob_index] = &blob_array[blob_index][target_conformation];
             active_blob_array[blob_index]->kinetically_set_faces(true);
@@ -2500,16 +2341,14 @@ int World::change_kinetic_state(int blob_index, int target_state)
     active_blob_array[blob_index]->set_previous_state_index(current_state);
     active_blob_array[blob_index]->set_state_index(target_state);
     active_blob_array[blob_index]->set_previous_conformation_index(current_conformation);
-
-    return FFEA_OK;
 }
 
 /**
  * @brief Parses <blobs>, <springs>, <rods> and <precomp>.
- * @param[in] vector<string> script_vector, which is essentially the FFEA input file,
+ * @param script_vector which is essentially the FFEA input file,
  *            line by line, as it comes out of FFEA_input_reader::file_to_lines
  */
-int World::read_and_build_system(vector<string> script_vector)
+void World::read_and_build_system(const vector<string> &script_vector)
 {
 
     // READ and parse more
@@ -2534,8 +2373,7 @@ int World::read_and_build_system(vector<string> script_vector)
     // Get interactions vector first, for later use
     if ((params.calc_preComp == 1) || (params.calc_springs == 1) || (params.calc_ctforces == 1))
     {
-        if (systemreader.extract_block("interactions", 0, script_vector, &interactions_vector) == FFEA_ERROR)
-            return FFEA_ERROR;
+        systemreader.extract_block("interactions", 0, script_vector, &interactions_vector);
     }
 
     // Get precomputed data first
@@ -2544,10 +2382,7 @@ int World::read_and_build_system(vector<string> script_vector)
     if (params.calc_preComp == 1)
     {
         vector<string> precomp_vector;
-        if (systemreader.extract_block("precomp", 0, interactions_vector, &precomp_vector) == FFEA_ERROR)
-        {
-            return FFEA_ERROR;
-        }
+        systemreader.extract_block("precomp", 0, interactions_vector, &precomp_vector);
 
         for (i = 0; i < precomp_vector.size(); i++)
         {
@@ -2558,8 +2393,7 @@ int World::read_and_build_system(vector<string> script_vector)
                 boost::trim(lrvalue[1]);
                 if (lrvalue[1].compare("") == 0)
                 {
-                    FFEA_ERROR_MESSG("Invalid value for 'types' in <precomp> section\n");
-                    return FFEA_ERROR;
+                    throw FFEAException("Invalid value for 'types' in <precomp> section");
                 }
                 systemreader.split_string(lrvalue[1], pc_params.types, ",");
             }
@@ -2586,14 +2420,10 @@ int World::read_and_build_system(vector<string> script_vector)
     if (params.calc_ctforces == 1)
     {
         vector<string> ctforces_vector;
-        if (systemreader.extract_block("ctforces", 0, interactions_vector, &ctforces_vector) == FFEA_ERROR)
-        {
-            return FFEA_ERROR;
-        }
+        systemreader.extract_block("ctforces", 0, interactions_vector, &ctforces_vector);
         if (ctforces_vector.size() != 1)
         {
-            FFEA_ERROR_MESSG("only a single field is allowed in <ctforces> block\n");
-            return FFEA_ERROR;
+            throw FFEAException("only a single field is allowed in <ctforces> block.");
         }
         systemreader.parse_tag(ctforces_vector[0], lrvalue);
         if (lrvalue[0] == "ctforces_fname")
@@ -2603,26 +2433,22 @@ int World::read_and_build_system(vector<string> script_vector)
         }
         else
         {
-            FFEA_ERROR_MESSG("ctforces_fname not provided in <ctforces> block, while calc_ctforces set to 1\n");
-            return FFEA_ERROR;
+            throw FFEAException("ctforces_fname not provided in <ctforces> block, while calc_ctforces set to 1.");
         }
         // try to open this file:
         if (!fs::exists(params.ctforces_fname))
         {
-            FFEA_ERROR_MESSG("ctforces_fname: %s could not be open\n", params.ctforces_fname.c_str());
+            throw FFEAException("ctforces_fname: %s could not be open.", params.ctforces_fname.c_str());
         }
     }
 
     if (params.calc_springs == 1)
     {
-        if (systemreader.extract_block("springs", 0, interactions_vector, &spring_vector) == FFEA_ERROR)
-            return FFEA_ERROR;
+        systemreader.extract_block("springs", 0, interactions_vector, &spring_vector);
 
         if (spring_vector.size() > 1)
         {
-            FFEA_error_text();
-            cout << "'Spring' block should only have 1 file." << endl;
-            return FFEA_ERROR;
+            throw FFEAException("'Spring' block should only have 1 file.");
         }
         else if (spring_vector.size() == 1)
         {
@@ -2663,8 +2489,7 @@ int World::read_and_build_system(vector<string> script_vector)
         blob_conf[i].set_rotation = 0;
 
         // Get blob data
-        if (systemreader.extract_block("blob", i, script_vector, &blob_vector) == FFEA_ERROR)
-            return FFEA_ERROR;
+        systemreader.extract_block("blob", i, script_vector, &blob_vector);
 
         // Read all conformations
         bool enforce_conf_blocks = false;
@@ -2675,24 +2500,19 @@ int World::read_and_build_system(vector<string> script_vector)
         {
 
             // Get conformation data
-            int read_conf_err = systemreader.extract_block("conformation", j, blob_vector, &conformation_vector, enforce_conf_blocks);
-            if (read_conf_err == FFEA_ERROR)
-            {
+            try {
+                systemreader.extract_block("conformation", j, blob_vector, &conformation_vector, enforce_conf_blocks);
+            } catch (FFEAException &err) {
                 if (enforce_conf_blocks == true)
-                    return FFEA_ERROR;
-                else
-                {
-                    read_blob_as_conf = true;
-                    conformation_vector = blob_vector;
-                }
+                    throw;
+                read_blob_as_conf = true;
+                conformation_vector = blob_vector;
             }
 
             // Error check
             if (conformation_vector.size() == 0)
             {
-                FFEA_error_text();
-                cout << " In 'Blob' block " << i << ", expected at least a single 'conformation' block." << endl;
-                return FFEA_ERROR;
+                throw FFEAException("In 'Blob' block %d, expected at least a single 'conformation' block.", i);
             }
 
             // Parse conformation data
@@ -2782,9 +2602,7 @@ int World::read_and_build_system(vector<string> script_vector)
                         forgive_unrecognised = true;
                     if (forgive_unrecognised == false)
                     {
-                        FFEA_error_text();
-                        cout << "Unrecognised conformation lvalue: '" << lrvalue[0] << "'" << endl;
-                        return FFEA_ERROR;
+                        throw FFEAException("Unrecognised conformation lvalue: '%s'", lrvalue[0].c_str());
                     }
                 }
             }
@@ -2792,26 +2610,20 @@ int World::read_and_build_system(vector<string> script_vector)
             // Error check
             if (set_motion_state == 0)
             {
-                FFEA_error_text();
-                cout << "Blob " << i << ", conformation " << j << " must have a motion state set.\nAccepted states: DYNAMIC, STATIC, FROZEN." << endl;
-                return FFEA_ERROR;
+                throw FFEAException("In blob %d, conformation %d: must have a motion state set.\nAccepted states: DYNAMIC, STATIC, FROZEN.", i, j);
             }
             else
             {
                 if (set_nodes == 0 || set_surf == 0 || set_ssint == 0)
                 {
-                    FFEA_error_text();
-                    cout << "In blob " << i << ", conformation " << j << ":\nFor any blob conformation, 'nodes', 'surface' and 'ssint' must be set." << endl;
-                    return FFEA_ERROR;
+                    throw FFEAException("In blob %d, conformation %d:\nFor any blob conformation, 'nodes', 'surface' and 'ssint' must be set.", i, j);
                 }
 
                 if (motion_state.back() == FFEA_BLOB_IS_DYNAMIC)
                 {
                     if (set_top == 0 || set_mat == 0 || set_stokes == 0)
                     {
-                        FFEA_error_text();
-                        cout << "In blob " << i << ", conformation " << j << ":\nFor a DYNAMIC blob conformation, 'topology', 'material', and 'stokes' must be set." << endl;
-                        return FFEA_ERROR;
+                        throw FFEAException("In blob %d, conformation %d:\nFor a DYNAMIC blob conformation, 'topology', 'material', and 'stokes' must be set.", i, j);
                     }
                 }
                 else
@@ -2864,16 +2676,14 @@ int World::read_and_build_system(vector<string> script_vector)
         {
 
             // Get kinetic data
-            if (systemreader.extract_block("kinetics", 0, blob_vector, &kinetics_vector) == FFEA_ERROR)
-                return FFEA_ERROR;
+            systemreader.extract_block("kinetics", 0, blob_vector, &kinetics_vector);
 
             // Get map info if necessary
             if (params.num_conformations[i] > 1)
             {
 
                 // Get map data
-                if (systemreader.extract_block("maps", 0, kinetics_vector, &map_vector) == FFEA_ERROR)
-                    return FFEA_ERROR;
+                systemreader.extract_block("maps", 0, kinetics_vector, &map_vector);
 
                 // Parse map data
                 for (it = map_vector.begin(); it != map_vector.end(); ++it)
@@ -2887,9 +2697,7 @@ int World::read_and_build_system(vector<string> script_vector)
                 // Error check
                 if (blob_conf[i].maps.size() != params.num_conformations[i] * (params.num_conformations[i] - 1))
                 {
-                    FFEA_error_text();
-                    cout << "In blob " << i << ", expected " << params.num_conformations[i] * (params.num_conformations[i] - 1) << " maps to describe all possible switches.\n Read " << blob_conf[i].maps.size() << " maps." << endl;
-                    return FFEA_ERROR;
+                    throw FFEAException("In blob %d, expected %d maps to describe all possible switches.\n Read %zu maps.", i, params.num_conformations[i] * (params.num_conformations[i] - 1), blob_conf[i].maps.size());
                 }
             }
 
@@ -2918,11 +2726,11 @@ int World::read_and_build_system(vector<string> script_vector)
                 // Error check
                 if (set_states == 0)
                 {
-                    FFEA_ERROR_MESSG("Expected a .states files for blob %d, as num_states = %d\n", i, params.num_states[i])
+                    throw FFEAException("Expected a .states files for blob %d, as num_states = %d", i, params.num_states[i]);
                 }
                 if (set_rates == 0)
                 {
-                    FFEA_ERROR_MESSG("Expected a .rates files for blob %d, as num_states = %d\n", i, params.num_states[i])
+                    throw FFEAException("Expected a .rates files for blob %d, as num_states = %d", i, params.num_states[i]);
                 }
             }
             else
@@ -2966,9 +2774,7 @@ int World::read_and_build_system(vector<string> script_vector)
                 }
                 else
                 {
-                    FFEA_error_text();
-                    cout << "In blob " << i << ", unrecognised solver type.\nRecognised solvers:CG, CG_nomass, direct, masslumped." << endl;
-                    return FFEA_ERROR;
+                    throw FFEAException("In blob %d, unrecognised solver type.\nRecognised solvers:CG, CG_nomass, direct, masslumped.", i);
                 }
                 set_solver = 1;
             }
@@ -3030,9 +2836,7 @@ int World::read_and_build_system(vector<string> script_vector)
 
         if (set_scale == 0)
         {
-            FFEA_error_text();
-            cout << "Blob " << i << ", scale not set." << endl;
-            return FFEA_ERROR;
+            throw FFEAException("Blob %d, scale not set.", i);
         }
 
         // Build blob
@@ -3042,14 +2846,11 @@ int World::read_and_build_system(vector<string> script_vector)
         {
             cout << "\tConfiguring blob " << i << " conformation " << j << "..." << endl;
 
-            if (blob_array[i][j].config(i, j, nodes[j], topology[j], surface[j],
-                                        material[j], stokes[j], ssint[j], pin[j], binding[j],
-                                        beads[j], scale, calc_compress, compress, solver,
-                                        motion_state[j], params, pc_params, &ssint_matrix,
-                                        &binding_matrix, rng) == FFEA_ERROR)
-            {
-                FFEA_ERROR_MESSG("\tError when trying to pre-initialise Blob %d, conformation %d.\n", i, j);
-            }
+            blob_array[i][j].config(i, j, nodes[j], topology[j], surface[j],
+                material[j], stokes[j], ssint[j], pin[j], binding[j],
+                beads[j], scale, calc_compress, compress, solver,
+                motion_state[j], params, pc_params, &ssint_matrix,
+                &binding_matrix, rng);
         }
 
         // Clear blob vector and other vectors for next round
@@ -3078,22 +2879,15 @@ int World::read_and_build_system(vector<string> script_vector)
     //    and thus it may be performance wise to initialise things in the
     //    thread they will be. Hopefully will work, though that
     //    leaves us with schedule static.
-    int fatal_errors = 0;
 #ifdef FFEA_PARALLEL_PER_BLOB
-#pragma omp parallel for default(none) schedule(static) private(i, j) reduction(+ \
-                                                                                : fatal_errors) shared(blob_conf) // shared(params, blob_array, systemreader, blob_conf)
+#pragma omp parallel for default(none) schedule(static) private(i, j) shared(blob_conf) // shared(params, blob_array, systemreader, blob_conf)
 
 #endif
     for (i = 0; i < params.num_blobs; ++i)
     {
         for (j = 0; j < params.num_conformations[i]; ++j)
         {
-
-            if (blob_array[i][j].init() == FFEA_ERROR)
-            {
-                printf("Error when initialising Blob %d, conformation %d", i, j);
-                fatal_errors += 1;
-            }
+            blob_array[i][j].init();
 
             // If not an active conforamtion, move to random area in infinity so ssint and stuff are not active (face linked list is not set up for deleting elements)
             if (j > 0)
@@ -3169,51 +2963,26 @@ int World::read_and_build_system(vector<string> script_vector)
 
             // Will load a default state if params.num_states[i] == 1
             printf("\t\tLoading kinetic states...");
-            if (load_kinetic_states(blob_conf[i].states, i) == FFEA_ERROR)
-            {
-                FFEA_error_text();
-                printf("\nProblem reading kinetic states in 'read_kinetic_states' function");
-                fatal_errors += 1;
-            }
+            load_kinetic_states(blob_conf[i].states, i);
             printf("...done!");
 
             printf("\t\tLoading kinetic rates...");
-            if (load_kinetic_rates(blob_conf[i].rates, i) == FFEA_ERROR)
-            {
-                FFEA_error_text();
-                printf("\nProblem reading kinetic rates in 'read_kinetic_rates' function");
-                fatal_errors += 1;
-            }
+            load_kinetic_rates(blob_conf[i].rates, i);
             printf("...done!\n");
 
             // Maps only if num_conforamtions for this blob > 1
             if (params.num_conformations[i] > 1)
             {
                 printf("\t\tLoading kinetic maps...\n");
-                if (load_kinetic_maps(blob_conf[i].maps, blob_conf[i].maps_conf_index_from, blob_conf[i].maps_conf_index_to, i) == FFEA_ERROR)
-                {
-                    FFEA_error_text();
-                    printf("\nProblem reading kinetic maps in 'read_kinetic_maps' function");
-                    fatal_errors += 1;
-                }
+                load_kinetic_maps(blob_conf[i].maps, blob_conf[i].maps_conf_index_from, blob_conf[i].maps_conf_index_to, i);
                 printf("\t\t...done!\n");
 
                 printf("\t\tBuilding 'identity' maps for energy comparison...");
-                if (build_kinetic_identity_maps() == FFEA_ERROR)
-                {
-                    FFEA_error_text();
-                    printf("\nProblem reading kinetic maps in 'build_kinetic_identity_maps' function");
-                    fatal_errors += 1;
-                }
+                build_kinetic_identity_maps();
                 printf("...done!\n");
             }
             printf("\t...done!");
         }
-    }
-    if (fatal_errors > 0)
-    {
-        cout << "There were fatal errors initialising the blobs" << endl;
-        return FFEA_ERROR;
     }
 
     // Create rods
@@ -3276,32 +3045,23 @@ int World::read_and_build_system(vector<string> script_vector)
     }
 
     // Finally, get springs
-    if (params.calc_springs == 1)
-    {
-        if (load_springs(params.springs_fname.c_str()) != 0)
-        {
-            //if(load_springs(auxpath.string().c_str()) != 0) {
-            //if(load_springs(lrvalue[1].c_str()) != 0) {
-            FFEA_error_text();
-            cout << "Problem loading springs from " << lrvalue[1] << "." << endl;
-            return FFEA_ERROR;
-        }
+    if (params.calc_springs == 1) {
+        load_springs(params.springs_fname.c_str());
+        // load_springs(auxpath.string().c_str());
+        // load_springs(lrvalue[1].c_str());
     }
-
-    return FFEA_OK;
 }
 
 /**
  * @brief Loads the maps from a given blob
- * @param[in] vector<string> map_fnames A vector of maps to load
- * @param[in] vector<int> map_from Which conformation the maps are from
- * @param[in] vector<int> map_to Which conformation the maps go to
- * @param[in] int blob_index Which blob the maps belong to
+ * @param map_fnames A vector of maps to load
+ * @param map_from Which conformation the maps are from
+ * @param map_to Which conformation the maps go to
+ * @param blob_index Which blob the maps belong to
  * @details This function reads in the maps required for kinetic switching
  * between conformations. Does no error checking for correct number of maps
  * */
-
-int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, vector<int> map_to, int blob_index)
+void World::load_kinetic_maps(const vector<string> &map_fnames, const vector<int> &map_from, const vector<int> &map_to, int blob_index)
 {
 
     unsigned int i, j, num_rows, num_cols, num_entries;
@@ -3315,18 +3075,14 @@ int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, ve
         fin.open(map_fnames.at(i).c_str());
         if (fin.is_open() == false)
         {
-            cout << "File " << map_fnames.at(i) << " not found. Plaese supply valid map file with correct path." << endl;
-            return FFEA_ERROR;
+            throw FFEAException("File %s not found. Please supply valid map file with correct path.", map_fnames.at(i).c_str());
         }
 
         // Check if sparse or dense
         getline(fin, buf_string);
         if (buf_string != "FFEA Kinetic Conformation Mapping File (Sparse)")
         {
-            FFEA_error_text();
-            cout << "In " << map_fnames.at(i) << ", expected 'FFEA Kinetic Conformation Mapping File (Sparse)'" << endl;
-            cout << "but got " << buf_string << endl;
-            return FFEA_ERROR;
+            throw FFEAException("In %s, expected 'FFEA Kinetic Conformation Mapping File (Sparse)'\n but got %s", map_fnames.at(i).c_str(), buf_string.c_str());
         }
 
         // Get nodes to and from and check against the structures
@@ -3336,9 +3092,7 @@ int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, ve
 
         if (num_cols != blob_array[blob_index][map_from.at(i)].get_num_nodes())
         {
-            FFEA_error_text();
-            cout << "In " << map_fnames.at(i) << ", 'num_nodes_from', " << num_cols << ", does not correspond to the number of nodes in blob " << i << " conformation " << map_from.at(i) << endl;
-            return FFEA_ERROR;
+            throw FFEAException("In %s, 'num_nodes_from', %u, does not correspond to the number of nodes in blob %u conformation %d", map_fnames.at(i).c_str(), num_cols, i, map_from.at(i));
         }
 
         getline(fin, buf_string);
@@ -3347,9 +3101,7 @@ int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, ve
 
         if (num_rows != blob_array[blob_index][map_to.at(i)].get_num_nodes())
         {
-            FFEA_error_text();
-            cout << "In " << map_fnames.at(i) << ", 'num_nodes_to', " << num_rows << ", does not correspond to the number of nodes in blob " << i << " conformation " << map_to.at(i) << endl;
-            return FFEA_ERROR;
+            throw FFEAException("In %s, 'num_nodes_to', %u, does not correspond to the number of nodes in blob %u conformation %d", map_fnames.at(i).c_str(), num_rows, i, map_to.at(i));
         }
 
         // Get num_entries
@@ -3400,8 +3152,6 @@ int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, ve
         // Use of std::move() here moves the local scope entry/key into the method (converts them to rval)
         kinetic_map[blob_index][map_from[i]][map_to[i]]->init(num_rows, entries, std::move(key), col_index);
     }
-
-    return FFEA_OK;
 }
 
 /**
@@ -3410,7 +3160,7 @@ int World::load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, ve
  * 'return_maps', which are used for energy calculations and comparisons
  * */
 
-int World::build_kinetic_identity_maps() {  
+void World::build_kinetic_identity_maps() {  
     // For each blob, build map_ij*map_ji and map_ji*map_ij so we can compare energies using only the conserved modes. Well clever this, Oliver Harlen's idea.
     // He didn't write this though!
     for (int i = 0; i < params.num_blobs; ++i) {
@@ -3427,7 +3177,6 @@ int World::build_kinetic_identity_maps() {
             }
         }
     }
-    return FFEA_OK;
 }
 
 /**
@@ -3436,9 +3185,8 @@ int World::build_kinetic_identity_maps() {
  * The average rate throughout the simulation should still be the given values.
  * */
 
-int World::calculate_kinetic_rates()
+void World::calculate_kinetic_rates()
 {
-
     int i, j;
     int current_state;
     float prob_sum;
@@ -3544,13 +3292,11 @@ int World::calculate_kinetic_rates()
             }
             else if (kinetic_state[i][current_state].is_bound() && !kinetic_state[i][j].is_bound())
             {
-
-                // Unbnding event! Kinetic switch is constant
+                // Unbinding event! Kinetic switch is constant
                 kinetic_rate[i][current_state][j] = kinetic_base_rate[i][current_state][j];
             }
             else
             {
-
                 // Identity event. Nothing changes here either
                 kinetic_rate[i][current_state][j] = kinetic_base_rate[i][current_state][j];
             }
@@ -3561,13 +3307,11 @@ int World::calculate_kinetic_rates()
         // Finally, the probability of staying put
         if (prob_sum > 1.0)
         {
-            FFEA_ERROR_MESSG("Although your original switching probabilities for blob %d totalled < 1.0, after rescaling they have gone > 1.0. Lower your 'kinetic_update' parameter!", i)
+            throw FFEAException("Although your original switching probabilities for blob %d totalled < 1.0, after rescaling they have gone > 1.0. Lower your 'kinetic_update' parameter!", i);
         }
 
         kinetic_rate[i][current_state][current_state] = 1 - prob_sum;
     }
-
-    return FFEA_OK;
 }
 
 /**
@@ -3579,7 +3323,7 @@ int World::calculate_kinetic_rates()
  * rates.
  * */
 
-int World::choose_new_kinetic_state(int blob_index, int *target)
+void World::choose_new_kinetic_state(int blob_index, int *target)
 {
 
     int i;
@@ -3613,10 +3357,9 @@ int World::choose_new_kinetic_state(int blob_index, int *target)
             *target = i;
         }
     }
-    return FFEA_OK;
 }
 
-int World::load_kinetic_states(string states_fname, int blob_index)
+void World::load_kinetic_states(string states_fname, int blob_index)
 {
 
     int i, j, num_states, conf_index, from, to; //, site_index;
@@ -3631,8 +3374,7 @@ int World::load_kinetic_states(string states_fname, int blob_index)
     {
         kinetic_state[blob_index] = std::vector<KineticState>(1);
         kinetic_state[blob_index][0].init();
-
-        return FFEA_OK;
+        return;
     }
 
     // Else
@@ -3642,7 +3384,7 @@ int World::load_kinetic_states(string states_fname, int blob_index)
     fin.open(states_fname);
     if (fin.fail())
     {
-        FFEA_ERROR_MESSG("'states_fname' %s not found\n", states_fname.c_str())
+        throw FFEAException("'states_fname' %s not found\n", states_fname.c_str());
     }
 
     cout << "\n\t\tReading in Kinetic States file: " << states_fname << endl;
@@ -3652,7 +3394,7 @@ int World::load_kinetic_states(string states_fname, int blob_index)
 
     if (strcmp(buf, "ffea kinetic states file") != 0)
     {
-        FFEA_ERROR_MESSG("\nExpected 'ffea kinetic states file' as first line. This may not be an FFEA kinetic states file\n")
+        throw FFEAException("\nExpected 'ffea kinetic states file' as first line. This may not be an FFEA kinetic states file.");
     }
 
     // Get num_states
@@ -3664,7 +3406,7 @@ int World::load_kinetic_states(string states_fname, int blob_index)
 
     if (num_states != params.num_states[blob_index])
     {
-        FFEA_ERROR_MESSG("\nnum_states defined in '%s', %d, does not correspond to the initial script file, %d.\n", states_fname.c_str(), num_states, params.num_states[blob_index])
+        throw FFEAException("\nnum_states defined in '%s', %d, does not correspond to the initial script file, %d.", states_fname.c_str(), num_states, params.num_states[blob_index]);
     }
 
     // Get 'states:'
@@ -3686,7 +3428,7 @@ int World::load_kinetic_states(string states_fname, int blob_index)
 
         if (conf_index < 0 || conf_index >= params.num_conformations[blob_index])
         {
-            FFEA_ERROR_MESSG("In %s, state %d, conf_index is out of range (0 < conf_index < %d).\n", states_fname.c_str(), i, params.num_conformations[blob_index])
+            throw FFEAException("In %s, state %d, conf_index is out of range (0 < conf_index < %d).", states_fname.c_str(), i, params.num_conformations[blob_index]);
         }
 
         // Now get bound binding sites
@@ -3708,7 +3450,7 @@ int World::load_kinetic_states(string states_fname, int blob_index)
 
             if (sline.size() - 1 != 2)
             {
-                FFEA_ERROR_MESSG("In %s, state %d, binding line format error. Should be 'binding from_index to_index\n", states_fname.c_str(), i)
+                throw FFEAException("In %s, state %d, binding line format error. Should be 'binding from_index to_index.", states_fname.c_str(), i);
             }
 
             sline.erase(sline.begin());
@@ -3728,12 +3470,12 @@ int World::load_kinetic_states(string states_fname, int blob_index)
 
                     if (from >= binding_matrix.num_interaction_types || to >= binding_matrix.num_interaction_types)
                     {
-                        FFEA_ERROR_MESSG("In %s, state %d, binding from type %d or to type %d is > num_interaction_types %d (check binding_matrix).\n", states_fname.c_str(), i, from, to, binding_matrix.num_interaction_types)
+                        throw FFEAException("In %s, state %d, binding from type %d or to type %d is > num_interaction_types %d (check binding_matrix).", states_fname.c_str(), i, from, to, binding_matrix.num_interaction_types);
                     }
 
                     if (binding_matrix.interaction[from][to] != true)
                     {
-                        FFEA_ERROR_MESSG("In %s, state %d, binding from type %d to type %d is not allowed (check binding_matrix).\n", states_fname.c_str(), i, from, to)
+                        throw FFEAException("In %s, state %d, binding from type %d to type %d is not allowed (check binding_matrix).", states_fname.c_str(), i, from, to);
                     }
                 }
             }
@@ -3745,12 +3487,10 @@ int World::load_kinetic_states(string states_fname, int blob_index)
 
     // Close and return
     fin.close();
-    return FFEA_OK;
 }
 
-int World::load_kinetic_rates(string rates_fname, int blob_index)
+void World::load_kinetic_rates(string rates_fname, int blob_index)
 {
-
     int i, j, num_states;
     char *crap;
     char buf[255];
@@ -3773,7 +3513,7 @@ int World::load_kinetic_rates(string rates_fname, int blob_index)
         kinetic_rate[blob_index][0][0] = 1.0;
         kinetic_base_rate[blob_index][0][0] = 1.0;
 
-        return FFEA_OK;
+        return;
     }
 
     // Open the file
@@ -3783,16 +3523,16 @@ int World::load_kinetic_rates(string rates_fname, int blob_index)
     crap = fgets(buf, 255, fin);
     if (strcmp(buf, "ffea kinetic rates file\n") != 0)
     {
-        FFEA_ERROR_MESSG("\nExpected 'ffea kinetic rates file' as first line. This may not be an FFEA kinetic rates file\n")
+        throw FFEAException("\nExpected 'ffea kinetic rates file' as first line. This may not be an FFEA kinetic rates file.");
     }
 
     if (fscanf(fin, "num_states %d\n", &num_states) != 1)
     {
-        FFEA_ERROR_MESSG("\nExpected 'num_states %%d' as second line. Unable to read further.\n")
+        throw FFEAException("\nExpected 'num_states %%d' as second line. Unable to read further.");
     }
     if (num_states != params.num_states[blob_index])
     {
-        FFEA_ERROR_MESSG("\nnum_states defined in '%s', %d, does not correspond to the initial script file, %d.\n", rates_fname.c_str(), num_states, params.num_states[blob_index])
+        throw FFEAException("\nnum_states defined in '%s', %d, does not correspond to the initial script file, %d.", rates_fname.c_str(), num_states, params.num_states[blob_index]);
     }
     crap = fgets(buf, 255, fin);
 
@@ -3817,7 +3557,7 @@ int World::load_kinetic_rates(string rates_fname, int blob_index)
         boost::split(sline, buf, boost::is_any_of(" "), boost::token_compress_on);
         if (sline.size() > num_states)
         {
-            FFEA_ERROR_MESSG("\nState %d contains %zd rate values, instead of 'num_states', %d.\n", i, sline.size(), num_states)
+            throw FFEAException("\nState %d contains %zd rate values, instead of 'num_states', %d.", i, sline.size(), num_states);
         }
 
         j = -1;
@@ -3840,20 +3580,17 @@ int World::load_kinetic_rates(string rates_fname, int blob_index)
         // Prob of not switching (for completion)
         if (total_prob > 1)
         {
-            FFEA_error_text();
-            cout << "P(switch_state in kinetic update period) = rate(switch_state)(Hz) * dt * kinetics_update" << endl;
-            cout << "Due to the size of your rates, your timestep, and your kinetic_update value, the total probability of changing states each kinetic update period is greater than one." << endl;
-            cout << "Best solution - Reduce 'kinetics_update' parameter" << endl;
-            return FFEA_ERROR;
+            throw FFEAException(
+                "P(switch_state in kinetic update period) = rate(switch_state)(Hz) * dt * kinetics_update\n"
+                "Due to the size of your rates, your timestep, and your kinetic_update value, the total probability of changing states each kinetic update period is greater than one.\n"
+                "Best solution - Reduce 'kinetics_update' parameter");
         }
         kinetic_base_rate[blob_index][i][i] = 1 - total_prob;
     }
-    return FFEA_OK;
 }
 
 void World::print_kinetic_rates_to_screen(int type)
 {
-
     int i, j, k;
     cout << "Kinetic Rates:" << endl;
     for (i = 0; i < params.num_blobs; ++i)
@@ -4034,7 +3771,7 @@ int World::get_num_blobs()
     return params.num_blobs;
 }
 
-int World::load_springs(const char *fname)
+void World::load_springs(const char *fname)
 {
 
     int i, crap;
@@ -4045,7 +3782,7 @@ int World::load_springs(const char *fname)
     // open the spring file
     if (!(in = fopen(fname, "rb")))
     {
-        FFEA_FILE_ERROR_MESSG(fname)
+        throw FFEAFileException(fname);
     }
     printf("\tReading in springs file: %s\n", fname);
 
@@ -4053,12 +3790,12 @@ int World::load_springs(const char *fname)
     if (!fgets(line, max_line_size, in))
     {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading first line of spring file\n")
+        throw FFEAException("Error reading first line of spring file");
     }
     if (strcmp(line, "ffea springs file\n") != 0)
     {
         fclose(in);
-        FFEA_ERROR_MESSG("This is not a 'ffea spring file' (read '%s') \n", line)
+        throw FFEAException("This is not a 'ffea spring file' (read '%s')", line);
     }
 
     // read in the number of springs in the file
@@ -4066,7 +3803,7 @@ int World::load_springs(const char *fname)
     if (fscanf(in, "num_springs %d\n", &num_springs) != 1)
     {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading number of springs\n")
+        throw FFEAException("Error reading number of springs");
     }
     printf("\t\tNumber of springs = %d\n", num_springs);
 
@@ -4079,11 +3816,10 @@ int World::load_springs(const char *fname)
     {
         if (fscanf(in, "%lf %lf %d %d %d %d %d %d\n", &spring_array[i].k, &spring_array[i].l, &spring_array[i].blob_index[0], &spring_array[i].blob_index[1], &spring_array[i].conformation_index[0], &spring_array[i].conformation_index[1], &spring_array[i].node_index[0], &spring_array[i].node_index[1]) != 8)
         {
-            FFEA_error_text();
-            printf("Problem reading spring data from %s. Format is:\n\n", fname);
-            printf("ffea spring file\nnum_springs ?\n");
-            printf("k l blob_index_0 blob_index 1 conformation_index_0 conformation_index_1 node_index_0 node_index_1\n\n");
-            return FFEA_ERROR;
+            throw FFEAException(
+                "Problem reading spring data from %s.Format is : \n\n"
+                "ffea spring file\nnum_springs ? \n"
+                "k l blob_index_0 blob_index 1 conformation_index_0 conformation_index_1 node_index_0 node_index_1\n", fname);
         }
         spring_array[i].k *= mesoDimensions::area / mesoDimensions::Energy;
         spring_array[i].l /= mesoDimensions::length;
@@ -4097,46 +3833,32 @@ int World::load_springs(const char *fname)
         {
             if (spring_array[i].blob_index[j] >= params.num_blobs || spring_array[i].blob_index[j] < 0)
             {
-                FFEA_error_text();
-                printf("In spring %d, blob index %d is out of bounds given the number of blobs defined (%d). Please fix. Remember, indexing starts at ZERO!\n", i, j, params.num_blobs);
-                return FFEA_ERROR;
+                throw FFEAException("In spring %d, blob index %d is out of bounds given the number of blobs defined (%d). Please fix. Remember, indexing starts at ZERO!\n", i, j, params.num_blobs);
             }
             if (spring_array[i].conformation_index[j] >= params.num_conformations[spring_array[i].blob_index[j]] || spring_array[i].conformation_index[j] < 0)
             {
-                FFEA_error_text();
                 printf("In spring %d, conformation index %d is out of bounds given the number of conformations defined in blob %d (%d). Please fix. Remember, indexing starts at ZERO!\n", i, j, spring_array[i].blob_index[j], params.num_conformations[spring_array[i].blob_index[j]]);
-                return FFEA_ERROR;
             }
             if (spring_array[i].node_index[j] >= blob_array[spring_array[i].blob_index[j]][spring_array[i].conformation_index[j]].get_num_nodes() || spring_array[i].node_index[j] < 0)
             {
-                FFEA_error_text();
-                printf("In spring %d, node index %d is out of bounds given the number of nodes defined in blob %d, conformation %d (%d). Please fix. Remember, indexing starts at ZERO!\n", i, j, spring_array[i].blob_index[j], spring_array[i].conformation_index[j], blob_array[spring_array[i].blob_index[j]][spring_array[i].conformation_index[j]].get_num_nodes());
-                return FFEA_ERROR;
+                throw FFEAException("In spring %d, node index %d is out of bounds given the number of nodes defined in blob %d, conformation %d (%d). Please fix. Remember, indexing starts at ZERO!\n", i, j, spring_array[i].blob_index[j], spring_array[i].conformation_index[j], blob_array[spring_array[i].blob_index[j]][spring_array[i].conformation_index[j]].get_num_nodes());
             }
             if (spring_array[i].k < 0)
             {
-                FFEA_error_text();
-                printf("In spring %d, spring constant, %e, < 0. This is not going to end well for you...\n", i, spring_array[i].k);
-                return FFEA_ERROR;
+                throw FFEAException("In spring %d, spring constant, %e, < 0. This is not going to end well for you...\n", i, spring_array[i].k);
             }
             if (spring_array[i].l < 0)
             {
-                FFEA_error_text();
-                printf("In spring %d, spring equilibrium length, %e, < 0. Reverse node definitions for consistency.\n", i, spring_array[i].l);
-                return FFEA_ERROR;
+                throw FFEAException("In spring %d, spring equilibrium length, %e, < 0. Reverse node definitions for consistency.\n", i, spring_array[i].l);
             }
         }
         if (spring_array[i].blob_index[0] == spring_array[i].blob_index[1] && spring_array[i].conformation_index[0] == spring_array[i].conformation_index[1] && spring_array[i].node_index[0] == spring_array[i].node_index[1])
         {
-            FFEA_error_text();
-            printf("In spring %d, spring is connected to same node on same blob on same conformation. Will probably cause an force calculation error.\n", i);
-            return FFEA_ERROR;
+            throw FFEAException("In spring %d, spring is connected to same node on same blob on same conformation. Will probably cause an force calculation error.\n", i);
         }
         if (spring_array[i].blob_index[0] == spring_array[i].blob_index[1] && spring_array[i].conformation_index[0] != spring_array[i].conformation_index[1])
         {
-            FFEA_error_text();
-            printf("In spring %d, spring is connected two conformations of the same blob (blob_index = %d). This cannot happen as conformations are mutually exclusive.\n", i, spring_array[i].blob_index[0]);
-            return FFEA_ERROR;
+            throw FFEAException("In spring %d, spring is connected two conformations of the same blob (blob_index = %d). This cannot happen as conformations are mutually exclusive.\n", i, spring_array[i].blob_index[0]);
         }
     }
 
@@ -4150,7 +3872,6 @@ int World::load_springs(const char *fname)
     }
     printf("\t\tRead %d springs from %s\n", num_springs, fname);
     activate_springs();
-    return 0;
 }
 
 rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> block, int interface_id, FFEA_input_reader &systemreader, rod::Rod **rod_array, Blob **blob_array)
@@ -4549,13 +4270,12 @@ void World::rod_box_length_check(rod::Rod *current_rod, std::vector<float> dim)
 
     if ((e2e > 0.5 * dim[0]) || (e2e > 0.5 * dim[1]) || (e2e > 0.5 * dim[2]))
     {
-        std::string msg = "box_dim: (" +
+        throw FFEAException("box_dim: (" +
             std::to_string(dim[0]) + ", " +
             std::to_string(dim[1]) + ", " +
             std::to_string(dim[2]) + ")"
             "Rod " + std::to_string(current_rod->rod_no) +
-            " end-to-end length " + std::to_string(e2e) + " exceeds half a box dimension.";
-        throw std::runtime_error(msg);
+            " end-to-end length " + std::to_string(e2e) + " exceeds half a box dimension.");
     }
 
     if ((cl > 0.5 * dim[0]) || (cl > 0.5 * dim[1]) || (cl > 0.5 * dim[2]))
@@ -4582,7 +4302,7 @@ void World::activate_springs()
     }
 }
 
-int World::apply_springs()
+void World::apply_springs()
 {
     scalar force_mag;
     arr3 n1, n0, force0, force1, sep, sep_norm;
@@ -4612,7 +4332,7 @@ int World::apply_springs()
                 }
                 else
                 {
-                    return FFEA_ERROR;
+                    // throw FFEAException();  // Note: former return FFEA_ERROR was not being handled
                 }
             }
 
@@ -4628,7 +4348,6 @@ int World::apply_springs()
             active_blob_array[spring_array[i].blob_index[1]]->add_force_to_node(force1, spring_array[i].node_index[1]);
         }
     }
-    return FFEA_OK;
 }
 
 scalar World::get_spring_field_energy(int index0, int index1)
@@ -4660,7 +4379,7 @@ scalar World::get_spring_field_energy(int index0, int index1)
     }
 }
 
-int World::get_next_script_tag(FILE *in, char *buf)
+void World::get_next_script_tag(FILE *in, char *buf)
 {
     if (fscanf(in, "%*[^<]") != 0)
     {
@@ -4668,12 +4387,8 @@ int World::get_next_script_tag(FILE *in, char *buf)
     }
     if (fscanf(in, "<%255[^>]>", buf) != 1)
     {
-        FFEA_error_text();
-        printf("Error reading tag in script file.\n");
-        return FFEA_ERROR;
+        throw FFEAException("Error reading tag in script file.");
     }
-
-    return FFEA_OK;
 }
 
 void World::apply_dense_matrix(scalar *y, scalar *M, scalar *x, int N)
@@ -5367,12 +5082,10 @@ void World::do_nothing()
     // that means nothing.
 }
 
-int World::die_with_dignity(int step, scalar wtime)
+void World::die_with_dignity(int step, scalar wtime)
 {
-
-    FFEA_error_text();
     printf("A problem occurred when...\n");
-    printf("Simulation ran for %2f seconds (wall clock time) before error ocurred\n", (omp_get_wtime() - wtime));
+    printf("Simulation ran for %2f seconds (wall clock time) before error occurred\n", (omp_get_wtime() - wtime));
     printf("Detected fatal errors in this system update. Exiting now...\n");
 
     // attempt to print out the final (bad) time step (if step != step_initial)
@@ -5382,12 +5095,11 @@ int World::die_with_dignity(int step, scalar wtime)
         print_trajectory_and_measurement_files(step, wtime);
         print_kinetic_files(step);
     }
-
-    return FFEA_ERROR;
+    throw; // Rethrow original exception to exit, if this was triggered inside try-catch catch, else sig-term
 }
 
 #ifdef FFEA_PARALLEL_FUTURE
-int World::prebuild_nearest_neighbour_lookup_wrapper(scalar cell_size)
+void World::prebuild_nearest_neighbour_lookup_wrapper(scalar cell_size)
 {
     return lookup.prebuild_nearest_neighbour_lookup(cell_size);
 }
@@ -5404,7 +5116,6 @@ bool World::updatingPCLL()
 
 bool World::updatingVdWLL_ready_to_swap()
 {
-
     bool its = false;
     if (thread_updatingVdWLL.valid())
     {
@@ -5418,7 +5129,6 @@ bool World::updatingVdWLL_ready_to_swap()
 
 bool World::updatingPCLL_ready_to_swap()
 {
-
     bool its = false;
     if (thread_updatingPCLL.valid())
     {
@@ -5430,46 +5140,36 @@ bool World::updatingPCLL_ready_to_swap()
     return its;
 }
 
-int World::catch_thread_updatingVdWLL(int step, scalar wtime, int where)
+void World::catch_thread_updatingVdWLL(int step, scalar wtime, int where)
 {
-
     if (updatingVdWLL() == false)
     { // i. e., thread has been already catched!
         cout << "trying to catch from: " << where << ", but updatingVdWLL was false" << endl;
-        return 0;
+        return;
     }
-
-    if (thread_updatingVdWLL.get() == FFEA_ERROR)
-    {
-        return die_with_dignity(step, wtime);
+    try {
+        thread_updatingVdWLL.get();
+        lookup.safely_swap_layers();
+    } catch(...) {
+        die_with_dignity(step, wtime);
+        throw;
     }
-    if (lookup.safely_swap_layers() == FFEA_ERROR)
-    {
-        return die_with_dignity(step, wtime);
-    }
-
-    return FFEA_OK;
 }
 
-int World::catch_thread_updatingPCLL(int step, scalar wtime, int where)
+void World::catch_thread_updatingPCLL(int step, scalar wtime, int where)
 {
-
     if (updatingPCLL() == false)
     { // i. e., thread has been already catched!
         cout << "trying to catch from: " << where << ", but updatingPCLL was false" << endl;
-        return 0;
+        return;
     }
-
-    if (thread_updatingPCLL.get() == FFEA_ERROR)
-    { // we'll need to change this check
-        return die_with_dignity(step, wtime);
+    try {
+        thread_updatingPCLL.get();
+        pc_solver.safely_swap_pc_layers();
+    } catch (...) {
+        die_with_dignity(step, wtime);
+        throw;
     }
-    if (pc_solver.safely_swap_pc_layers() == FFEA_ERROR)
-    {
-        return die_with_dignity(step, wtime);
-    }
-
-    return FFEA_OK;
 }
 
 #endif

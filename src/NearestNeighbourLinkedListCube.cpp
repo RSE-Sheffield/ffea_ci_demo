@@ -24,22 +24,20 @@
 #include "NearestNeighbourLinkedListCube.h"
 
 /* */
-int NearestNeighbourLinkedListCube::build_nearest_neighbour_lookup(scalar h) {
+void NearestNeighbourLinkedListCube::build_nearest_neighbour_lookup(scalar h) {
     // Clear the grid
     clear();
 
     // Loop through each Face in the pool, calculate which cell of the
     // grid it belongs in based on its centroid position, and add it to
     // the linked list stack on that cell
-    int i;
-    for (i = 0; i < num_nodes_in_pool; i++) {
-
+    for (int i = 0; i < num_nodes_in_pool; i++) {
         // calculate which cell the face belongs in
-	if (!pool[i].obj->kinetically_active) {
-		continue;
-	}
+	    if (!pool[i].obj->kinetically_active) {
+		    continue;
+	    }
 
-	// Do we have the correct centroid?? We do now!
+	    // Do we have the correct centroid?? We do now!
         //pool[i].obj->calc_area_normal_centroid();
         int x = (int) floor(pool[i].obj->centroid[0] / h);
         int y = (int) floor(pool[i].obj->centroid[1] / h);
@@ -68,23 +66,19 @@ int NearestNeighbourLinkedListCube::build_nearest_neighbour_lookup(scalar h) {
                                         }
          */
         // attempt to add the node to the cell
-        if (add_node_to_stack(i, x, y, z) == FFEA_ERROR) {
-            FFEA_ERROR_MESSG("Error when trying to add node %d to nearest neighbour stack at (%d %d %d)\n", i, x, y, z);
-        }
+        add_node_to_stack(i, x, y, z);
     }
-    return FFEA_OK;
 }
 
 
-int NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup_and_swap(scalar h) {
+void NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup_and_swap(scalar h) {
     // Clear the grid
     clear_layer(shadow_layer);
 
     // Loop through each Face in the pool, calculate which cell of the
     // grid it belongs in based on its centroid position, and add it to
     // the linked list stack on that cell
-    int i;
-    for (i = 0; i < num_nodes_in_pool; i++) {
+    for (int i = 0; i < num_nodes_in_pool; i++) {
 
         // calculate which cell the face belongs in
         if (!pool[i].obj->kinetically_active) {
@@ -99,16 +93,12 @@ int NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup_and_swap(s
         int z = (int) floor(pool[i].obj->centroid[2] / h);
 
         // attempt to add the node to the cell
-        if (add_node_to_stack_shadow(i, x, y, z) == FFEA_ERROR) {
-            FFEA_ERROR_MESSG("Error when trying to add node %d to nearest neighbour stack at (%d %d %d)\n", i, x, y, z);
-        }
-
+        add_node_to_stack_shadow(i, x, y, z);
     }
-    swap_layers(); 
-    return FFEA_OK;
+    swap_layers();
 }
 
-int NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup(scalar h) {
+void NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup(scalar h) {
     // Clear the grid
     clear_layer(shadow_layer);
     can_swap = false;
@@ -116,8 +106,7 @@ int NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup(scalar h) 
     // Loop through each Face in the pool, calculate which cell of the
     // grid it belongs in based on its centroid position, and add it to
     // the linked list stack on that cell
-    int i;
-    for (i = 0; i < num_nodes_in_pool; i++) {
+    for (int i = 0; i < num_nodes_in_pool; i++) {
 
         // calculate which cell the face belongs in
         if (!pool[i].obj->kinetically_active) {
@@ -132,11 +121,7 @@ int NearestNeighbourLinkedListCube::prebuild_nearest_neighbour_lookup(scalar h) 
         int z = (int) floor(pool[i].obj->centroid[2] / h);
 
         // attempt to add the node to the cell
-        if (add_node_to_stack_shadow(i, x, y, z) == FFEA_ERROR) {
-            FFEA_ERROR_MESSG("Error when trying to add node %d to nearest neighbour stack at (%d %d %d)\n", i, x, y, z)
-        }
-
+        add_node_to_stack_shadow(i, x, y, z);
     }
     can_swap = true;
-    return FFEA_OK;
 }

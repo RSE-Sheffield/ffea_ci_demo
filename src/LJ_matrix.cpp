@@ -42,36 +42,31 @@ SSINT_matrix::~SSINT_matrix() {
     num_ssint_face_types = 0;
 }
 
-int SSINT_matrix::init(string ssint_params_fname, string ssint_type, int calc_ssint, scalar ssint_cutoff) {
-
-    int err;
+void SSINT_matrix::init(string ssint_params_fname, string ssint_type, int calc_ssint, scalar ssint_cutoff) {
     // In that case we do not need an input parameter file,
     //      but just to initialise a number of values
     if (calc_ssint == 0) {
-       err = init_steric();
+        init_steric();
     } else {
-       err = init_ssint(ssint_params_fname, ssint_type, ssint_cutoff);
+        init_ssint(ssint_params_fname, ssint_type, ssint_cutoff);
     }
-    return err;
 }
 
-int SSINT_matrix::init_steric() {
+void SSINT_matrix::init_steric() {
 
     num_ssint_face_types = 1;
     // Allocate the memory for that LJ pair
     try {
         params = std::vector<map<string, scalar>>(num_ssint_face_types * num_ssint_face_types);
     } catch (std::bad_alloc &) {
-        FFEA_ERROR_MESSG("Unable to allocate memory for LJ matrix.\n")
+        throw FFEAException("Unable to allocate memory for LJ matrix.");
     }
     params[LJI(0, 0)]["Emin"] = 0;
     params[LJI(0, 0)]["Rmin"] = 0;
-
-    return FFEA_OK;
 }
 
 
-int SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scalar ssint_cutoff) {
+void SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scalar ssint_cutoff) {
 
     int count, MAX_NUM_VARS = 3;
     string line, aset;
@@ -86,7 +81,7 @@ int SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scala
     head[1] = "Rmin";
     head[2] = "k0";
     if (!in.is_open())
-        FFEA_FILE_ERROR_MESSG(ssint_params_fname.c_str());
+        throw FFEAFileException(ssint_params_fname);
 
     printf("\tReading in VDW forcefield parameters file: %s\n", ssint_params_fname.c_str());
 
@@ -95,7 +90,7 @@ int SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scala
     if (line != "ffea vdw forcefield params file" && line != "ffea ssint forcefield params file" && line != "ffea rod vdw forcefield params file")
     {
         in.close();
-        FFEA_ERROR_MESSG("This is not a 'ffea vdw forcefield params file' (read '%s') \n", line.c_str());
+        throw FFEAException("This is not a 'ffea vdw forcefield params file' (read '%s').", line.c_str());
     }
     if (line.find("rod") != std::string::npos)
         is_rod = true;
@@ -113,7 +108,7 @@ int SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scala
         params = std::vector<map<string, scalar>>(num_ssint_face_types * num_ssint_face_types);
     } catch (std::bad_alloc &) {
         in.close();
-        FFEA_ERROR_MESSG("Unable to allocate memory for LJ matrix.\n")
+        throw FFEAException("Unable to allocate memory for LJ matrix.");
     }
 
     // Fill the matrix (with an as yet unknown number of parameters)
@@ -134,17 +129,17 @@ int SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scala
 
             // First parameter is an energy one, second is a distance one, third is a curvature one. This may need further generalisation
             if (bufvec2.size() > 3)
-                FFEA_ERROR_MESSG("For SSINT_params set %d %d, currently unable to have more than 3 params. You specified %zu\n", i, j, bufvec2.size());
+                throw FFEAException("For SSINT_params set %d %d, currently unable to have more than 3 params. You specified %zu.", i, j, bufvec2.size());
             if (bufvec2.size() < 2)
-                FFEA_ERROR_MESSG("For SSINT_params set %d %d, currently must have at least 2 params (Emin, Rmin). You specified %zu\n", i, j, bufvec2.size());
+                throw FFEAException("For SSINT_params set %d %d, currently must have at least 2 params (Emin, Rmin). You specified %zu.", i, j, bufvec2.size());
 
             for(count = 0; count < bufvec2.size(); count++)
                 params[LJI(i, j)][head[count]] = atof(bufvec2.at(count).c_str());
 
             if (params[LJI(i, j)]["Emin"] <= 0)
-                FFEA_ERROR_MESSG("Required: 'Emin' must be greater than 0 if you wish to use ssint (calc_ssint is 1)\n");
+                throw FFEAException("Required: 'Emin' must be greater than 0 if you wish to use ssint (calc_ssint is 1).");
             if (params[LJI(i, j)]["Rmin"] <= 0)
-                FFEA_ERROR_MESSG("Required: 'Rmin' must be greater than 0 if you wish to use ssint (calc_ssint is 1)\n");
+                throw FFEAException("Required: 'Rmin' must be greater than 0 if you wish to use ssint (calc_ssint is 1).");
 
             // In gensoft, set the Rmin value to the cutoff distance for now, so avoid turning points
             if (ssint_type == "gensoft")
@@ -172,7 +167,6 @@ int SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scala
     in.close();
 
     printf("\t\tRead %d VDW forcefield parameter entries from %s\n", num_ssint_face_types * num_ssint_face_types, ssint_params_fname.c_str());
-    return FFEA_OK;
 }
 
 map<string, scalar> SSINT_matrix::get_SSINT_params(int type1, int type2) {

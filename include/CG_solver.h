@@ -36,11 +36,11 @@ public:
     CG_solver();
     ~CG_solver();
 
-    int init(int N, scalar tol, int max_num_iterations);
+    void init(int N, scalar tol, int max_num_iterations);
 
-    int solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b);
+    void solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b);
 
-    int solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b, int num_iterations);
+    void solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b, int num_iterations);
 
 private:
 

@@ -202,35 +202,22 @@ SimulationParams::~SimulationParams()
     trajectory_beads_fname = "\n";
 }
 
-int SimulationParams::extract_params(vector<string> script_vector)
-{
-
+void SimulationParams::extract_params(vector<string> script_vector) {
     // Extract param string from script string
     vector<string> param_vector;
     FFEA_input_reader paramreader = FFEA_input_reader();
-    if (paramreader.extract_block("param", 0, script_vector, &param_vector) == FFEA_ERROR)
-    {
-        return FFEA_ERROR;
-    }
+    paramreader.extract_block("param", 0, script_vector, &param_vector);
 
     // Parse the section
     vector<string>::iterator it;
     string lrvalue[2];
     for (it = param_vector.begin(); it != param_vector.end(); ++it)
     {
-        if (paramreader.parse_tag(*it, lrvalue) == FFEA_ERROR)
-            return FFEA_ERROR;
+        paramreader.parse_tag(*it, lrvalue);
 
         // Assign if possible
-        if (assign(lrvalue[0], lrvalue[1]) != 0)
-        {
-            FFEA_error_text();
-            cout << "Assignment of parameter " << lrvalue[0] << " = " << lrvalue[1] << " failed" << endl;
-            return FFEA_ERROR;
-        }
+        assign(lrvalue[0], lrvalue[1]);
     }
-    
-    return FFEA_OK;
 }
 
 std::vector<float> SimulationParams::vector_from_rvalue(string rvalue)
@@ -249,9 +236,8 @@ std::vector<float> SimulationParams::vector_from_rvalue(string rvalue)
     return out;
 }
 
-int SimulationParams::assign(string lvalue, string rvalue)
+void SimulationParams::assign(string lvalue, string rvalue)
 {
-
     fs::path ffea_script = FFEA_script_filename;
     FFEA_script_path = ffea_script.parent_path();
     FFEA_script_basename = ffea_script.stem();
@@ -329,7 +315,7 @@ int SimulationParams::assign(string lvalue, string rvalue)
         try {
             num_conformations.resize(conformation_array_size);
         } catch (std::bad_alloc &) {
-            FFEA_ERROR_MESSG("Failed to allocate meory for the number of conformations in SimulationParams\n");
+            throw FFEAException("Failed to allocate meory for the number of conformations in SimulationParams.");
         }
         int i = 0;
         for (it = conformation_vector.begin(); it != conformation_vector.end(); ++it)
@@ -354,7 +340,7 @@ int SimulationParams::assign(string lvalue, string rvalue)
         try {
             num_states.resize(state_array_size);
         } catch (std::bad_alloc &) {
-            FFEA_ERROR_MESSG("Failed to allocate memory for the number of states in SimulationParams\n");
+            throw FFEAException("Failed to allocate memory for the number of states in SimulationParams.");
         }
         int i = 0;
         for (it = state_vector.begin(); it != state_vector.end(); ++it)
@@ -585,7 +571,7 @@ int SimulationParams::assign(string lvalue, string rvalue)
     {
         vector<float> u0 = vector_from_rvalue(rvalue);
         if (u0.size() != 3)
-            FFEA_ERROR_MESSG("Required: 'flow_velocity' should be a vector of length 3.\n");
+            throw FFEAException("Required: 'flow_velocity' should be a vector of length 3.");
         if (userInfo::verblevel > 1)
             cout << "\tSetting " << lvalue << " = (" << u0[0] << ", " << u0[1] << ", " << u0[2] << ")" << endl;
         for (int i = 0; i < 3; i++)
@@ -781,23 +767,17 @@ int SimulationParams::assign(string lvalue, string rvalue)
     else if (lvalue == "stress_out_fname")
     {
         cout << lvalue << " no longer recognised" << endl;
+    } else {
+        throw FFEAException("'%s' is not a recognised lvalue\n"
+            "Recognised lvalues are:\n",
+            "\tdt\n\tepsilon\n\tnum_steps\n\tmax_iterations_cg\n\tcheck\n\tes_update\n\ttrajectory_out_fname\n\tmeasurement_out_fname\n\tstress_out_fname\n\tes_N_x\n\tes_N_y\n\tes_N_z\n\tes_h\n\trng_seed\n\tkT\n\tkappa\n\tdielec_ext\n\tepsilon_0\n\trestart\n\tcalc_ssint\n\tcalc_noise\n\tcalc_preComp\n",
+            lvalue.c_str());
     }
-    else
-    {
-        FFEA_error_text();
-        cout << "Error: '" << lvalue << "' is not a recognised lvalue" << endl;
-        cout << "Recognised lvalues are:" << endl;
-        cout << "\tdt\n\tepsilon\n\tnum_steps\n\tmax_iterations_cg\n\tcheck\n\tes_update\n\ttrajectory_out_fname\n\tmeasurement_out_fname\n\tstress_out_fname\n\tes_N_x\n\tes_N_y\n\tes_N_z\n\tes_h\n\trng_seed\n\tkT\n\tkappa\n\tdielec_ext\n\tepsilon_0\n\trestart\n\tcalc_ssint\n\tcalc_noise\n\tcalc_preComp\n"
-             << endl;
-        return FFEA_ERROR;
-    }
-    return FFEA_OK;
 }
 
 // rename oFile to something else.
-int SimulationParams::checkFileName(string oFile)
+void SimulationParams::checkFileName(string oFile)
 {
-
     if (fs::exists(oFile)) // does oFile actually exist?
     {
         int cnt = 1;
@@ -820,251 +800,188 @@ int SimulationParams::checkFileName(string oFile)
         // cout << "FFEA: moving " << oFile << " to " << bckp << "\n";
         fs::rename(oFile, bckp.c_str());
     }
-
-    return FFEA_OK;
 }
 
-int SimulationParams::validate(int sim_mode)
-{
-
-    if (restart != 0 && restart != 1)
-    {
-        FFEA_ERROR_MESSG("Required: Restart flag, 'restart', must be 0 (false) or 1 (true).\n");
+void SimulationParams::validate(int sim_mode) {
+    if (restart != 0 && restart != 1) {
+        throw FFEAException("Required: Restart flag, 'restart', must be 0 (false) or 1 (true).");
     }
-    if (restart == 1)
-    {
-        if (icheckpoint_fname_set == 0)
-        {
-            FFEA_ERROR_MESSG("Checkpoint input file required if restart is required.\n");
+    if (restart == 1) {
+        if (icheckpoint_fname_set == 0) {
+            throw FFEAException("Checkpoint input file required if restart is required.");
         }
     }
 
-    if (num_steps < 0)
-    {
-        FFEA_ERROR_MESSG("Required: Number of time steps, 'num_steps', must be greater than or equal to 0.\n");
+    if (num_steps < 0) {
+        throw FFEAException("Required: Number of time steps, 'num_steps', must be greater than or equal to 0.");
     }
-    if (num_blobs <= 0 && num_rods <= 0)
-    {
-        FFEA_ERROR_MESSG("\tRequired: Number of Blobs, 'num_blobs' or Number of rods, 'num_rods' must be greater than 0.\n");
+    if (num_blobs <= 0 && num_rods <= 0) {
+        throw FFEAException("\tRequired: Number of Blobs, 'num_blobs' or Number of rods, 'num_rods' must be greater than 0.");
     }
 
-    if (kappa < 0)
-    {
-        FFEA_ERROR_MESSG("Required: Inverse Debye Screening length, 'kappa', cannot be negative.\n");
+    if (kappa < 0) {
+        throw FFEAException("Required: Inverse Debye Screening length, 'kappa', cannot be negative.");
     }
 
-    if (dielec_ext <= 0)
-    {
-        FFEA_ERROR_MESSG("Required: Exterior dielectric constant, 'dielec_ext', must be greater than 0.\n");
+    if (dielec_ext <= 0) {
+        throw FFEAException("Required: Exterior dielectric constant, 'dielec_ext', must be greater than 0.");
     }
 
-    if (epsilon_0 <= 0)
-    {
-        FFEA_ERROR_MESSG("Required: Permittivity of free space, 'epsilon_0', must be greater than 0.\n");
+    if (epsilon_0 <= 0) {
+        throw FFEAException("Required: Permittivity of free space, 'epsilon_0', must be greater than 0.");
     }
 
-    if (calc_ssint != 0 && calc_ssint != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_ssint', must be 0 (no) or 1 (yes).\n");
+    if (calc_ssint != 0 && calc_ssint != 1) {
+        throw FFEAException("Required: 'calc_ssint', must be 0 (no) or 1 (yes).\n");
     }
 
-    if (calc_steric != 0 && calc_steric != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_steric', must be 0 (no) or 1 (yes).\n");
+    if (calc_steric != 0 && calc_steric != 1) {
+        throw FFEAException("Required: 'calc_steric', must be 0 (no) or 1 (yes).");
     }
 
-    if (calc_steric_rod != 0 && calc_steric_rod != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_steric_rod', must be 0 (no) or 1 (yes).\n");
+    if (calc_steric_rod != 0 && calc_steric_rod != 1) {
+        throw FFEAException("Required: 'calc_steric_rod', must be 0 (no) or 1 (yes).");
     }
 
-    if (calc_vdw_rod != 0 && calc_vdw_rod != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_vdw_rod', must be 0 (no) or 1 (yes).\n");
+    if (calc_vdw_rod != 0 && calc_vdw_rod != 1) {
+        throw FFEAException("Required: 'calc_vdw_rod', must be 0 (no) or 1 (yes).");
     }
 
-    if (pbc_rod != 0 && pbc_rod != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_steric_rod', must be 0 (no) or 1 (yes).\n");
+    if (pbc_rod != 0 && pbc_rod != 1) {
+        throw FFEAException("Required: 'calc_steric_rod', must be 0 (no) or 1 (yes).");
     }
 
-    if (flow_profile != "none" && flow_profile != "uniform" && flow_profile != "shear")
-    {
-        FFEA_ERROR_MESSG("Required: 'flow_profile' must be set to 'none', 'uniform' or 'shear'.\n");
-    }
-    else if (flow_profile == "none")
-    {
+    if (flow_profile != "none" && flow_profile != "uniform" && flow_profile != "shear") {
+        throw FFEAException("Required: 'flow_profile' must be set to 'none', 'uniform' or 'shear'.");
+    } else if (flow_profile == "none") {
         for (int i=0; i<3; i++)
             flow_velocity[i] = 0;
         shear_rate = 0;
-    }
-    else if (flow_profile == "shear" && shear_rate < 0)
-    {
-        FFEA_ERROR_MESSG("Required: 'shear_rate' must be >= 0.\n");
+    } else if (flow_profile == "shear" && shear_rate < 0) {
+        throw FFEAException("Required: 'shear_rate' must be >= 0.\n");
     }
 
     float u0_mag = sqrt(pow(flow_velocity[0], 2) + pow(flow_velocity[1], 2) + pow(flow_velocity[2], 2));
-    if (shear_rate > 0 && u0_mag > 0)
-    {
-        printf("\tWARNING: Required: only one of 'shear_rate' or 'flow_velocity' can be > 0.\n");
+    if (shear_rate > 0 && u0_mag > 0) {
+        printf("\tWARNING: Required: only one of 'shear_rate' or 'flow_velocity' can be > 0.");
 
-        if (flow_profile == "shear")
-        {
-            printf("\t\t'flow_profile' = 'shear': 'flow_velocity' will be set to zero.\n");
+        if (flow_profile == "shear") {
+            printf("\t\t'flow_profile' = 'shear': 'flow_velocity' will be set to zero.");
             for (int i=0; i<3; i++)
                 flow_velocity[i] = 0;
-        }
-        else if (flow_profile == "uniform")
-        {
-            printf("\t\t'flow_profile' = 'uniform': 'shear_rate' will be set to zero.\n");
+        } else if (flow_profile == "uniform") {
+            printf("\t\t'flow_profile' = 'uniform': 'shear_rate' will be set to zero.");
             shear_rate = 0;
         }
     }
 
-    if (pbc_rod == 1 && num_interfaces > 0)
-    {
-        printf("\tWARNING: rod periodic boundary conditions AND rod-blob interfaces are enabled. These have not been tested together.\n");
+    if (pbc_rod == 1 && num_interfaces > 0) {
+        printf("\tWARNING: rod periodic boundary conditions AND rod-blob interfaces are enabled. These have not been tested together.");
     }
 
-    if (inc_self_ssint != 0 && inc_self_ssint != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'inc_self_ssint', must be 0 (no) or 1 (yes).\n");
+    if (inc_self_ssint != 0 && inc_self_ssint != 1) {
+        throw FFEAException("Required: 'inc_self_ssint', must be 0 (no) or 1 (yes).");
     }
 
-    if (ssint_cutoff <= 0)
-    {
-        FFEA_ERROR_MESSG("'ssint_cutoff' must be positive and larger than zero.\n");
+    if (ssint_cutoff <= 0) {
+        throw FFEAException("'ssint_cutoff' must be positive and larger than zero.");
     }
 
-    if (calc_ssint == 1)
-    {
+    if (calc_ssint == 1) {
 
         // Steric is now separate
-        if (ssint_type == "steric")
-        {
-            if (calc_steric == 0)
-            {
-                FFEA_ERROR_MESSG("Inconsistent parameters. If you want steric interactions, set 'calc_steric = 1'\n");
+        if (ssint_type == "steric") {
+            if (calc_steric == 0) {
+                throw FFEAException("Inconsistent parameters. If you want steric interactions, set 'calc_steric = 1'.");
             }
             calc_ssint = 0; // ! WHY??? Programs should not do this!!!
-        }
-        else if (ssint_type != "lennard-jones" && ssint_type != "ljsteric" && ssint_type != "gensoft")
-        {
-            FFEA_ERROR_MESSG("Optional: 'ssint_type', must be either 'lennard-jones', 'ljsteric' (both methods combined) or 'gensoft' (polynomial soft attraction).\n");
+        } else if (ssint_type != "lennard-jones" && ssint_type != "ljsteric" && ssint_type != "gensoft") {
+            throw FFEAException("Optional: 'ssint_type', must be either 'lennard-jones', 'ljsteric' (both methods combined) or 'gensoft' (polynomial soft attraction).");
         }
 
-        if (ssint_type == "ljsteric" && calc_steric == 0)
-        {
-            FFEA_ERROR_MESSG("Optional: For 'ssint_type = ljsteric', we also require 'calc_steric = 1'.\n");
+        if (ssint_type == "ljsteric" && calc_steric == 0) {
+            throw FFEAException("Optional: For 'ssint_type = ljsteric', we also require 'calc_steric = 1'.");
         }
 
-        if (ssint_type == "gensoft" && calc_steric == 0)
-        {
-            FFEA_ERROR_MESSG("Optional: For 'ssint_type = gensoft', we also require 'calc_steric = 1'.\n");
+        if (ssint_type == "gensoft" && calc_steric == 0) {
+            throw FFEAException("Optional: For 'ssint_type = gensoft', we also require 'calc_steric = 1'.");
         }
 
-        if (ssint_in_fname_set == 0 && ssint_type != "steric")
-        {
-            FFEA_ERROR_MESSG("Surface-surface forcefield params file name required (ssint_in_fname).\n");
+        if (ssint_in_fname_set == 0 && ssint_type != "steric") {
+            throw FFEAException("Surface-surface forcefield params file name required (ssint_in_fname).");
         }
-    }
-    else
-    {
-        if (inc_self_ssint == 1)
-        {
-            printf("\tFRIENDLY WARNING: No face-face interactions will be computed as calc_ssint = 0.\n");
+    } else {
+        if (inc_self_ssint == 1) {
+            printf("\tFRIENDLY WARNING: No face-face interactions will be computed as calc_ssint = 0.");
         }
     }
 
-    if (calc_vdw_rod == 1)
-    {
-        if (rod_lj_in_fname_set == 0)
-        {
-            FFEA_ERROR_MESSG("Rod Lennard-Jones parameters file name required (rod_lj_params).\n");
+    if (calc_vdw_rod == 1) {
+        if (rod_lj_in_fname_set == 0) {
+            throw FFEAException("Rod Lennard-Jones parameters file name required (rod_lj_params).");
         }
     }
 
-    if (calc_preComp != 0 && calc_preComp != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_preComp', must be 0 (no) or 1 (yes).\n");
+    if (calc_preComp != 0 && calc_preComp != 1) {
+        throw FFEAException("Required: 'calc_preComp', must be 0 (no) or 1 (yes).");
     }
 
-    if (calc_springs != 0 && calc_springs != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_springs', must be 0 (no) or 1 (yes).\n");
+    if (calc_springs != 0 && calc_springs != 1) {
+        throw FFEAException("Required: 'calc_springs', must be 0 (no) or 1 (yes).");
     }
 
-    if (calc_ctforces != 0 && calc_ctforces != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_ctforces', must be 0 (no) or 1 (yes).\n");
+    if (calc_ctforces != 0 && calc_ctforces != 1) {
+        throw FFEAException("Required: 'calc_ctforces', must be 0 (no) or 1 (yes).");
     }
 
-    if (calc_es != 0 && calc_es != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_es', must be 0 (no) or 1 (yes).\n");
+    if (calc_es != 0 && calc_es != 1) {
+        throw FFEAException("Required: 'calc_es', must be 0 (no) or 1 (yes).");
     }
 
-    if (calc_kinetics != 0 && calc_kinetics != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_kinetics', must be 0 (no) or 1 (yes).\n");
+    if (calc_kinetics != 0 && calc_kinetics != 1) {
+        throw FFEAException("Required: 'calc_kinetics', must be 0 (no) or 1 (yes).");
     }
 
-    if (calc_steric == 1 || calc_ssint == 1 || calc_es == 1 || calc_preComp == 1)
-    {
-        if (es_N_x < 1)
-        {
-            printf("\tFRIENDLY WARNING: Length of the nearest neighbour lookup grid, 'es_N_x', is less than 1. Will assign default value to encompass whole system.\n");
-        }
-        else if (es_N_y < 1)
-        {
-            printf("\tFRIENDLY WARNING: Length of the nearest neighbour lookup grid, 'es_N_y', is less than 1. Will assign default value to encompass whole system.\n");
-        }
-        else if (es_N_z < 1)
-        {
-            printf("\tFRIENDLY WARNING: Length of the nearest neighbour lookup grid, 'es_N_z', is less than 1. Will assign default value to encompass whole system.\n");
-        }
-        else
-        {
-            if (es_h <= 0)
-            {
-                FFEA_ERROR_MESSG("Required: Nearest neighbour lookup grid cell dimension, 'es_h', must be greater than 0.\n");
+    if (calc_steric == 1 || calc_ssint == 1 || calc_es == 1 || calc_preComp == 1) {
+        if (es_N_x < 1) {
+            printf("\tFRIENDLY WARNING: Length of the nearest neighbour lookup grid, 'es_N_x', is less than 1. Will assign default value to encompass whole system.");
+        } else if (es_N_y < 1) {
+            printf("\tFRIENDLY WARNING: Length of the nearest neighbour lookup grid, 'es_N_y', is less than 1. Will assign default value to encompass whole system.");
+        } else if (es_N_z < 1) {
+            printf("\tFRIENDLY WARNING: Length of the nearest neighbour lookup grid, 'es_N_z', is less than 1. Will assign default value to encompass whole system.");
+        } else {
+            if (es_h <= 0) {
+                throw FFEAException("Required: Nearest neighbour lookup grid cell dimension, 'es_h', must be greater than 0.");
             }
         }
 
-        if (move_into_box != 0 && move_into_box != 1)
-        {
-            FFEA_ERROR_MESSG("'move_into_box' must all be either 0 (system centroid preserved) or 1 (system centroid will move to centroid of simulation box).\n")
+        if (move_into_box != 0 && move_into_box != 1) {
+            throw FFEAException("'move_into_box' must all be either 0 (system centroid preserved) or 1 (system centroid will move to centroid of simulation box).");
         }
-    }
-    else
-    {
+    } else {
         printf("\tFRIENDLY WARNING: No electrostatic, vdw or pre-computed interactions will be simulated\n");
         es_N_x = 0;
         es_N_y = 0;
         es_N_z = 0;
     }
 
-    if (calc_noise != 0 && calc_noise != 1)
-    {
-        FFEA_ERROR_MESSG("Required: 'calc_noise', must be 0 (no) or 1 (yes).\n");
+    if (calc_noise != 0 && calc_noise != 1) {
+        throw FFEAException("Required: 'calc_noise', must be 0 (no) or 1 (yes).");
     }
 
-    if (trajectory_out_fname_set == 0)
-    {
+    if (trajectory_out_fname_set == 0) {
         fs::path auxpath = FFEA_script_path / FFEA_script_basename / ".ftj";
         trajectory_out_fname = auxpath.string();
     }
 
-    if (measurement_out_fname_set == 0)
-    {
+    if (measurement_out_fname_set == 0) {
         fs::path auxpath = FFEA_script_path / FFEA_script_basename / ".fm";
         measurement_out_fname = auxpath.string();
     }
 
     // Three checkings for checkpoint files:
     // CPT.1 - If we don't have a name for checkpoint_out we're assigning one.
-    if (ocheckpoint_fname_set == 0)
-    {
+    if (ocheckpoint_fname_set == 0) {
         fs::path fs_ocpt_fname = FFEA_script_filename;
         fs_ocpt_fname.replace_extension(".fcp");
         ocheckpoint_fname_set = 1;
@@ -1072,98 +989,81 @@ int SimulationParams::validate(int sim_mode)
         printf("\tFRIENDLY WARNING: Checkpoint output file name was not specified, so it will be set to %s\n", ocheckpoint_fname.c_str());
     }
     // CPT.2 - checkpoint_out must differ from checkpoint_in
-    if (ocheckpoint_fname.compare(icheckpoint_fname) == 0)
-    {
-        FFEA_ERROR_MESSG("it is not allowed to set up checkpoint_in and checkpoint_out with the same file names\n");
+    if (ocheckpoint_fname.compare(icheckpoint_fname) == 0) {
+        throw FFEAException("it is not allowed to set up checkpoint_in and checkpoint_out with the same file names\n");
     }
     // CPT.3 - checkpoint_out will be backed up if it exists and needs to be used
-    if (sim_mode == 0)
-    {
+    if (sim_mode == 0) {
         checkFileName(ocheckpoint_fname);
 
         // check if the output files exists, and if so, rename it.
-        if (restart == 0)
-        {
+        if (restart == 0) {
             checkFileName(measurement_out_fname);
             checkFileName(detailed_meas_out_fname);
             checkFileName(trajectory_out_fname);
             checkFileName(kinetics_out_fname);
             checkFileName(trajectory_beads_fname);
-        }
-        else
-        {
+        } else {
             if (trajbeads_fname_set == 1)
-                FFEA_ERROR_MESSG("FFEA cannot still restart and keep writing on the beads file. Just remove it from your input file.");
+                throw FFEAException("FFEA cannot still restart and keep writing on the beads file. Just remove it from your input file.");
         }
     }
 
-    if (calc_stokes == 1 && stokes_visc <= 0)
-    {
-        FFEA_ERROR_MESSG("calc_stokes flag is set, so stokes_visc must be set to a value greater than 0.\n");
+    if (calc_stokes == 1 && stokes_visc <= 0) {
+        throw FFEAException("calc_stokes flag is set, so stokes_visc must be set to a value greater than 0.");
     }
 
-    if (steric_factor < 0)
-    {
-        printf("\tFRIENDLY WARNING: Beware, steric_factor is negative.\n");
+    if (steric_factor < 0) {
+        printf("\tFRIENDLY WARNING: Beware, steric_factor is negative.");
     }
 
-    if (steric_dr <= 0)
-    {
-        FFEA_ERROR_MESSG("steric_dr can only be >=0.\n");
+    if (steric_dr <= 0) {
+        throw FFEAException("steric_dr can only be >=0.");
     }
     
-    if (calc_kinetics == 1)
-    {
+    if (calc_kinetics == 1) {
         if (conformation_array_size != num_blobs)
         {
-            FFEA_ERROR_MESSG("\tRequired: Number of Conformations, 'num_conformations', must have 'num_blobs' elements. We read %d elements but only %d blobs\n", conformation_array_size, num_blobs);
+            throw FFEAException("\tRequired: Number of Conformations, 'num_conformations', must have 'num_blobs' elements. We read %d elements but only %d blobs.", conformation_array_size, num_blobs);
         }
         if (kinetics_update <= 0)
         {
-            //FFEA_ERROR_MESSG("\tRequired: If 'calc_kinetics' = 1, then 'kinetics_update' must be greater than 0.\n");
+            //throw FFEAException("\tRequired: If 'calc_kinetics' = 1, then 'kinetics_update' must be greater than 0.");
             cout << "\tDefaulting 'kinetics_update' to " << check << endl;
             kinetics_update = check;
         } //else if (kinetics_update <= check) {
 
         // This could be fixed by changing how the output files are printed. Fix later, busy now!
-        //FFEA_CAUTION_MESSG("\t'kinetics_update' < 'check'. A kinetic switch therefore maybe missed i.e. not printed to the output files.\n")
+        //throw FFEAException("\t'kinetics_update' < 'check'. A kinetic switch therefore maybe missed i.e. not printed to the output files.")
         //}
 
         // num_conformations[i] can be > num_states[i], so long as none of the states reference an out of bounds conformation
-    }
-    else
-    {
-        if (num_conformations.empty())
-        {
+    } else {
+        if (num_conformations.empty()) {
             // Default num_conformations array
             conformation_array_size = num_blobs;
             try {
                 num_conformations.resize(conformation_array_size, 1);
             } catch(std::bad_alloc &) {
-                FFEA_ERROR_MESSG("Failed to allocate memory for the number of conformations in SimulationParams\n");
+                throw FFEAException("Failed to allocate memory for the number of conformations in SimulationParams.");
             }
         }
 
-        for (int i = 0; i < num_blobs; ++i)
-        {
-            if (num_conformations[i] != 1)
-            {
-                FFEA_CAUTION_MESSG("\tNumber of Conformations, 'num_conformations[%d]', not equal to 1. Only first conformation will be loaded.\n", i);
+        for (int i = 0; i < num_blobs; ++i) {
+            if (num_conformations[i] != 1) {
+                throw FFEAException("\tNumber of Conformations, 'num_conformations[%d]', not equal to 1. Only first conformation will be loaded.", i);
                 num_conformations[i] = 1;
             }
         }
     }
     printf("...done\n");
-
-    return FFEA_OK;
 }
 
 int SimulationParams::get_max_num_states()
 {
 
     int i, max_num_states = 0;
-    for (i = 0; i < num_blobs; ++i)
-    {
+    for (i = 0; i < num_blobs; ++i) {
         if (num_states[i] > max_num_states)
         {
             max_num_states = num_states[i];
@@ -1174,7 +1074,6 @@ int SimulationParams::get_max_num_states()
 
 void SimulationParams::write_to_file(FILE *fout, PreComp_params &pc_params)
 {
-
     // This should be getting added to the top of the measurement file!!
 
     // Then, every parameter (if anyone hates this goddamn class in the future, please make a Param struct / dictionary / vector / list thing so we can just loop over all parameters)

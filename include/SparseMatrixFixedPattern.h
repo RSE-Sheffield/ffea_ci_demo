@@ -51,8 +51,8 @@ public:
      * \param source_list 
      * \return 
      */
-    int init(int num_rows, int num_nonzero_elements, std::vector<sparse_entry> &&entry, std::vector<int> &&key, std::vector<sparse_entry_sources> source_list);
-    int init(int num_rows, const std::vector<scalar> &entries, std::vector<int> &&key, const std::vector<int>& col_indices);
+    void init(int num_rows, int num_nonzero_elements, std::vector<sparse_entry> &&entry, std::vector<int> &&key, std::vector<sparse_entry_sources> source_list);
+    void init(int num_rows, const std::vector<scalar> &entries, std::vector<int> &&key, const std::vector<int>& col_indices);
 
     /** Reconstruct the matrix by adding up all the contributions from the sources stored in the source list */
     void build();

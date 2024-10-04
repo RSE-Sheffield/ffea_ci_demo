@@ -29,6 +29,8 @@
 
 #include "rod_interactions.h"
 
+#include "FFEA_return_codes.h"
+
 namespace rod
 {
 
@@ -209,7 +211,7 @@ void nearest_node_correction(float3 &c_a, const float3 &c_b, const float3 &r_a, 
     else if (index_min == 2)
         vec3d(n) { c_a[n] = r_a2[n]; }
     else if (index_min != 0)
-        throw std::out_of_range("Invalid min index in rod::nearest_node_connection()");
+        throw FFEAException("OutOfRange: Invalid min index (%d) in rod::nearest_node_connection()", index_min);
 
     // if (rod::dbg_print)
     // {
@@ -431,8 +433,7 @@ void set_steric_nbrs(int rod_id_a, int rod_id_b, int elem_id_a,
         }
         else if (rod::absolute(c_ab) <= 1e-5)
         {
-            std::cout << "ERROR!\n";
-            throw std::runtime_error("Rod elements have fully overlapped.");
+            throw FFEAException("Rod elements have fully overlapped.");
         }
     }
     else if (rod::dbg_print && rod::absolute(mid_ab) >= cutoff)
@@ -441,7 +442,7 @@ void set_steric_nbrs(int rod_id_a, int rod_id_b, int elem_id_a,
     }
     else if (rod::dbg_print)
     {
-        throw std::runtime_error("Invalid distance to rod::set_steric_nbrs()");
+        throw FFEAException("Invalid distance to rod::set_steric_nbrs()");
     }
 }
 
@@ -510,8 +511,7 @@ std::vector<float> element_steric_energy(float delta, float force_constant,
 
         if (rod::absolute(c_ab) > radius_sum)
         {
-            std::cout << "ERROR!\n";
-            throw std::runtime_error("Centreline distance cannot be "
+            throw FFEAException("Centreline distance cannot be "
                 "greater than radius sum when calculating steric energy.");
         }
     }
@@ -557,10 +557,7 @@ std::vector<float> node_force_interpolation(
 
     if (l1 > element_length)
     {
-        std::string err = "Distance along rod element (" + std::to_string(l1) +
-            ") cannot be greater than the element length (" +
-            std::to_string(element_length) + ")\n";
-        throw std::invalid_argument(err);
+        throw FFEAException("InvalidArgument: Distance along rod element (%f) cannot be greater than the element length (%f)", l1, element_length);
     }
 
     return force;
@@ -772,7 +769,7 @@ void set_vdw_nbrs(const VDWSite site_a, const VDWSite site_b, const float3 &p_a,
     }
     else if (rod::dbg_print)
     {
-        throw std::runtime_error("Invalid distance to rod::set_vdw_nbrs()");
+        throw FFEAException("Invalid distance to rod::set_vdw_nbrs()");
     }
 }
 

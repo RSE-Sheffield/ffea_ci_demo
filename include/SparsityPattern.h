@@ -48,10 +48,10 @@ public:
 
     ~SparsityPattern();
 
-    int init(int num_rows);
+    void init(int num_rows);
 
     /* * */
-    int register_contribution(int i, int j, scalar *contrib_memory_loc);
+    void register_contribution(int i, int j, scalar *contrib_memory_loc);
 
     bool check_for_contribution(int i, int j);
 

@@ -165,7 +165,7 @@ public:
 
     ~SimulationParams();
 
-    int validate(int sim_mode);
+    void validate(int sim_mode);
 
     /**
      * @brief DEPRECATED! Superseeded by: extract_params + assign.
@@ -177,12 +177,12 @@ public:
     /**
      * Expects a string of the form "<system>\n<>\n<>.....\n<system>" where parameter data can be extracted from.
      */
-    int extract_params(vector<string> script_vector);
+    void extract_params(vector<string> script_vector);
 
     std::vector<float> vector_from_rvalue(string rvalue);
 
     /** Expects a parameter label and value, which will be assigned if valid and rejected if not */
-    int assign(string lvalue, string rvalue);
+    void assign(string lvalue, string rvalue);
 
     /** Returns maximum number of states on any blob */
     int get_max_num_states();
@@ -204,10 +204,10 @@ private:
     int bsite_in_fname_set;
 
     /** Check if the file oFile exists, and if so
-  *     rename it to "__"+oFile+"__bckp.N",
-  *     where N is an integer so that the resulting file is new.
-  */
-    int checkFileName(string oFile);
+     * rename it to "__"+oFile+"__bckp.N",
+     * where N is an integer so that the resulting file is new.
+     */
+    void checkFileName(string oFile);
     
 };
 #endif

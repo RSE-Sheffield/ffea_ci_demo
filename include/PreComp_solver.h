@@ -50,21 +50,21 @@ class PreComp_solver{
 public:
   PreComp_solver();
   ~PreComp_solver();
-  int init(PreComp_params *pc_params, SimulationParams *params, Blob **blob_array);
-  int solve(scalar *blob_corr=nullptr); ///< calculate the forces using a straightforward double loop.
-  int solve_using_neighbours();  ///< calculate the forces using linkedlists.
-  int solve_using_neighbours_non_critical(scalar *blob_corr=nullptr);  ///< using linkedlists, calculate twice the forces to avoid any critical regions.
+  void init(PreComp_params *pc_params, SimulationParams *params, Blob **blob_array);
+  void solve(scalar *blob_corr=nullptr); ///< calculate the forces using a straightforward double loop.
+  void solve_using_neighbours();  ///< calculate the forces using linkedlists.
+  void solve_using_neighbours_non_critical(scalar *blob_corr=nullptr);  ///< using linkedlists, calculate twice the forces to avoid any critical regions.
   void reset_fieldenergy(); 
   scalar get_U(scalar x, int typei, int typej);
   scalar get_F(scalar x, int typei, int typej);
   scalar get_field_energy(int index0, int index1);
 
-  int compute_bead_positions(); ///< calculate b_pos, the absolute positions of the beads. 
+  void compute_bead_positions(); ///< calculate b_pos, the absolute positions of the beads. 
 
-  int build_pc_nearest_neighbour_lookup(); ///< put the beads on the grid.
-  int prebuild_pc_nearest_neighbour_lookup_and_swap(); ///< put the beads on the grid.
-  int prebuild_pc_nearest_neighbour_lookup(); ///< put the beads on the grid.
-  int safely_swap_pc_layers(); ///< swap the two LinkedLists. 
+  void build_pc_nearest_neighbour_lookup(); ///< put the beads on the grid.
+  void prebuild_pc_nearest_neighbour_lookup_and_swap(); ///< put the beads on the grid.
+  void prebuild_pc_nearest_neighbour_lookup(); ///< put the beads on the grid.
+  void safely_swap_pc_layers(); ///< swap the two LinkedLists. 
 
   void write_beads_to_file(FILE *fout, int timestep); ///< write beads to file, for the current timestep
 
@@ -74,9 +74,9 @@ private:
   int msg(string whatever); 
   int msg(int whatever); 
   
-  int read_tabulated_values(PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z);
+  void read_tabulated_values(PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z);
 
-  int calc_force_from_pot();
+  void calc_force_from_pot();
   
   scalar finterpolate(std::vector<scalar> &Z, scalar x, int typei, int typej);
 

@@ -45,7 +45,7 @@ BiCGSTAB_solver::~BiCGSTAB_solver() {
     max_num_iterations = 0;
 }
 
-int BiCGSTAB_solver::init(int N, scalar tol, int max_num_iterations) {
+void BiCGSTAB_solver::init(int N, scalar tol, int max_num_iterations) {
     this->N = N;
     this->tol = tol;
     this->max_num_iterations = max_num_iterations;
@@ -62,13 +62,11 @@ int BiCGSTAB_solver::init(int N, scalar tol, int max_num_iterations) {
         s_hat = std::vector<scalar>(N, 0);
         t = std::vector<scalar>(N, 0);
     } catch (std::bad_alloc &) {
-        FFEA_ERROR_MESSG("While initialising BiCGSTAB_solver, could not allocate memory for vectors.\n");
+        throw FFEAException("While initialising BiCGSTAB_solver, could not allocate memory for vectors.");
     }
-
-    return FFEA_OK;
 }
 
-int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b) {
+void BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b) {
     scalar rho_last = 1, alpha = 1, omega = 1, rho, beta;
 
     // Get the inverse of the diagonal of the matrix to use as a preconditioner
@@ -84,14 +82,13 @@ int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::
     zero(q, N);
 
     // loop till convergence (or a threshold maximum number of iterations have elapsed -> convergence failure)
-    int i;
-    for (i = 0; i < max_num_iterations; i++) {
+    for (int i = 0; i < max_num_iterations; i++) {
 
         // rho_i = dot(r_hat_0, r_i_minus_1);
         rho = dot(r_hat, r, N);
 
         if (rho == 0) {
-            FFEA_ERROR_MESSG("In BiCGSTAB_solver solve(), rho is zero. Solver stopping on iteration %d.\n", i);
+            throw FFEAException("In BiCGSTAB_solver solve(), rho is zero. Solver stopping on iteration %d.", i);
         }
 
         // beta = (rho_i/rho_i_minus_1) (alpha/omega_i_minus_1)
@@ -118,7 +115,7 @@ int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::
         // Check for convergence
         if (dot(s, s, N) < tol) {
             //			printf("Convergence reached on iteration %d.\n", i);
-            return FFEA_OK;
+            return;
         }
 
         // apply preconditioner to s (s_hat = inv_M s)
@@ -139,10 +136,10 @@ int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::
         //		printf("BiCGSTAB_solver: %f\n", dot(s,s,N));
     }
 
-    FFEA_ERROR_MESSG("Bi-Conjugate Gradient Stabilised solver could not converge in max_num_iterations.\n");
+    throw FFEAException("Bi-Conjugate Gradient Stabilised solver could not converge in max_num_iterations.");
 }
 
-int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations) {
+void BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations) {
     scalar rho_last = 1, alpha = 1, omega = 1, rho, beta;
 
     // Get the inverse of the diagonal of the matrix to use as a preconditioner
@@ -165,7 +162,7 @@ int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::
         rho = dot(r_hat, r, N);
 
         if (rho == 0) {
-            FFEA_ERROR_MESSG("In BiCGSTAB_solver solve(), rho is zero. Solver stopping on iteration %d.\n", i);
+            throw FFEAException("In BiCGSTAB_solver solve(), rho is zero. Solver stopping on iteration %d.", i);
         }
 
         // beta = (rho_i/rho_i_minus_1) (alpha/omega_i_minus_1)
@@ -206,8 +203,6 @@ int BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::
 
         //		printf("BiCGSTAB_solver: %f\n", dot(s,s,N));
     }
-
-    return FFEA_OK;
 }
 
 void BiCGSTAB_solver::get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, const int N) {

@@ -48,7 +48,7 @@ ConjugateGradientSolver::~ConjugateGradientSolver() {
     i_max = 0;
 }
 
-int ConjugateGradientSolver::init(std::vector<mesh_node>& node, std::vector<tetra_element_linear>& elem, const SimulationParams& params, const std::vector<int>& pinned_nodes_list, const set<int>& bsite_pinned_node_list) {
+void ConjugateGradientSolver::init(std::vector<mesh_node>& node, std::vector<tetra_element_linear>& elem, const SimulationParams& params, const std::vector<int>& pinned_nodes_list, const set<int>& bsite_pinned_node_list) {
     int ni, nj;
 
     // Store the number of rows, error threshold (stopping criterion for solver) and max
@@ -58,13 +58,7 @@ int ConjugateGradientSolver::init(std::vector<mesh_node>& node, std::vector<tetr
     this->i_max = params.max_iterations_cg;
 
     printf("\t\tAttempting to allocate and zero %d scalars for mass_LU...\n", num_rows * num_rows);
-    std::vector<scalar> mass_LU;
-    try {
-        mass_LU = std::vector<scalar>(num_rows * num_rows, 0);
-    }
-    catch (std::bad_alloc&) {
-        FFEA_ERROR_MESSG("Could not allocate mass_LU\n");
-    }
+    std::vector<scalar> mass_LU = std::vector<scalar>(num_rows * num_rows, 0);
     printf("\t\t...success.\n");
 
     // Create a temporary lookup for checking if a node is 'pinned' or not.
@@ -124,7 +118,7 @@ int ConjugateGradientSolver::init(std::vector<mesh_node>& node, std::vector<tetr
     try {
         key = std::vector<int>(num_rows + 1, 0);
     } catch (std::bad_alloc&) {
-        FFEA_ERROR_MESSG("Failed to allocate 'key' in ConjugateGradientSolver\n");
+        throw FFEAException("Failed to allocate 'key' in ConjugateGradientSolver\n");
     }
 
     // Get the number of non-zero entries in each row
@@ -151,7 +145,7 @@ int ConjugateGradientSolver::init(std::vector<mesh_node>& node, std::vector<tetr
     try {
         entry = std::vector<sparse_entry>(total_non_zeros);
     } catch (std::bad_alloc&) {
-        FFEA_ERROR_MESSG("Failed to allocate 'entry' in ConjugateGradientSolver\n");
+        throw FFEAException("Failed to allocate 'entry' in ConjugateGradientSolver\n");
     }
     printf("\t\t...done.\n");
 
@@ -179,7 +173,7 @@ int ConjugateGradientSolver::init(std::vector<mesh_node>& node, std::vector<tetr
     try {
         preconditioner = std::vector<scalar>(num_rows);
     } catch(std::bad_alloc &) {
-        FFEA_ERROR_MESSG("Failed to allocate 'preconditioner' in ConjugateGradientSolver\n")
+        throw FFEAException("Failed to allocate 'preconditioner' in ConjugateGradientSolver.");
     }
     for (int i = 0; i < num_rows; i++)
         preconditioner[i] = 1.0 / mass_LU[i * num_rows + i];
@@ -192,20 +186,18 @@ int ConjugateGradientSolver::init(std::vector<mesh_node>& node, std::vector<tetr
         s = std::vector<arr3>(num_rows);
         f = std::vector<arr3>(num_rows);
     } catch (std::bad_alloc &) {
-        FFEA_ERROR_MESSG(" Failed to create the work vectors necessary for ConjugateGradientSolver\n");
+        throw FFEAException(" Failed to create the work vectors necessary for ConjugateGradientSolver.");
     }
-
-    return FFEA_OK;
 }
 
-int ConjugateGradientSolver::solve(std::vector<arr3> &x) {
+void ConjugateGradientSolver::solve(std::vector<arr3> &x) {
     scalar delta_new, delta_old, dTq, alpha;
     delta_new = conjugate_gradient_residual_assume_x_zero(x);
     for (int i = 0; i < i_max; i++) {
 
         // Once convergence is achieved, return
         if (residual2() < epsilon2) {
-            return FFEA_OK;
+            return;
         }
 
         dTq = parallel_sparse_matrix_apply();
@@ -221,7 +213,7 @@ int ConjugateGradientSolver::solve(std::vector<arr3> &x) {
     }
 
     // If desired convergence was not reached in the set number of iterations...
-    FFEA_ERROR_MESSG("Conjugate gradient solver: Could not converge after %d iterations.\n\tEither epsilon or max_iterations_cg are set too low, or something went wrong with the simulation.\n", i_max);
+    throw FFEAException("Conjugate gradient solver: Could not converge after %d iterations.\n\tEither epsilon or max_iterations_cg are set too low, or something went wrong with the simulation.\n", i_max);
 }
 
 void ConjugateGradientSolver::apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) {

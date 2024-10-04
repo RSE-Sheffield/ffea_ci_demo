@@ -53,7 +53,7 @@ NoMassCGSolver::~NoMassCGSolver() {
 }
 
 /* */
-int NoMassCGSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) {
+void NoMassCGSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) {
     this->num_rows = 3 * node.size();
     this->num_nodes = node.size();
     this->epsilon2 = params.epsilon2;
@@ -131,13 +131,13 @@ int NoMassCGSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element
     V = sparsity_pattern_viscosity_matrix.create_sparse_matrix();
     //V->build();
     //delete V;
-    //return FFEA_ERROR;
+    //throw FFEAException();
     // create a preconditioner for solving in less iterations
     // Create the jacobi preconditioner matrix (diagonal)
     try {
         preconditioner = std::vector<scalar>(num_rows);
     } catch(std::bad_alloc &) {
-        FFEA_ERROR_MESSG("Failed to allocate 'preconditioner' in NoMassCGSolver\n");
+        throw FFEAException("Failed to allocate 'preconditioner' in NoMassCGSolver\n");
     }
 
     // create the work vectors necessary for use by the conjugate gradient solver in 'solve'
@@ -148,14 +148,12 @@ int NoMassCGSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element
         q = std::vector<arr3>(num_nodes);
         f = std::vector<arr3>(num_nodes);
     } catch(std::bad_alloc &) {
-        FFEA_ERROR_MESSG(" Failed to create the work vectors necessary for NoMassCGSolver\n");
+        throw FFEAException(" Failed to create the work vectors necessary for NoMassCGSolver\n");
     }
-
-    return FFEA_OK;
 }
 
 /*  */
-int NoMassCGSolver::solve(std::vector<arr3> &x) {
+void NoMassCGSolver::solve(std::vector<arr3> &x) {
     // Complete the sparse viscosity matrix
     V->build();
     V->calc_inverse_diagonal(preconditioner);
@@ -178,7 +176,7 @@ int NoMassCGSolver::solve(std::vector<arr3> &x) {
 	    //cout << residual2() << " " << epsilon2 << endl;
 	    //exit(0);
             //std::cout << "NoMassCG_solver: Convergence reached on iteration " << i << "\n"; // DEBUGGO
-            return FFEA_OK;
+            return;
         }
 	//cout << residual2() << " " << epsilon2 << endl;
         delta_old = delta_new;
@@ -186,7 +184,7 @@ int NoMassCGSolver::solve(std::vector<arr3> &x) {
         vec3_scale_and_add(p, z, (delta_new / delta_old), num_nodes);
     }
     // If desired convergence was not reached in the set number of iterations...
-    FFEA_ERROR_MESSG("Conjugate gradient solver: Could not converge after %d iterations.\n\tEither epsilon or max_iterations_cg are set too low, or something went wrong with the simulation.\n", i_max);
+    throw FFEAException("Conjugate gradient solver: Could not converge after %d iterations.\n\tEither epsilon or max_iterations_cg are set too low, or something went wrong with the simulation.\n", i_max);
 }
 
 /* */
@@ -196,7 +194,6 @@ void NoMassCGSolver::print_matrices(std::vector<arr3> &force) {
 
 /* */
 scalar NoMassCGSolver::conjugate_gradient_residual_assume_x_zero(std::vector<arr3> &b) {
-
     scalar delta_new = 0;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
 #pragma omp parallel for default(none) shared(b) reduction(+:delta_new)

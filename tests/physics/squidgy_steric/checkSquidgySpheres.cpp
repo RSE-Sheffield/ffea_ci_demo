@@ -129,11 +129,16 @@ int main(int argc, char** argv) {
    scalar d = 10*d0;
    // for every time step:
    for (int t=0; t<num_steps; t++) {
-     // load the coordinates of this time step:
-     if (b1.read_nodes_from_file(trj)) break; 
-     skipnlines(trj,1);
-     if (b2.read_nodes_from_file(trj)) break; 
-     skipnlines(trj,6);
+       // load the coordinates of this time step:
+       try {
+           b1.read_nodes_from_file(trj);
+       } catch (...) { break; }
+       skipnlines(trj,1);
+       try {
+           b2.read_nodes_from_file(trj);
+       }
+       catch (...) { break; }
+       skipnlines(trj,6);
 
      // 1st Check - Nodes only move on the x axis.
      // we store these coordinates because the system has to be put into box.

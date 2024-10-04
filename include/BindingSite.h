@@ -86,7 +86,7 @@ class BindingSite_matrix{
 		BindingSite_matrix();
 		~BindingSite_matrix();
 
-		int init(string fname);
+		void init(string fname);
 		int get_num_interaction_types();
 		void print_to_screen();
 

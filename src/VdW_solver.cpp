@@ -92,7 +92,7 @@ VdW_solver::~VdW_solver() {
     ssint_type = SSINT_TYPE_UNDEFINED;
 }
 
-int VdW_solver::init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs) {
+void VdW_solver::init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs) {
     this->surface_face_lookup = surface_face_lookup;
     this->box_size[0] = box_size[0];
     this->box_size[1] = box_size[1];
@@ -120,16 +120,15 @@ int VdW_solver::init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &
     try {
         fieldenergy = std::vector<std::vector<scalar>>(num_blobs);
     } catch (std::bad_alloc &) {
-        FFEA_ERROR_MESSG("Failed to allocate fieldenergy in VdW_solver::init\n");
+        throw FFEAException("Failed to allocate fieldenergy in VdW_solver::init\n");
     }
     for(int i = 0; i < num_blobs; ++i) {
         try {
             fieldenergy[i] = std::vector<scalar>(num_blobs);
         } catch (std::bad_alloc &) {
-            FFEA_ERROR_MESSG("Failed to allocate fieldenergy[%d] in VdW_solver::init\n", i);
+            throw FFEAException("Failed to allocate fieldenergy[%d] in VdW_solver::init\n", i);
         }
     }
-    return FFEA_OK;
 }
 
 /**  Zero measurement stuff, AKA fieldenergy */
@@ -142,8 +141,7 @@ void VdW_solver::reset_fieldenergy() {
 }
 
 /** Solve VdW */
-int VdW_solver::solve(scalar *blob_corr) {
-
+void VdW_solver::solve(scalar *blob_corr) {
     LinkedListNode<Face> *l_i = nullptr;
     LinkedListNode<Face> *l_j = nullptr;
     Face *f_i, *f_j;
@@ -184,13 +182,11 @@ int VdW_solver::solve(scalar *blob_corr) {
             }
         }
     }
-   // exit(0);
-    return FFEA_OK;
 }
 
 
 /* Allow protein VdW interactions along the top and bottom x-z planes */
-int VdW_solver::solve_sticky_wall(scalar h) {
+void VdW_solver::solve_sticky_wall(scalar h) {
     int Nx = 0, Ny = 0, Nz = 0;
     surface_face_lookup->get_dim(&Nx, &Ny, &Nz);
     LinkedListNode<Face> *l_j = nullptr;
@@ -208,7 +204,6 @@ int VdW_solver::solve_sticky_wall(scalar h) {
             }
         }
     }
-    return FFEA_OK;
 }
 
 void VdW_solver::do_lj_interaction(Face *f1, Face *f2, scalar *blob_corr) {

@@ -45,13 +45,13 @@ public:
     ~ConjugateGradientSolver();
 
     /** Builds the sparse mass matrix and allocates the various work vectors required for conjugate gradient */
-    int init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list);
+    void init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) override;
 
     /** Applies conjugate gradient with a Jacobi preconditioner to solve the system Mx = f */
-    int solve(std::vector<arr3> &x);
+    void solve(std::vector<arr3> &x) override;
 
     /** Applies the mass matrix to the given vector, 'in', putting the result in 'result'*/
-    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result);
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) override;
 
 private:
 

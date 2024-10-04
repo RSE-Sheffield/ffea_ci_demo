@@ -45,7 +45,7 @@ CG_solver::~CG_solver() {
     s.clear();
 }
 
-int CG_solver::init(int N, scalar tol, int max_num_iterations) {
+void CG_solver::init(int N, scalar tol, int max_num_iterations) {
     this->N = N;
     this->tol = tol;
     this->max_num_iterations = max_num_iterations;
@@ -58,13 +58,11 @@ int CG_solver::init(int N, scalar tol, int max_num_iterations) {
         q = std::vector<scalar>(N, 0);
         s = std::vector<scalar>(N, 0);
     } catch(std::bad_alloc &) {
-        FFEA_ERROR_MESSG("While initialising CG_solver, could not allocate memory for vectors.\n");
+        throw FFEAException("While initialising CG_solver, could not allocate memory for vectors.\n");
     }
-
-    return FFEA_OK;
 }
 
-int CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b) {
+void CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b) {
     // Get the preconditioner matrix (inverse of the matrix diagonal)
     A->calc_inverse_diagonal(inv_M);
 
@@ -78,7 +76,7 @@ int CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<s
         // Once convergence is achieved, return
         if (residual2() < tol) {
             std::cout << "CG_solver: Convergence reached on iteration " << i << "\n"; // DEBUGGO
-            return FFEA_OK;
+            return;
         }
 
         // q = A * d
@@ -96,10 +94,10 @@ int CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<s
 
     }
     // If desired convergence was not reached in the set number of iterations...
-    FFEA_ERROR_MESSG("CG_solver: Could not converge after %d iterations.\n\tEither epsilon or max_iterations_cg are set too low, or something went wrong with the simulation.\n", max_num_iterations);
+    throw FFEAException("CG_solver: Could not converge after %d iterations.\n\tEither epsilon or max_iterations_cg are set too low, or something went wrong with the simulation.\n", max_num_iterations);
 }
 
-int CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b, int num_iterations) {
+void CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b, int num_iterations) {
     // Get the preconditioner matrix (inverse of the matrix diagonal)
     A->calc_inverse_diagonal(inv_M);
 
@@ -122,8 +120,6 @@ int CG_solver::solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<s
 
         parallel_vector_add(d, (delta_new / delta_old), s);
     }
-
-    return FFEA_OK;
 }
 
 scalar CG_solver::conjugate_gradient_residual(std::shared_ptr<SparseMatrixFixedPattern> &A, const std::vector<scalar> &x, const std::vector<scalar> &b) {

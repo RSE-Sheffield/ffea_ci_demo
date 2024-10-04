@@ -33,7 +33,7 @@ SparseMatrixUnknownPattern::~SparseMatrixUnknownPattern() {
     diagonal.clear();
 }
 
-int SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_for_row_vectors) {
+void SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_for_row_vectors) {
 
     this->num_rows = num_rows;
 
@@ -41,7 +41,7 @@ int SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_fo
     try {
         row = vector<vector<sparse_entry>>(num_rows);
     } catch(std::bad_alloc &) {
-        return FFEA_ERROR;
+        throw FFEAException("Failed to allocate SparseMatrixUnknownPattern::row vector (len %d).", num_rows);
     }
 
     // Reserve a certain amount of space (for the inevitable large amount of growth that will come)
@@ -53,15 +53,14 @@ int SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_fo
     try {
         diagonal = vector<scalar>(num_rows);
     } catch(std::bad_alloc &) {
-        return FFEA_ERROR;
+        throw FFEAException("Failed to allocate SparseMatrixUnknownPattern::diagonal vector (len %d).", num_rows);
     }
 
     // Initialise diagonal to zero
     for (int i = 0; i < num_rows; i++) {
         diagonal[i] = 0;
     }
-
-    return FFEA_OK;
+    
 }
 
 void SparseMatrixUnknownPattern::add_off_diagonal_element(int row_index, int column_index, scalar val) {

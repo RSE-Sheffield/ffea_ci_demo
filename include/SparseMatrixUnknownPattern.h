@@ -38,7 +38,7 @@ public:
 
     ~SparseMatrixUnknownPattern();
 
-    int init(int num_rows, int suggested_initial_size_for_row_vectors);
+    void init(int num_rows, int suggested_initial_size_for_row_vectors);
 
     void add_off_diagonal_element(int row_index, int column_index, scalar val);
 

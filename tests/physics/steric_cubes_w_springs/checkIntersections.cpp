@@ -110,11 +110,15 @@ int main(int argc, char** argv) {
    // for every time step:
    for (int t=0; t<num_steps; t++) {
      // load the coordinates of this time step:
-     if (b1.read_nodes_from_file(trj)) break; 
-     skipnlines(trj,1);
-     if (b2.read_nodes_from_file(trj)) break; 
-     skipnlines(trj,6);
-     if (t < 3) continue;
+       try {
+           b1.read_nodes_from_file(trj);
+       } catch (...) { break; }
+       skipnlines(trj,1);
+       try {
+           b2.read_nodes_from_file(trj);
+       } catch (...) { break; }
+       skipnlines(trj,6);
+       if (t < 3) continue;
 
      b1.center_of_coord(cm1);
      b2.center_of_coord(cm2);

@@ -30,3 +30,36 @@ void FFEA_error_text() {
 void FFEA_caution_text() {
     printf("\x1b[33mCAUTION: \x1b[m");
 }
+
+FFEAException::FFEAException(const char* format, ...) {
+    va_list argp;
+    va_start(argp, format);
+    err_message += parseArgs(format, argp);
+    va_end(argp);
+    // Print the exception message to stdout preceded by ERROR in ANSI Red
+    printf("\x1b[33mERROR\x1b[m: %s\n", err_message.c_str());
+}
+FFEAException::FFEAException(const std::string& message)
+    : err_message(message) { }
+
+char const* FFEAException::what() const noexcept {
+    return err_message.c_str();
+}
+std::string FFEAException::parseArgs(const char* format, va_list argp) {
+    std::string rtn = format;
+    // Create a copy of the va_list, as vsnprintf can invalidate elements of argp and find the required buffer length
+    va_list argpCopy;
+    va_copy(argpCopy, argp);
+    const int buffLen = vsnprintf(nullptr, 0, format, argpCopy) + 1;
+    va_end(argpCopy);
+    char* buffer = reinterpret_cast<char*>(malloc(buffLen * sizeof(char)));
+    // Populate the buffer with the original va_list
+    int ct = vsnprintf(buffer, buffLen, format, argp);
+    if (ct >= 0) {
+        // Success!
+        buffer[buffLen - 1] = '\0';
+        rtn = std::string(buffer);
+    }
+    free(buffer);
+    return rtn;
+}

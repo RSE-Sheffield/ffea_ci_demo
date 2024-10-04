@@ -43,7 +43,7 @@ class BEM_Poisson_Boltzmann : GaussianQuadrature_tri, GaussianQuadrature_1d {
 public:
     BEM_Poisson_Boltzmann();
     ~BEM_Poisson_Boltzmann();
-    int init(NearestNeighbourLinkedListCube *lookup);
+    void init(NearestNeighbourLinkedListCube *lookup);
     /** Sets the inverse debye screening length for the system */
     void set_kappa(scalar kappa);
     void build_BEM_matrices();

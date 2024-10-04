@@ -41,7 +41,7 @@ public:
 
     ~sparse_entry_sources();
 
-    int init(int num_sources);
+    void init(int num_sources);
 
     void set_source(int i, scalar *s);
 

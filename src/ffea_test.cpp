@@ -164,14 +164,8 @@ int ffea_test::do_ffea_test(std::string filename)
 int ffea_test::connection_test()
 {
     std::cout << "Performing connection test...\n";
-   World world = World();
-    if (world.init("tet_ascii.1.ffea", 0, 0, 1) == FFEA_ERROR)
-    {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed "
-                "properly."
-             << endl;
-    }
+    World world = World();
+    world.init("tet_ascii.1.ffea", 0, 0, 1);
     std::cout << "Test world initialised. \n";
 
     rod::dbg_print = true;
@@ -312,13 +306,7 @@ int ffea_test::connection_orientation_test()
 {
     std::cout << "Performing connection orientation test...\n";
     World world = World();
-    if (world.init("tet_ascii.1.ffea", 0, 0, 1) == FFEA_ERROR)
-    {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed "
-                "properly."
-             << endl;
-    }
+    world.init("tet_ascii.1.ffea", 0, 0, 1);
     std::cout << "Test world initialised. \n";
 
     rod::Rod_blob_interface *current_interface =
@@ -478,13 +466,7 @@ int ffea_test::identify_face()
     std::cout << "Identify face\n";
 
     World world = World();
-    if (world.init("round_lad.1.ffea", 0, 0, 1) == FFEA_ERROR)
-    {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed "
-                "properly."
-             << endl;
-    }
+    world.init("round_lad.1.ffea", 0, 0, 1);
     std::cout << "Test world initialised. \n";
 
     rod::Rod_blob_interface *current_interface =
@@ -568,13 +550,7 @@ int ffea_test::connection_energy()
     std::cout << "doin a connection energy test \n";
 
     World world = World();
-    if (world.init("realistic.ffea", 0, 0, 1) == FFEA_ERROR)
-    {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed "
-                "properly."
-             << endl;
-    }
+    world.init("realistic.ffea", 0, 0, 1);
     std::cout << "Test world initialised. \n";
 
     rod::Rod_blob_interface *current_interface =
@@ -641,11 +617,7 @@ int ffea_test::connection_energy()
     /**
 
       World mirror_world = new World();
-      if(mirror_world.init("realistic_reversed.ffea", 0, 0, 1) == FFEA_ERROR) {
-          FFEA_error_text();
-          cout << "Errors during initialisation mean World cannot be constructed
-     properly." << endl;
-      }
+      mirror_world.init("realistic_reversed.ffea", 0, 0, 1);
       std::cout << "Mirror world initialised... oooo! \n";
 
       rod::Rod_blob_interface *mirror_interface =
@@ -685,13 +657,7 @@ int ffea_test::connection_energy()
 int ffea_test::connection_energy_2()
 {
     World world = World();
-    if (world.init("realistic.ffea", 0, 0, 1) == FFEA_ERROR)
-    {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed "
-                "properly."
-             << endl;
-    }
+    world.init("realistic.ffea", 0, 0, 1);
 
     rod::Rod_blob_interface *current_interface =
         world.rod_blob_interface_array[0];
@@ -743,11 +709,7 @@ int ffea_test::connection_energy_2()
     //    std::cout << "doin a connection energy test \n";
     //
     //    World world= World();
-    //    if(world->init("realistic.ffea", 0, 0, 1) == FFEA_ERROR) {
-    //        FFEA_error_text();
-    //        cout << "Errors during initialisation mean World cannot be
-    //        constructed properly." << endl;
-    //    }
+    //    world->init("realistic.ffea", 0, 0, 1);
     //    std::cout << "Test world initialised. \n";
     //
     //    rod::Rod_blob_interface *current_interface =
@@ -774,12 +736,7 @@ int ffea_test::connection_energy_2()
     //    world->print_trajectory_and_measurement_files(3, 1);
 
     //    World mirror_world = World();
-    //    if(mirror_world.init("realistic_reversed.ffea", 0, 0, 1) == FFEA_ERROR)
-    //    {
-    //        FFEA_error_text();
-    //        cout << "Errors during initialisation mean World cannot be
-    //        constructed properly." << endl;
-    //    }
+    //    mirror_world.init("realistic_reversed.ffea", 0, 0, 1);
     //    std::cout << "Mirror world initialised. \n";
     //
     //    rod::Rod_blob_interface *mirror_interface =
@@ -882,13 +839,7 @@ int ffea_test::connection_energy_3()
 {
     World *world;
     world = new World();
-    if (world->init("realistic.ffea", 0, 0, 1) == FFEA_ERROR)
-    {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed "
-                "properly."
-             << endl;
-    }
+    world->init("realistic.ffea", 0, 0, 1);
 
     rod::Rod_blob_interface *current_interface =
         world->rod_blob_interface_array[0];
@@ -919,37 +870,19 @@ int ffea_test::connection_propagation(
 
     World world = World();
 
-    if (mode == 0)
-    { // twist
-        if (world.init("twist.ffea", 0, 0, 1) == FFEA_ERROR)
-        {
-            FFEA_error_text();
-            cout << "Errors during initialisation mean World cannot be constructed "
-                    "properly."
-                 << endl;
-        }
-    }
-    if (mode == 1)
-    {
-        if (world.init("bend.ffea", 0, 0, 1) == FFEA_ERROR)
-        {
-            FFEA_error_text();
-            cout << "Errors during initialisation mean World cannot be constructed "
-                    "properly."
-                 << endl;
-        }
+    if (mode == 0) { // twist
+        world.init("twist.ffea", 0, 0, 1);
+    } else if (mode == 1) {
+        world.init("bend.ffea", 0, 0, 1);
     }
 
     rod::Rod *current_rod = world.rod_array[0];
 
     int end_index;
 
-    if (world.rod_blob_interface_array[0]->ends_at_rod == false)
-    {
+    if (world.rod_blob_interface_array[0]->ends_at_rod == false) {
         end_index = 0;
-    }
-    else
-    {
+    } else {
         end_index = current_rod->num_nodes - 2;
     }
 
@@ -960,8 +893,7 @@ int ffea_test::connection_propagation(
     rod::float9 rotmat;
     float edgevec_dot_prod_pre;
 
-    if (mode == 0)
-    { // twist
+    if (mode == 0) { // twist
 
         for (int i = 0; i < 3; i++)
         {
@@ -1023,10 +955,7 @@ int ffea_test::connection_propagation(
             current_rod->current_m[n + (3 * direction_factor) + (end_index * 3)] =
                 next_end_m[n];
         }
-    }
-
-    if (mode == 1)
-    {
+    } else if (mode == 1) {
         rod::float3 end_p;
         rod::float3 end_m;
         rod::float3 end_p_rotated;
@@ -1291,13 +1220,7 @@ int ffea_test::connection_propagation(
 int ffea_test::recover_normal()
 {
     World world = World();
-    if (world.init("realistic.ffea", 0, 0, 1) == FFEA_ERROR)
-    {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed "
-                "properly."
-             << endl;
-    }
+    world.init("realistic.ffea", 0, 0, 1);
 
     std::cout << "Starting equil attachment node (normal) test\n";
 
@@ -1416,13 +1339,7 @@ int ffea_test::dump_twist_info()
 int ffea_test::lower_sphere()
 {
     World world = World();
-    if (world.init("ndc80c_mt_multi.ffea", 0, 0, 1) == FFEA_ERROR)
-    {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed "
-                "properly."
-             << endl;
-    }
+    world.init("ndc80c_mt_multi.ffea", 0, 0, 1);
 
     for (int i = 0; i < 1000; i++)
     {

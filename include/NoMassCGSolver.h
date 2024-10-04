@@ -48,10 +48,10 @@ public:
     ~NoMassCGSolver();
 
     /** Builds a sparse matrix pattern for blob viscosity matrix from initial structure. Doesn't build the matrix though, just the key and whatnot */
-    int init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list);
+    void init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) override;
 
     /** Adds values to sparse viscosity matrix and uses it to solve the system Kv = f using conjugate gradient*/
-    int solve(std::vector<arr3> &x);
+    void solve(std::vector<arr3> &x) override;
 
     /* */
     void print_matrices(std::vector<arr3> &x);

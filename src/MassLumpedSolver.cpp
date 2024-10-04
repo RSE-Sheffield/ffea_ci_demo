@@ -35,14 +35,14 @@ MassLumpedSolver::~MassLumpedSolver() {
 }
 
 /* */
-int MassLumpedSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) {
+void MassLumpedSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) {
     // Store the number of rows, error threshold (stopping criterion for solver) and max
     // number of iterations, on this Solver (these quantities will be used a lot)
     this->num_rows = node.size();
     try {
         inv_M = std::vector<scalar>(num_rows);
     } catch(std::bad_alloc &) {
-        FFEA_ERROR_MESSG("could not allocate inv_M\n");
+        throw FFEAException("could not allocate inv_M.");
     }
 
     for (int i = 0; i < num_rows; i++) {
@@ -70,19 +70,16 @@ int MassLumpedSolver::init(std::vector<mesh_node> &node, std::vector<tetra_eleme
     for (int i = 0; i < num_rows; i++) {
         inv_M[i] = 1.0 / inv_M[i];
     }
-
-    return FFEA_OK;
 }
 
 /* */
-int MassLumpedSolver::solve(std::vector<arr3> &x) {
+void MassLumpedSolver::solve(std::vector<arr3> &x) {
     int i = 0;
     for (i = 0; i < num_rows; i++) {
         x[i][0] = x[i][0] * inv_M[i];
         x[i][1] = x[i][1] * inv_M[i];
         x[i][2] = x[i][2] * inv_M[i];
     }
-    return FFEA_OK;
 }
 
 /* */

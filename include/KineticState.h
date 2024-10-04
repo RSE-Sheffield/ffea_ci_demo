@@ -43,8 +43,8 @@ class KineticState {
 
 		~KineticState();
 
-		int init();
-		int init(int conf_index, int from, int to);
+		void init();
+		void init(int conf_index, int from, int to);
 
 		int get_conformation_index();
 		int get_base_bsite_type();

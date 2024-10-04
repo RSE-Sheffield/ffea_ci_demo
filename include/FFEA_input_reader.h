@@ -43,16 +43,16 @@ class FFEA_input_reader {
 
 
 		/** Get all lines from ffea, strip them of whitespace and return as a vector object */ 
-		int file_to_lines(string script_fname, vector<string> *output);
+		void file_to_lines(string script_fname, vector<string> *output);
 
 		/** Extract any block from the current block */ 
-		int extract_block(string block_title, int block_index, vector<string> input, vector<string> *output, bool mandatory=true); 
+		void extract_block(string block_title, int block_index, vector<string> input, vector<string> *output, bool mandatory=true); 
 
 		/** Get rvalue from block */ 
-		int parse_tag(string input, string *output);
+		void parse_tag(string input, string *output);
 
 		/** Specifically return map data */ 
-		int parse_map_tag(string input, int *map_indices, string *map_fname);
+		void parse_map_tag(string input, int *map_indices, string *map_fname);
 
 		/** Split string around delim and return as strings */ 
 		int split_string(string input, string *output, string delim, size_t output_length);

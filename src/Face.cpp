@@ -56,8 +56,7 @@ Face::~Face() {
     daddy_blob = nullptr;
 }
 
-int Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, SecondOrderFunctions::stu centroid_stu, Blob *daddy_blob, const SimulationParams &params) {
-
+void Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, SecondOrderFunctions::stu centroid_stu, Blob *daddy_blob, const SimulationParams &params) {
     this->index = index;
     this->e = e;
     n[0] = n0;
@@ -75,12 +74,9 @@ int Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1,
     this->num_blobs = params.num_blobs;
 
     this->daddy_blob = daddy_blob;
-
-    return FFEA_OK;
 }
 
-int Face::init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, Blob *daddy_blob, const SimulationParams &params) {
-
+void Face::init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, Blob *daddy_blob, const SimulationParams &params) {
     this->index = index;
     this->e = nullptr;
     n[0] = n0;
@@ -100,15 +96,13 @@ int Face::init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node
     zero_force();
 
     this->daddy_blob = daddy_blob;
-
-    return FFEA_OK;
 }
 
 void Face::set_ssint_interaction_type(int ssint_interaction_type) {
     this->ssint_interaction_type = ssint_interaction_type;
 }
 
-int Face::build_opposite_node() {
+void Face::build_opposite_node() {
 
     // If opposite == nullptr and VdW_type == steric, we can define a node specifically for this face, to make an 'element'
     // It will contain position data (maybe add some error checks in future)
@@ -117,7 +111,7 @@ int Face::build_opposite_node() {
 
     if(!n[3]) {
         n[3] = new(std::nothrow) mesh_node();
-        if (!n[3]) FFEA_ERROR_MESSG("Couldn't find memory for an opposite node\n");
+        if (!n[3]) throw FFEAException("Couldn't find memory for an opposite node.");
         dealloc_n3 = true;
         n[3]->index = n[0]->index;
 
@@ -144,8 +138,6 @@ int Face::build_opposite_node() {
     }
 
     zero_force();
-
-    return FFEA_OK;
 }
 
 void Face::set_kinetic_state(bool state) {

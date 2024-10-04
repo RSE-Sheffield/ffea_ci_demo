@@ -35,15 +35,13 @@ FFEA_input_reader::~FFEA_input_reader() {
 	copying = 0;
 }
 
-int FFEA_input_reader::file_to_lines(string script_fname, vector<string> *script_vector) {
+void FFEA_input_reader::file_to_lines(string script_fname, vector<string> *script_vector) {
 
 	// Open script
 	ifstream fin;
 	fin.open(script_fname.c_str());
 	if(fin.fail()) {
-		FFEA_error_text();
-		cout << script_fname << " does not exist.\n" << endl;
-		return FFEA_ERROR;
+		throw FFEAException("%s does not exist.", script_fname.c_str());
 	}
 
 	// Copy entire script into string
@@ -113,17 +111,16 @@ int FFEA_input_reader::file_to_lines(string script_fname, vector<string> *script
 		}
 	}
 	fin.close();
-	return FFEA_OK;
 }
 
-int FFEA_input_reader::extract_block(string block_title, int block_index, vector<string> input, vector<string> *output, bool mandatory/*=true*/) {
+void FFEA_input_reader::extract_block(string block_title, int block_index, vector<string> input, vector<string> *output, bool mandatory/*=true*/) {
 
 	// Immediate error checking
 	if(block_title != "param" && block_title != "system" && block_title != "blob" && block_title != "conformation" && block_title != "kinetics" && block_title != "maps" && block_title != "interactions" && block_title != "springs" && block_title != "precomp" && block_title != "ctforces" && block_title != "rod" && block_title != "coupling" ) {
-		FFEA_error_text();
-		cout << "Unrecognised block: " << block_title << ". Block structure is:" << endl;
-		cout << "<param>\n</param>\n<system>\n\t<blob>\n\t\t<conformation>\n\t\t</conformation>\n\t\t\t.\n\t\t\t.\n\t\t\t.\n\t\t<kinetics>\n\t\t\t<maps>\n\t\t\t</maps>\n\t\t</kinetics>\n\t</blob>\n\t\t.\n\t\t.\n\t\t.\n\t<interactions>\n\t\t<springs>\n\t\t</springs>\n\t\t<precomp>\n\t\t</precomp>\n\t\t<ctforces>\n\t\t</ctforces>\n\t</interactions>\n</system>" << endl;
-		return FFEA_ERROR;
+		throw FFEAException(
+		"Unrecognised block: %s. Block structure is:\n"
+		"<param>\n</param>\n<system>\n\t<blob>\n\t\t<conformation>\n\t\t</conformation>\n\t\t\t.\n\t\t\t.\n\t\t\t.\n\t\t<kinetics>\n\t\t\t<maps>\n\t\t\t</maps>\n\t\t</kinetics>\n\t</blob>\n\t\t.\n\t\t.\n\t\t.\n\t<interactions>\n\t\t<springs>\n\t\t</springs>\n\t\t<precomp>\n\t\t</precomp>\n\t\t<ctforces>\n\t\t</ctforces>\n\t</interactions>\n</system>",
+		block_title.c_str());
 	}
 
 	int count = -1;
@@ -143,9 +140,7 @@ int FFEA_input_reader::extract_block(string block_title, int block_index, vector
 		if(buf_string == block_title) {
 			
 			if(copying == 1) {
-				FFEA_error_text();
-				cout << "Shouldn't have found '" << buf_string << "' within " << block_title << " block." << endl;
-				return FFEA_ERROR;
+				throw FFEAException("Shouldn't have found '%s' within %s block.", buf_string.c_str(), block_title.c_str());
 			}
 
 			count++;
@@ -158,7 +153,7 @@ int FFEA_input_reader::extract_block(string block_title, int block_index, vector
 		if(copying == 1) {
 			if(buf_string == "/" + block_title) {
 				copying = 0;
-				return FFEA_OK;
+				return;
 			} else {
 				output->push_back(*string_it);
 			}
@@ -166,15 +161,9 @@ int FFEA_input_reader::extract_block(string block_title, int block_index, vector
 	}
 
 	if(copying == 1) {
-		FFEA_error_text();
-		cout << "Never found closing tag '/" << block_title << "'." << endl;
-		return FFEA_ERROR;
+		throw FFEAException("Never found closing tag '%s'.", block_title.c_str());
 	} else {
-		if (mandatory) {
-			FFEA_error_text();
-			cout << "Specified block_index " << block_index << " for block '" << block_title << "' not found." << endl;
-		}
-		return FFEA_ERROR;
+		throw FFEAException("Specified block_index %d for block '%s' not found.", block_index, block_title.c_str());
 	}
 	
 }
@@ -184,14 +173,14 @@ int FFEA_input_reader::extract_block(string block_title, int block_index, vector
  * @param[in] string input e. g.,  string < blah = whatever>
  * @param[out] string[2] output; string[0] = blah, string[1] = whatever.
  */
-int FFEA_input_reader::parse_tag(string input, string *output) {
+void FFEA_input_reader::parse_tag(string input, string *output) {
 
 	string tag;
 	vector<string> lrvalvec;
-   if (std::count(input.begin(), input.end(), '<') == 0)
-     FFEA_ERROR_MESSG("Line '%s' is missing '<'\n", input.c_str())
-   if (std::count(input.begin(), input.end(), '>') == 0)
-     FFEA_ERROR_MESSG("Line '%s' is missing '>'\n", input.c_str())
+	if (std::count(input.begin(), input.end(), '<') == 0)
+		throw FFEAException("Line '%s' is missing '<'\n", input.c_str());
+	if (std::count(input.begin(), input.end(), '>') == 0)
+		throw FFEAException("Line '%s' is missing '>'\n", input.c_str());
      
 	tag = boost::erase_last_copy(boost::erase_first_copy(input, "<"), ">");
 	boost::trim(tag);
@@ -203,11 +192,10 @@ int FFEA_input_reader::parse_tag(string input, string *output) {
 		output[i] = lrvalvec.at(i);
 		boost::trim(output[i]);
 	}
-
-	return FFEA_OK;
+	
 }
 
-int FFEA_input_reader::parse_map_tag(string input, int *map_indices, string *map_fname) {
+void FFEA_input_reader::parse_map_tag(string input, int *map_indices, string *map_fname) {
 
 	// Parse whole tag
 	string lrvalue[2], indexlrvalue[2];
@@ -217,9 +205,7 @@ int FFEA_input_reader::parse_map_tag(string input, int *map_indices, string *map
 	split_string(lrvalue[0], indexlrvalue, "(", 2);
 	if(indexlrvalue[0] != "map") {
 		cout << indexlrvalue[0] << endl;
-		FFEA_error_text();
-		cout << "Expected '<map (from,to) = fname>' but got " << input << endl;
-		return FFEA_ERROR;
+		throw FFEAException("Expected '<map (from,to) = fname>' but got %s.", input.c_str());
 	}
 
 	// Assign map!
@@ -228,7 +214,6 @@ int FFEA_input_reader::parse_map_tag(string input, int *map_indices, string *map
 	// Get indices
 	indexlrvalue[1] = boost::erase_last_copy(indexlrvalue[1], ")");
 	split_string(indexlrvalue[1], map_indices, ",", 2);
-	return FFEA_OK;
 }
 
 int FFEA_input_reader::split_string(string input, string *output, string delim, size_t output_length) {
@@ -240,9 +225,7 @@ int FFEA_input_reader::split_string(string input, string *output, string delim, 
 	int i = 0;
 	for(it = lrvalvec.begin(); it != lrvalvec.end(); it++) {
 		if (i >= output_length) {
-			std::stringstream ss;
-			ss << "String \"" << input << "\" contains more than the expected " << output_length << " items, it may be malformed.";
-			throw std::out_of_range(ss.str());
+			throw FFEAException("OutOfRange: String '%s' contains more than the expected '%zu' items, it may be malformed.", input.c_str(), output_length);
 		}
 		output[i] = *it;
 		boost::trim(output[i++]);
@@ -275,9 +258,7 @@ int FFEA_input_reader::split_string(string input, int *output, string delim, siz
 	int i = 0;
 	for(it = lrvalvec.begin(); it != lrvalvec.end(); it++) {
 		if (i >= output_length) {
-			std::stringstream ss;
-			ss << "String \"" << input << "\" contains more than the expected " << output_length << " items, it may be malformed.";
-			throw std::out_of_range(ss.str());
+			throw FFEAException("OutOfRange: String '%s' contains more than the expected '%zu' items, it may be malformed.", input.c_str(), output_length);
 		}
 		output[i++] = atoi((*it).c_str());
 	}
@@ -293,9 +274,7 @@ int FFEA_input_reader::split_string(string input, scalar *output, string delim, 
 	int i = 0;
 	for(it = lrvalvec.begin(); it != lrvalvec.end(); it++) {
 		if (i >= output_length) {
-			std::stringstream ss;
-			ss << "String \"" << input << "\" contains more than the expected " << output_length << " items, it may be malformed.";
-			throw std::out_of_range(ss.str());
+			throw FFEAException("OutOfRange: String '%s' contains more than the expected '%zu' items, it may be malformed.", input.c_str(), output_length);
 		}
 		output[i++] = atof((*it).c_str());
 	}

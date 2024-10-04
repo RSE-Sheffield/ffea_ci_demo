@@ -87,37 +87,37 @@ public:
     ~World();
 
     /* */
-    int init(string FFEA_script_filename, int frames_to_delete, int mode, bool writeEnergy);
+    void init(string FFEA_script_filename, int frames_to_delete, int mode, bool writeEnergy);
 
     /* */
-    int get_smallest_time_constants();
+    void get_smallest_time_constants();
 
     /* */
-    int lem(set<int> blob_indices, int num_modes);
+    void lem(set<int> blob_indices, int num_modes);
 
     /* */
-    int dmm(set<int> blob_indices, int num_modes);
+    void dmm(set<int> blob_indices, int num_modes);
 
     /* */
-    int dmm_rp(set<int> blob_indices, int num_modes);
+    void dmm_rp(set<int> blob_indices, int num_modes);
 
     /* */
-    int run();
+    void run();
 
     /* */
-    int read_and_build_system(vector<string> script_vector);
+    void read_and_build_system(const vector<string> &script_vector);
 
     /* */
-    int load_kinetic_maps(vector<string> map_fnames, vector<int> map_from, vector<int> map_to, int blob_index);
+    void load_kinetic_maps(const vector<string> &map_fnames, const vector<int> &map_from, const vector<int> &map_to, int blob_index);
 
     /* */
-    int build_kinetic_identity_maps();
+    void build_kinetic_identity_maps();
 
     /* */
-    int load_kinetic_states(string states_fname, int blob_index);
+    void load_kinetic_states(string states_fname, int blob_index);
 
     /* */
-    int load_kinetic_rates(string rates_fname, int blob_index);
+    void load_kinetic_rates(string rates_fname, int blob_index);
 
     /* */
     void print_kinetic_rates_to_screen(int type);
@@ -130,9 +130,6 @@ public:
 
     /* */
     void get_system_dimensions(arr3 &dimenstion_vector);
-
-    /* */
-    int enm(int *blob_index, int num_modes);
 
     /* */
     int get_num_blobs();
@@ -278,7 +275,7 @@ private:
 
     long long step_initial;
 
-    int load_springs(const char *fname);
+    void load_springs(const char *fname);
 
     rod::Rod_blob_interface* rod_blob_interface_from_block(vector<string> block, int interface_id, FFEA_input_reader &systemreader, rod::Rod** rod_array, Blob** blob_array);
 
@@ -294,20 +291,20 @@ private:
 
     void activate_springs();
 
-    int apply_springs();
+    void apply_springs();
 
     scalar get_spring_field_energy(int index0, int index1);
 
     /** @brief calculates the kinetic rates as a function of the energy of the system*/
-    int calculate_kinetic_rates();
+    void calculate_kinetic_rates();
 
     /** @brief randomly chooses a new kinetic state based upon the kinetic rates / switching probabilitie */
-    int choose_new_kinetic_state(int blob_index, int *target);
+    void choose_new_kinetic_state(int blob_index, int *target);
 
     /** @brief changes the kinetic state based upon the kinetic rates. Maps between conformations and adds/ removes bound sites */
-    int change_kinetic_state(int blob_index, int target_state);
+    void change_kinetic_state(int blob_index, int target_state);
 
-    int get_next_script_tag(FILE *in, char *buf);
+    void get_next_script_tag(FILE *in, char *buf);
 
     void apply_dense_matrix(scalar *y, scalar *M, scalar *x, int N);
 
@@ -328,7 +325,7 @@ private:
     void write_pre_print_to_trajfile(int step);
     void do_nothing();
 
-    int prebuild_nearest_neighbour_lookup_wrapper(scalar cell_size);
+    void prebuild_nearest_neighbour_lookup_wrapper(scalar cell_size);
 #ifdef FFEA_PARALLEL_FUTURE
     std::future<void> thread_writingTraj;
     std::future<int> thread_updatingVdWLL;
@@ -358,7 +355,7 @@ private:
 
     scalar *blob_corr;
 
-    int die_with_dignity(int step, scalar wtime);
+    void die_with_dignity(int step, scalar wtime);
 };
 
 #endif

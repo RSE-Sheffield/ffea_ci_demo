@@ -26,6 +26,8 @@
 
 #include <cmath>
 #include <cstring>
+
+#include "FFEA_return_codes.h"
 #include "mat_vec_types.h"
 
 ///////////////// SECTION 0 ////////////////////
@@ -170,7 +172,7 @@ void normalize(const Array1<T, N> &e, Array2<T, N> &result) {
     for (int i = 0; i < N; ++i) {
         sum += e[i] * e[i];
     }
-    if (sum == 0) throw std::exception();
+    if (sum == 0) throw FFEAException("Unable to normalize a vector with length zero");
     sum = std::sqrt(sum);
     for (int i = 0; i < N; ++i) {
         result[i] = e[i] / sum;
@@ -182,7 +184,7 @@ void normalize(const std::vector<T> &e, std::vector<T> &res) {
     for (int i = 0; i < e.size(); ++i) {
         sum += e[i] * e[i];
     }
-    if (sum == 0) throw std::exception();
+    if (sum == 0) throw FFEAException("Unable to normalize a vector with length zero");
     sum = std::sqrt(sum);
     for (int i = 0; i < e.size(); ++i) {
         res[i] = e[i] / sum;

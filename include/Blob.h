@@ -111,38 +111,39 @@ public:
      * Allocates the node, element and embedded charge arrays, initialised with the data
      * read from the given node, element and embedded charge files.
      * 'linear_solver' sets which type of linear solver is to be used: 0 for direct (forward/backward
-     * substitution) and 1 for iterative (preconditioned gonjugate gradient).
+     * substitution) and 1 for iterative (preconditioned conjugate gradient).
      * Also takes the simulation parameters and the array of RNGs (for multiprocessor runs).
      */
-    int config(const int blob_index, const int conformation_index, const string& node_filename,
+    void config(const int blob_index, const int conformation_index, const string& node_filename,
                const string& topology_filename, const string& surface_filename, const string& material_params_filename,
                const string& stokes_filename, const string& ssint_filename, const string& pin_filename,
                const string& binding_filename, const string& beads_filename, scalar scale, scalar calc_compress,
              scalar compress, int linear_solver, int blob_state, const SimulationParams &params,
              const PreComp_params &pc_params, SSINT_matrix *ssint_matrix,
              BindingSite_matrix *binding_matrix, std::shared_ptr<std::vector<RngStream>> &rng);
-    int init();
+    void init();
 
     /**
      * Calculates all internal forces on the finite element mesh, storing them on the elements
      * This requires the jacobian for each element, so if the mesh has inverted anywhere we will find out within this function
      */
-    int update_internal_forces();
+    void update_internal_forces();
 
     /**
      * Checks whether any of the elements have inverted or not
+     * @return True if inversions were found
      */
-    int check_inversion();
+    bool check_inversion();
 
     /**
      * Solves the EOM on the finite element mesh, updating the node positions and velocities by one time step
      */
-    int update_positions();
+    void update_positions();
 
     /**
      * If the system changes mid run (binding event, say) we may need to reinitialise the solver
      */
-    int reset_solver();
+    void reset_solver();
 
     /**
       * Translates the linear nodes, then linearises the secondary nodes
@@ -178,7 +179,7 @@ public:
      * Beads are only useful before PreComp_solver.init is called.
      * They can be removed later on.
      */
-    int forget_beads();
+    void forget_beads();
 
     /**
      * Add nodes to the face objects if and only if this blob is STATIC
@@ -208,7 +209,7 @@ public:
     /**
      * Writes a new node file for the case of an initially translated STATIC blob, so viewer doesn't read straight from node file
      */
-    int create_viewer_node_file(const char *node_filename, scalar scale);
+    void create_viewer_node_file(const char *node_filename, scalar scale);
 
     /**
      * Dumps all the node positions (in order) from the node array to the given file stream.
@@ -227,7 +228,7 @@ public:
      * Reads the node positions from the given trajectory file stream.
      * This is useful for restarting simulations from trajectory files.
      */
-    int read_nodes_from_file(FILE *trajectory_out);
+    void read_nodes_from_file(FILE *trajectory_out);
 
     /**
      * Takes measurements of system properties: KE, PE, Centre of Mass and Angular momentum etc
@@ -242,7 +243,7 @@ public:
     /**
      * Calculates the current jacobian and elasticity properties of the structure
      */
-    int calculate_deformation();
+    void calculate_deformation();
 
     scalar calc_volume();
 
@@ -308,12 +309,12 @@ public:
     /**
      * Solves the poisson equation inside this Blob for a given fixed surface potential, and calculates the surface flux out of the protein
      */
-    int solve_poisson(scalar *phi_gamma_IN, scalar *J_Gamma_OUT);
+    void solve_poisson(scalar *phi_gamma_IN, scalar *J_Gamma_OUT);
 
     /**
      * Apply the constant forces onto the corresponding nodes;
      */
-    int apply_ctforces();
+    void apply_ctforces();
 
 
     /**
@@ -356,22 +357,22 @@ public:
     /**
      * Builds a global viscosity matrix for this blob
      */
-    int build_linear_node_viscosity_matrix(Eigen::SparseMatrix<scalar> *K);
+    void build_linear_node_viscosity_matrix(Eigen::SparseMatrix<scalar> *K);
 
     /**
      * Builds a global diffusion matrix for this blob based on the work of Rotne and Prager (1969)
      */
-    int build_linear_node_rp_diffusion_matrix(Eigen_MatrixX *D);
+    void build_linear_node_rp_diffusion_matrix(Eigen_MatrixX *D);
 
     /**
      * Linearises the elasticity vector and build a global elasticity matrix for this blob
      */
-    int build_linear_node_elasticity_matrix(Eigen::SparseMatrix<scalar> *A);
+    void build_linear_node_elasticity_matrix(Eigen::SparseMatrix<scalar> *A);
 
     /**
      * Build the mass distribution matrix for this blob
      */
-    int build_linear_node_mass_matrix(Eigen::SparseMatrix<scalar> *M);
+    void build_linear_node_mass_matrix(Eigen::SparseMatrix<scalar> *M);
 
     /**
      * Returns the total mass of this Blob.
@@ -651,67 +652,67 @@ private:
      * Opens and reads the given 'ffea node file', extracting all the nodes for this Blob.
      * Records how many of these are surface nodes and how many are interior nodes.
      */
-    int load_nodes(const char *node_filename, scalar scale);
+    void load_nodes(const char *node_filename, scalar scale);
 
     /**
      * Opens and reads the given 'ffea topology file', extracting all the elements for this Blob.
      * Records how many of these are surface elements and how many are interior elements.
      */
-    int load_topology(const char *topology_filename);
+    void load_topology(const char *topology_filename);
 
     /**
      * Opens and reads the given 'ffea surface file', extracting all the faces for this Blob.
      */
-    int load_surface(const char *surface_filename);
+    void load_surface(const char *surface_filename);
 
 
     /**
      * Opens and reads the given 'ffea surface file', extracting all the faces for this Blob, ignoring topology.
      */
-    int load_surface_no_topology(const char *surface_filename);
+    void load_surface_no_topology(const char *surface_filename);
 
     /**
      * Opens and reads the given 'ffea material params file', extracting the material parameters for each element.
      */
-    int load_material_params(const char *material_params_filename);
+    void load_material_params(const char *material_params_filename);
 
     /**
      * Opens and reads the given 'ffea stokes params file', extracting the stokes radii for each node in the Blob.
      */
-    int load_stokes_params(const char *stokes_filename, scalar scale);
+    void load_stokes_params(const char *stokes_filename, scalar scale);
 
 
     /**
      * Opens and reads the given 'ffea ssint file', extracting all the van der waals species for each face of this Blob.
      */
-    int load_ssint(const char *ssint_filename, int num_ssint_face_types, string ssint_method);
+    void load_ssint(const char *ssint_filename, int num_ssint_face_types, string ssint_method);
 
     /**
      * Opens and reads the given 'ffea beads file', extracting all the beads types and positions and for this Blob.
      */
-    int load_beads(const char *beads_filename, scalar scale);
+    void load_beads(const char *beads_filename, scalar scale);
 
 
     /**
      * Opens and reads the given 'ffea ctforces file', and assigns the constant forces onto nodes for this Blob.
      */
-    int load_ctforces(const string& ctforces_fname);
+    void load_ctforces(const string& ctforces_fname);
 
 
     /**
      * Opens and reads the given 'ffea binding site file', extracting all the kinetic binding sites (types and face lists) for this Blob.
      */
-    int load_binding_sites(); // const char *binding_filename, int num_binding_site_types);
+    void load_binding_sites(); // const char *binding_filename, int num_binding_site_types);
 
     /**
      * Opens and reads the given 'ffea pinned nodes file', extracting all the faces for this Blob.
      */
-    int load_pinned_nodes(const char *pin_filename);
+    void load_pinned_nodes(const char *pin_filename);
 
     /**
      * Creates a new pinned nodes list from a given set
      */
-    int create_pinned_nodes(set<int> list);
+    void create_pinned_nodes(set<int> list);
 
     /**
      * Calculate some quantities such as the rest jacobian, rest volume etc.
@@ -721,7 +722,7 @@ private:
     /*
      *
      */
-    int aggregate_forces_and_solve();
+    void aggregate_forces_and_solve();
 
     /*
      *
@@ -731,9 +732,9 @@ private:
     /*
      *
      */
-    int calculate_node_element_connectivity();
+    void calculate_node_element_connectivity();
 
-    int build_mass_matrix();
+    void build_mass_matrix();
 };
 
 #endif

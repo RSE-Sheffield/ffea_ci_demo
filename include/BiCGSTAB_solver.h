@@ -38,11 +38,11 @@ public:
 
     ~BiCGSTAB_solver();
 
-    int init(int N, scalar tol, int max_num_iterations);
+    void init(int N, scalar tol, int max_num_iterations);
 
-    int solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b);
+    void solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b);
 
-    int solve(unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations);
+    void solve(unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations);
 
 private:
 

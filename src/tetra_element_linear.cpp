@@ -215,8 +215,9 @@ void tetra_element_linear::calculate_jacobian(matrix3 J) {
  *
  * Function also (as a by-product of the inversion) calculates the volume of the
  * element whose jacobian this is, which is stored in 'vol'.
+ * @return True if the element has inverted
  */
-int tetra_element_linear::calc_shape_function_derivatives_and_volume(matrix3 J) {
+bool tetra_element_linear::calc_shape_function_derivatives_and_volume(matrix3 J) {
     scalar det;
 
     // Calculate shape function derivs from inverse jacobian directly into dpsi[]
@@ -254,7 +255,7 @@ int tetra_element_linear::calc_shape_function_derivatives_and_volume(matrix3 J) 
 	printf("J Dets: Last = %e Now = %e\n", last_det, det);
     } */
     if (last_det * det < 0) {
-        return FFEA_ERROR;
+        return true;
     }
     last_det = det;
 
@@ -285,7 +286,7 @@ int tetra_element_linear::calc_shape_function_derivatives_and_volume(matrix3 J) 
     dpsi[DPSI1_DY] = -(dpsi[DPSI2_DY] + dpsi[DPSI3_DY] + dpsi[DPSI4_DY]);
     dpsi[DPSI1_DZ] = -(dpsi[DPSI2_DZ] + dpsi[DPSI3_DZ] + dpsi[DPSI4_DZ]);
 
-    return FFEA_OK;
+    return false;
 }
 
 /*
@@ -493,13 +494,12 @@ void tetra_element_linear::add_force_to_node(int i, arr3 &f) {
 
 /* A roundabout and inefficient way of working out what node (from 0 to 9) this index corresponds to */
 int tetra_element_linear::what_node_is_this(int index) {
-    int i;
-    for (i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
+    for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
         if (n[i]->index == index) {
             return i;
         }
     }
-    FFEA_ERROR_MESSG("Specified node index does not belong to this element\n")
+    throw FFEAException("Specified node index does not belong to this element.");
 }
 
 void tetra_element_linear::print() {
@@ -510,11 +510,9 @@ void tetra_element_linear::print() {
         printf("node_force: %e %e %e\n", node_force[i][0], node_force[i][1], node_force[i][2]);
         printf("volume: %e\n", vol);
     }
-
 }
 
 void tetra_element_linear::print_viscosity_matrix() {
-
 	for(int i = 0; i < 12; ++i) {
 		for(int j = 0; j < 12; ++j) {
 			cout << viscosity_matrix[i][j] << " ";

@@ -55,17 +55,17 @@ public:
     ~LinkedListCube();
 
     /** Builds a LinkedListCube of dimensions N_x x N_y x N_z, and an array of LinkedListNodes of size max_num_nodes_in_pool */
-    int alloc(int N_x, int N_y, int N_z, int max_num_nodes_in_pool);
+    void alloc(int N_x, int N_y, int N_z, int max_num_nodes_in_pool);
 
     /** Builds 2 layers of LinkedListCubes of dimensions N_x x N_y x N_z, a
       *   and an dual array of LinkedListNodes of size max_num_nodes_in_pool */ 
-    int alloc_dual(int N_x, int N_y, int N_z, int max_num_nodes_in_pool);
+    void alloc_dual(int N_x, int N_y, int N_z, int max_num_nodes_in_pool);
 
     /** Adds the specified T object to the pool (at the index given by add_index) */
-    int add_to_pool(T *t);
+    void add_to_pool(T *t);
 
     /** Adds the specified T object to the pool (at the index given by add_index) */
-    int add_to_pool_dual(T *t);
+    void add_to_pool_dual(T *t);
 
     /** Returns pointer to ith object in the pool */
     LinkedListNode<T> * get_from_pool(int i);
@@ -83,8 +83,8 @@ public:
      * Does this by setting the current top of stack node to be the 'next' in the list
      * after node i, with node i becoming the new top of stack node on that cell;
      */
-    int add_node_to_stack(int i, int x, int y, int z);
-    int add_node_to_stack_shadow(int i, int x, int y, int z);
+    void add_node_to_stack(int i, int x, int y, int z);
+    void add_node_to_stack_shadow(int i, int x, int y, int z);
 
     /** Returns whatever node is at the top of the (linked list) stack in grid cell (x, y, z) */
     LinkedListNode<T> * get_top_of_stack(int x, int y, int z);
@@ -94,7 +94,7 @@ public:
 
     void get_dim(int *Nx, int *Ny, int *Nz);
 
-    int safely_swap_layers(); 
+    void safely_swap_layers(); 
 
     void allow_swapping(); 
     void forbid_swapping(); 

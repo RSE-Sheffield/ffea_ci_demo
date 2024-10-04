@@ -32,6 +32,8 @@
 
 #include "rod_math_v9.h"
 
+#include "FFEA_return_codes.h"
+
 namespace rod
 {
 
@@ -151,7 +153,7 @@ namespace rod
     void print_array(std::string array_name, const std::vector<float> &vec, int start, int end)
     {
         if (start >= end)
-            throw std::invalid_argument("Invalid index range to print_array.");
+            throw FFEAException("InvalidArgument: Invalid index range to print_array.");
 
         std::cout << array_name << " : [";
         for (int i = start; i < end + 1; i++)
@@ -497,7 +499,7 @@ namespace rod
         }
         else
         {
-            throw std::invalid_argument("Invalid dimension given for rotation matrix");
+            throw FFEAException("InvalidArgument: Invalid dimension given for rotation matrix");
         }
     }
 
@@ -1234,7 +1236,7 @@ namespace rod
         }
         else
         {
-            throw std::invalid_argument("Length of the rod must be larger than 3");
+            throw FFEAException("InvalidArgument: Length of the rod must be larger than 3");
         }
     }
 
@@ -1476,7 +1478,7 @@ namespace rod
         }
         else
         {
-            throw std::invalid_argument("Length of the rod must be larger than 3");
+            throw FFEAException("InvalidArgument: Length of the rod must be larger than 3");
         }
 
         energies[0] = bend_energy;

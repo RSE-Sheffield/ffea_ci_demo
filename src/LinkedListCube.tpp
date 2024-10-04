@@ -57,7 +57,7 @@ LinkedListCube<T>::~LinkedListCube() {
 
 /* */
 template <class T>
-int LinkedListCube<T>::alloc(int N_x, int N_y, int N_z, int max_num_nodes_in_pool) {
+void LinkedListCube<T>::alloc(int N_x, int N_y, int N_z, int max_num_nodes_in_pool) {
     this->N_x = N_x;
     this->N_y = N_y;
     this->N_z = N_z;
@@ -67,7 +67,7 @@ int LinkedListCube<T>::alloc(int N_x, int N_y, int N_z, int max_num_nodes_in_poo
     pool = new(std::nothrow) LinkedListNode<T>[max_num_nodes_in_pool];
 
     if (root == NULL || pool == NULL) {
-        FFEA_ERROR_MESSG("Could not allocate memory (for root and pool arrays) in LinkedListCube\n");
+        throw FFEAException("Could not allocate memory (for root and pool arrays) in LinkedListCube.");
     }
 
     // Make sure all pointers are initialised to NULL
@@ -75,13 +75,11 @@ int LinkedListCube<T>::alloc(int N_x, int N_y, int N_z, int max_num_nodes_in_poo
 
     // Set the current addition index to the beginning of the pool array
     add_index = 0;
-
-    return FFEA_OK;
 }
 
 /* */
 template <class T>
-int LinkedListCube<T>::alloc_dual(int N_x, int N_y, int N_z, int max_num_nodes_in_pool) {
+void LinkedListCube<T>::alloc_dual(int N_x, int N_y, int N_z, int max_num_nodes_in_pool) {
     this->N_x = N_x;
     this->N_y = N_y;
     this->N_z = N_z;
@@ -93,7 +91,7 @@ int LinkedListCube<T>::alloc_dual(int N_x, int N_y, int N_z, int max_num_nodes_i
     pool2 = new(std::nothrow) LinkedListNode<T>[max_num_nodes_in_pool];
 
     if (root1 == NULL || pool1 == NULL || root2 == NULL || pool2 == NULL) {
-        FFEA_ERROR_MESSG("Could not allocate memory (for root and pool arrays) in LinkedListCube\n");
+        throw FFEAException("Could not allocate memory (for root and pool arrays) in LinkedListCube.");
     }
 
     // Make sure all pointers are initialised to NULL
@@ -106,15 +104,13 @@ int LinkedListCube<T>::alloc_dual(int N_x, int N_y, int N_z, int max_num_nodes_i
 
     // Set the current addition index to the beginning of the pool array
     add_index = 0;
-
-    return FFEA_OK;
 }
 
 /* */
 template <class T>
-int LinkedListCube<T>::add_to_pool(T *t) {
+void LinkedListCube<T>::add_to_pool(T *t) {
     if (add_index >= max_num_nodes_in_pool) {
-        FFEA_ERROR_MESSG("In LinkedListCube, attempt to add more nodes to the pool than space has been allocated for.\n");
+        throw FFEAException("In LinkedListCube, attempt to add more nodes to the pool than space has been allocated for.");
     }
 
     // Give object its own representant LinkedListNode in the pool
@@ -123,16 +119,14 @@ int LinkedListCube<T>::add_to_pool(T *t) {
     add_index++;
 
     num_nodes_in_pool++;
-
-    return FFEA_OK;
 }
 
 
 /* */
 template <class T>
-int LinkedListCube<T>::add_to_pool_dual(T *t) {
+void LinkedListCube<T>::add_to_pool_dual(T *t) {
     if (add_index >= max_num_nodes_in_pool) {
-        FFEA_ERROR_MESSG("In LinkedListCube, attempt to add more nodes to the pool than space has been allocated for.\n");
+        throw FFEAException("In LinkedListCube, attempt to add more nodes to the pool than space has been allocated for.");
     }
 
     // Give object its own representant LinkedListNode in the pool
@@ -143,8 +137,6 @@ int LinkedListCube<T>::add_to_pool_dual(T *t) {
     add_index++;
 
     num_nodes_in_pool++;
-
-    return FFEA_OK;
 }
 
 /* */
@@ -203,13 +195,12 @@ void LinkedListCube<T>::clear_shadow_layer() {
 
 /* */
 template <class T>
-int LinkedListCube<T>::add_node_to_stack(int i, int x, int y, int z) {
+void LinkedListCube<T>::add_node_to_stack(int i, int x, int y, int z) {
     // Apply PBC to the face centroid
     pbc(&x, &y, &z);
 
     if (x < 0 || x >= N_x || y < 0 || y >= N_y || z < 0 || z >= N_z) {
-        printf("Face centroid out of bounds of LinkedListCube (coords are [%d, %d, %d])\n", x, y, z);
-        return FFEA_ERROR;
+        throw FFEAException("Face centroid out of bounds of LinkedListCube (coords are [%d, %d, %d])\n", x, y, z);
     }
 
     int abs_index = x * N_y * N_z + y * N_z + z;
@@ -219,18 +210,16 @@ int LinkedListCube<T>::add_node_to_stack(int i, int x, int y, int z) {
     pool[i].z = z;
     pool[i].next = root[abs_index];
     root[abs_index] = &pool[i];
-    return FFEA_OK;
 }
 
 /* */
 template <class T>
-int LinkedListCube<T>::add_node_to_stack_shadow(int i, int x, int y, int z) {
+void LinkedListCube<T>::add_node_to_stack_shadow(int i, int x, int y, int z) {
     // Apply PBC to the face centroid
     pbc(&x, &y, &z);
 
     if (x < 0 || x >= N_x || y < 0 || y >= N_y || z < 0 || z >= N_z) {
-        printf("Face centroid out of bounds of LinkedListCube (coords are [%d, %d, %d])\n", x, y, z);
-        return FFEA_ERROR;
+        throw FFEAException("Face centroid out of bounds of LinkedListCube (coords are [%d, %d, %d])\n", x, y, z);
     }
 
     int abs_index = x * N_y * N_z + y * N_z + z;
@@ -240,7 +229,6 @@ int LinkedListCube<T>::add_node_to_stack_shadow(int i, int x, int y, int z) {
     pool_shadow[i].z = z;
     pool_shadow[i].next = root_shadow[abs_index];
     root_shadow[abs_index] = &pool_shadow[i];
-    return FFEA_OK;
 }
 
 /* */
@@ -290,7 +278,6 @@ void LinkedListCube<T>::pbc(int *x, int *y, int *z) {
 
 template <class T>
 void LinkedListCube<T>::swap_layers() {
-
     if (active_layer == 1){
       active_layer = 2;
       shadow_layer = 1;
@@ -305,30 +292,22 @@ void LinkedListCube<T>::swap_layers() {
       root = root1; 
       pool_shadow = pool2; 
       root_shadow = root2;
-    } 
-
+    }
 }
 
 template <class T>
-int LinkedListCube<T>::safely_swap_layers() {
-
+void LinkedListCube<T>::safely_swap_layers() {
     if (can_swap == true) {
        swap_layers(); 
-       return FFEA_OK; 
-    } else return FFEA_ERROR;
-
+    } else throw FFEAException();
 }
 
 template <class T>
 void LinkedListCube<T>::allow_swapping() {
-
     can_swap = true;
-
 }
 
 template <class T>
 void LinkedListCube<T>::forbid_swapping() {
-
     can_swap = false;
-
 }

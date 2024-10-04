@@ -42,14 +42,14 @@ public:
      * Initialises the solver (by building whatever representation of the mass matrix it needs)
      * using the given node-element connectivity.
      */
-    virtual int init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) = 0;
+    virtual void init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) = 0;
 
     /**
      * Solves the linear system Mx = f where f is the force vector (should be 'x' on input), and the mass matrix
      * M has already been constructed (in whatever representation) by the init() function for
      * a particular Blob. The solution is written to x.
      */
-    virtual int solve(std::vector<arr3> &x) = 0;
+    virtual void solve(std::vector<arr3> &x) = 0;
 
     virtual void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) = 0;
 };

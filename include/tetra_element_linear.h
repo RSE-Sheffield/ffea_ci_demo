@@ -235,7 +235,7 @@ public:
      * Function also (as a by-product of the inversion) calculates the volume of the
      * element whose jacobian this is, which is stored in 'vol'.
      */
-    int calc_shape_function_derivatives_and_volume(matrix3 J);
+    bool calc_shape_function_derivatives_and_volume(matrix3 J);
 
     /** @brief
      *  Prints a variety of structural details about the element to analyse it's configuration

@@ -31,13 +31,12 @@ sparse_entry_sources::~sparse_entry_sources() {
     sources.clear();
 }
 
-int sparse_entry_sources::init(int num_sources) {
+void sparse_entry_sources::init(int num_sources) {
     try {
         sources = std::vector<scalar*>(num_sources);
     } catch (std::bad_alloc &) {
-        FFEA_ERROR_MESSG("Could not allocate memory (for sources array)\n")
+        throw FFEAException("Could not allocate memory (for sources array).");
     }
-    return FFEA_OK;
 }
 
 void sparse_entry_sources::set_source(int i, scalar *s) {

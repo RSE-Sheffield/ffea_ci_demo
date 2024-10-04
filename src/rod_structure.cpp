@@ -32,6 +32,8 @@
 
 #include "rod_structure.h"
 
+#include "FFEA_return_codes.h"
+
 namespace rod
 {
 
@@ -581,7 +583,7 @@ namespace rod
             if (this->calc_vdw)
             {
                 if (this->num_vdw_sites != this->vdw_sites.size())
-                    throw std::logic_error("'num_vdw_sites' is not equal to the number of VDW site structs");
+                    throw FFEAException("'num_vdw_sites' is not equal to the number of VDW site structs");
 
                 for (int site_index = 0; site_index < this->vdw_sites.size(); ++site_index)
                 {
@@ -825,14 +827,13 @@ namespace rod
                     check[4] == vec_size);
                 if (!result)
                 {
-                    std::string msg = "Rod array length check failed during read.\n"
+                    throw FFEAException("Rod array length check failed during read.\n"
                         "vec_size :" + std::to_string(vec_size) + ")\n"
                         "L :       " + std::to_string(check[0]) + "\n"
                         "L+(L/3) : " + std::to_string(check[1]) + "\n"
                         "2L :      " + std::to_string(check[2]) + "\n"
                         "L/3 :     " + std::to_string(check[3]) + "\n"
-                        "3*num_vdw_sites: " + std::to_string(check[4]) + "\n";
-                    throw std::logic_error(msg);
+                        "3*num_vdw_sites: " + std::to_string(check[4]));
                 }
 
                 /** Set our rod data arrays to the raw .data() from the vector. */
@@ -954,7 +955,7 @@ namespace rod
     {
         std::ifstream infile(filename);
         if (!infile)
-            throw std::invalid_argument("IO error. Does VDW file exist?\n");
+            throw FFEAException("InvalidArgument: IO error. Does VDW file exist?");
 
         int row = 0;
         for (std::string line; getline(infile, line); ++row)
@@ -963,24 +964,23 @@ namespace rod
 
             // File header
             if (row == 0 && line != "ffea rod vdw file" && line != "ffea rod ssint file")
-                throw std::runtime_error("Error reading header in rod VDW file (row 0)");
+                throw FFEAException("Error reading header in rod VDW file (row 0)");
             else if (row == 1)
             {
                 boost::split(line_vec, line, boost::is_any_of(" "));
                 if (line_vec[0] != "num_sites")
-                    throw std::runtime_error("Error reading num_sites in rod VDW file (row 1)");
+                    throw FFEAException("Error reading num_sites in rod VDW file (row 1)");
 
                 if (this->num_vdw_sites != std::stoi(line_vec[1]))
                 {
-                    std::string err = "'num_vdw_sites' set in rod ("+std::to_string(this->num_vdw_sites)+")"
-                                      " does not match value in .rodvdw header (" + std::to_string(std::stoi(line_vec[1])) + ").\n";
-                    throw std::invalid_argument(err);
+                    throw FFEAException("'num_vdw_sites' set in rod (%d)"
+                        " does not match value in .rodvdw header (%d).", this->num_vdw_sites, std::stoi(line_vec[1]));
                 }
             }
             else if (row == 2)
             {
                 if (line != "vdw params:")
-                    throw std::runtime_error("Error reading header in rod VDW file (row 2)");
+                    throw FFEAException("Error reading header in rod VDW file (row 2)");
             }
             // VDW parameters
             else if (row > 2)
@@ -991,13 +991,11 @@ namespace rod
 
                 if (vdw_type < -1 || vdw_type > 6)
                 {
-                    std::string err = "VDW interaction type must be in range -1 <= row <= 6 (" + std::to_string(vdw_type) + ")";
-                    throw std::runtime_error(err);
+                    throw FFEAException("VDW interaction type must be in range -1 <= row <= 6 (%d)", vdw_type);
                 }
                 if (norm_length_along_rod < 0 || norm_length_along_rod > 1)
                 {
-                    std::string err = "VDW normalized distance along rod axis must be in range 0 <= L <= 1 " + std::to_string(norm_length_along_rod) + ")";
-                    throw std::runtime_error(err);
+                    throw FFEAException("VDW normalized distance along rod axis must be in range 0 <= L <= 1 (%f)", norm_length_along_rod);
                 }
 
                 VDWSite site(
@@ -1371,7 +1369,7 @@ namespace rod
         {
             if (this->num_nodes == 0)
             {
-                throw std::invalid_argument("Rod cannot have zero nodes.");
+                throw FFEAException("InvalidArgument: Rod cannot have zero nodes.");
             }
         }
         return this->num_nodes;
@@ -1379,15 +1377,11 @@ namespace rod
 
     Rod Rod::check_nbr_list_dim(std::vector<std::vector<InteractionData>> &nbr_list)
     {
-
         int num_rows = nbr_list.size();
-        int num_cols = 0;
-        std::string msg;
-
-        msg = "Number of rows in neighbour list (" + std::to_string(num_rows) + ") should be equal to number of rod elements (" + std::to_string(this->get_num_nodes() - 1) + ").";
+        
         if (num_rows != this->get_num_nodes() - 1)
         {
-            throw std::logic_error(msg);
+            throw FFEAException("Number of rows in neighbour list (%d) should be equal to number of rod elements (%d).", num_rows, this->get_num_nodes() - 1);
         }
 
         if (rod::dbg_print)
@@ -1453,7 +1447,7 @@ namespace rod
 
             // sanity check
             if (!stericInt.elements_intersect())
-                throw std::runtime_error("Elements do not intersect, but a steric force calculation was attempted.");
+                throw FFEAException("Elements do not intersect, but a steric force calculation was attempted.");
 
             // steric force constant depends on the radius of the rod
             radius_sum = stericInt.radius_self + stericInt.radius_nbr;
@@ -1490,7 +1484,7 @@ namespace rod
                     "  end node:   (" + std::to_string(node_force[3]) + ", " + std::to_string(node_force[4]) + ", " + std::to_string(node_force[5]) + ")\n"
                     "  elem:       (" + std::to_string(element_force[0]) + ", " + std::to_string(element_force[1]) + ", " + std::to_string(element_force[2]) + ")\n"
                     "  diff:       (" + std::to_string(diff[0]) + ", " + std::to_string(diff[1]) + ", " + std::to_string(diff[2]) + ")\n";
-                throw std::runtime_error(msg);
+                throw FFEAException(msg);
             }
 
         }
@@ -1588,7 +1582,7 @@ namespace rod
                 force_mag = vdw_force_interp(r_mag, VDWInt.epsilon, VDWInt.r_min_inv);
             }
             else
-                throw std::invalid_argument("Invalid distance to VDW energy calculation.");
+                throw FFEAException("Invalid distance to VDW energy calculation.");
 
             // Project force along interaction vector
             rod::normalize(VDWInt.c_ab, c_ab_norm);
@@ -1607,12 +1601,11 @@ namespace rod
             vec3d(n) { diff[n] = node_force[n] + node_force[n + 3] - element_force[n]; }
             if (rod::absolute(diff) > 1e-3)
             {
-                std::string msg = "Sum of node forces not equal to element force (vdw).\n"
+                throw FFEAException("Sum of node forces not equal to element force (vdw).\n"
                     "  start node: (" + std::to_string(node_force[0]) + ", " + std::to_string(node_force[1]) + ", " + std::to_string(node_force[2]) + ")\n"
                     "  end node:   (" + std::to_string(node_force[3]) + ", " + std::to_string(node_force[4]) + ", " + std::to_string(node_force[5]) + ")\n"
                     "  elem:       (" + std::to_string(element_force[0]) + ", " + std::to_string(element_force[1]) + ", " + std::to_string(element_force[2]) + ")\n"
-                    "  diff:       (" + std::to_string(diff[0]) + ", " + std::to_string(diff[1]) + ", " + std::to_string(diff[2]) + ")\n";
-                throw std::runtime_error(msg);
+                    "  diff:       (" + std::to_string(diff[0]) + ", " + std::to_string(diff[1]) + ", " + std::to_string(diff[2]) + ")");
             }
 
         }
