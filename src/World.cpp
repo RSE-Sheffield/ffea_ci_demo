@@ -33,6 +33,7 @@ World::World()
 
     // Initialise everything to zero
     blob_array = nullptr;
+    active_blob_array = nullptr;
     rod_array = nullptr;
     spring_array = {};
     kinetic_map = {};
