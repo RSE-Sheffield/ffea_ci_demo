@@ -105,7 +105,6 @@ set(FFEA_LIB_SRC
     ${PROJECT_SOURCE_DIR}/src/MatrixFixedSparsityPattern.cpp
     ${PROJECT_SOURCE_DIR}/src/LJ_matrix.cpp
     ${PROJECT_SOURCE_DIR}/src/BindingSite.cpp
-    ${PROJECT_SOURCE_DIR}/src/mat_vec_fns_II.cpp
     ${PROJECT_SOURCE_DIR}/src/NearestNeighbourLinkedListCube.cpp
     ${PROJECT_SOURCE_DIR}/src/PoissonMatrixQuadratic.cpp
     ${PROJECT_SOURCE_DIR}/src/SparseMatrixTypes.cpp
