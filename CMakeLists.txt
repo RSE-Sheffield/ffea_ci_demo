@@ -147,16 +147,7 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/src")
 
 #######################################
 ######## INSTALL THE FFEA TOOLS  ######
-# 1 - Set up the install python path
-include(${CMAKE_ROOT}/Modules/FindPythonInterp.cmake)
-set(PYTHONSTUFF "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/ffeatools")
-# Debian and derivatives use dist-packages instead of site-packages. 
-if(USE_PACK_DIST STREQUAL "DEB")
-  set(PYTHONSTUFF "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/dist-packages/ffeatools")
-endif(USE_PACK_DIST STREQUAL "DEB")
 
-# 2 - and go through the folders:
-add_subdirectory("${PROJECT_SOURCE_DIR}/ffeatools")
 #######################################
 
 
@@ -167,7 +158,7 @@ enable_testing()
 # set_tests_properties(ENVIRONMENT OMP_NUM_THREADS=1)
 add_subdirectory("${PROJECT_SOURCE_DIR}/tests/consistency")
 add_subdirectory("${PROJECT_SOURCE_DIR}/tests/physics")
-add_subdirectory("${PROJECT_SOURCE_DIR}/tests/ffeatools")
+#add_subdirectory("${PROJECT_SOURCE_DIR}/tests/ffeatools")
 add_subdirectory("${PROJECT_SOURCE_DIR}/tests/rods")
 set(IGNORE_NUMPY_TESTS "")
 if("${NUMPY_FOUND}" STREQUAL "FAIL")
