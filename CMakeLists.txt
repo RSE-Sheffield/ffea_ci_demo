@@ -29,6 +29,8 @@ set(PACKAGE_NAME "ffea")
 set(PACKAGE_VERSION ${PROJECT_VERSION})
 
 
+option(USE_FFEATOOLS_INTERNAL "Download and use the latest FFEATOOLS or use your own install (OFF)" ON)
+
 #todo check if any of these are now redundant.
 option(USE_BOOST_INTERNAL "Use the sources we ship (ON) or your own boost (OFF)" ON)
 mark_as_advanced(USE_BOOST_INTERNAL)
@@ -59,22 +61,6 @@ include(./cmake/doxygen.cmake)
 if(${BUILD_DOC} STREQUAL "ONLY")
   return()
 endif()
-
-# 9 ### PYTHON ######
-#find_package(PythonInterp 2.7 REQUIRED)
-# python will be used to run some f.
-# Now look for NumPy
-#execute_process(
-#    COMMAND "${PYTHON_EXECUTABLE}" -c "from __future__ import print_function\ntry:\n\t import numpy\n\t print('OK',end=\"\")\nexcept:\n\t print('FAIL',end=\"\")"
-#    OUTPUT_VARIABLE NUMPY_FOUND)
-#if("${NUMPY_FOUND}" STREQUAL "FAIL")
-#  message(WARNING "NumPy was not found: Several tests won't be run, and the ffeatools script and API will be mostly unusable")
-#endif("${NUMPY_FOUND}" STREQUAL "FAIL")
-#if  ("${NUMPY_FOUND}" STREQUAL "OK")
-#  message(STATUS "Found NumPy")
-#endif  ("${NUMPY_FOUND}" STREQUAL "OK")
-# Temporary until CMake upgraded to support Python3 FFEATools
-set(NUMPY_FOUND "FAIL")
 
 # Debug
 if(USE_DEBUG)
@@ -150,6 +136,23 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/src")
 
 #######################################
 
+if(USE_FFEATOOLS_INTERNAL AND WIN32)
+    set(USE_FFEATOOLS_INTERNAL OFF)
+    message(WARNING "FFEATools cannot be built on Windows")
+endif()
+if(USE_FFEATOOLS_INTERNAL) 
+    message(STATUS "Configuring internal FFEATools")
+    include(cmake/GetFFEATools.cmake)
+#else() 
+#find_package(FFEATools REQUIRED)
+#if(NOT FFEATools_FOUND)
+#    message(FATAL_ERROR "You could provide valid paths through either:
+#    -- FFEATOOLS_ROOT or
+#    try reconfiguring with -DUSE_FFEATOOLS_INTERNAL")
+#endif()
+endif()
+# Temporary until CMake upgraded to support Python3 FFEATools
+set(NUMPY_FOUND "FAIL")
 
 
 #####################################################
@@ -175,7 +178,7 @@ if("${NUMPY_FOUND}" STREQUAL "FAIL")
   message(STATUS "NumPy could not be found. This means that:")
   message(STATUS "   'ffeatools' - the python package, will fail to import")
   message(STATUS "   'ffeatools' - the script, will only be partially useful")
-  message(STATUS "   Several tests have been discarted and will not run.")
+  message(STATUS "   Several tests have been discarded and will not run.")
   message(STATUS "Your installation will still be complete.")
   message("--------------------------------------------------------")
 endif()
