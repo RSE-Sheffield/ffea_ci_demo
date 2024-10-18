@@ -21,13 +21,16 @@
 #  the research papers on the package.
 #
 
-set (SYMMETRYDIR "${PROJECT_BINARY_DIR}/tests/rods/integration/symmetry/")
-file (COPY symmetry_test_stretch_only.rod DESTINATION ${SYMMETRYDIR})
-file (COPY symmetry_test.py DESTINATION ${SYMMETRYDIR})
-file (COPY symmetry_test_bend_only.ffea DESTINATION ${SYMMETRYDIR})
-file (COPY symmetry_test_stretch_only.ffea DESTINATION ${SYMMETRYDIR})
-file (COPY symmetry_test_bend_only.rod DESTINATION ${SYMMETRYDIR})
-file (COPY symmetry_test_twist_only.ffea DESTINATION ${SYMMETRYDIR})
-file (COPY symmetry_test_twist_only.rod DESTINATION ${SYMMETRYDIR})
-add_test(NAME symmetry_test COMMAND ${PYTHON_EXECUTABLE} symmetry_test.py)
-set_tests_properties(symmetry_test PROPERTIES ENVIRONMENT PYTHONPATH=${PROJECT_SOURCE_DIR}/ffeatools/modules:$ENV{PYTHONPATH})
+if(Python3_EXECUTABLE)
+    set (SYMMETRYDIR "${PROJECT_BINARY_DIR}/tests/rods/integration/symmetry/")
+    file (COPY symmetry_test_stretch_only.rod DESTINATION ${SYMMETRYDIR})
+    file (COPY symmetry_test.py DESTINATION ${SYMMETRYDIR})
+    file (COPY symmetry_test_bend_only.ffea DESTINATION ${SYMMETRYDIR})
+    file (COPY symmetry_test_stretch_only.ffea DESTINATION ${SYMMETRYDIR})
+    file (COPY symmetry_test_bend_only.rod DESTINATION ${SYMMETRYDIR})
+    file (COPY symmetry_test_twist_only.ffea DESTINATION ${SYMMETRYDIR})
+    file (COPY symmetry_test_twist_only.rod DESTINATION ${SYMMETRYDIR})
+
+    add_test(NAME symmetry_test COMMAND ${Python3_EXECUTABLE} symmetry_test.py)
+    set_tests_properties(symmetry_test PROPERTIES ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

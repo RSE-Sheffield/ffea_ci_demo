@@ -21,7 +21,9 @@
 #  the research papers on the package.
 #
 
-set (EQTWISTDIR "${PROJECT_BINARY_DIR}/tests/rods/unit/arbitrary_equilibrium_twist/")
-file (COPY arbitrary_equilibrium_twist.ffeatest DESTINATION ${EQTWISTDIR})
-file (COPY arbitrary_equilibrium_twist.py DESTINATION ${EQTWISTDIR})
-add_test(NAME arbitrary_equilibrium_twist COMMAND ${PYTHON_EXECUTABLE} arbitrary_equilibrium_twist.py)
+if(Python3_EXECUTABLE)
+    set (EQTWISTDIR "${PROJECT_BINARY_DIR}/tests/rods/unit/arbitrary_equilibrium_twist/")
+    file (COPY arbitrary_equilibrium_twist.ffeatest DESTINATION ${EQTWISTDIR})
+    file (COPY arbitrary_equilibrium_twist.py DESTINATION ${EQTWISTDIR})
+    add_test(NAME arbitrary_equilibrium_twist COMMAND ${Python3_EXECUTABLE} arbitrary_equilibrium_twist.py PROPERTIES ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

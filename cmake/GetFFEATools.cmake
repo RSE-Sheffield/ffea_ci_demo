@@ -72,6 +72,12 @@ if(NOT Python3_FOUND)
         COMMAND_ECHO STDOUT
         OUTPUT_QUIET
         ERROR_QUIET) # This puts out alot of junk to stderr
+    message(STATUS "Installing additional dependencies for testing")
+    execute_process(COMMAND ${VENV_PIP} install pandas wrap
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMAND_ECHO STDOUT
+        OUTPUT_QUIET
+        ERROR_QUIET) # This puts out alot of junk to stderr
 
     # locate venv python
     unset(Python3_EXECUTABLE)
@@ -88,10 +94,10 @@ endif()
 ffea_search_python_module(ffeatools)
 if(${_RESULT} STREQUAL "0")
     message(STATUS "Successfully installed ffeatools (version ${_MODULE_VERSION})\n"
-        "Python3 venv: ${VENV_PIP}")
+        "Python3 venv: ${VENV_DIR}")
 else()    
     message(FATAL_ERROR 
         "Something went wrong!\n"
         "Unable to find required python module ffeatools within\n"
-        "Python3 venv: ${VENV_PIP}")
+        "Python3 venv: ${VENV_DIR}")
 endif()

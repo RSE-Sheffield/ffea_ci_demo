@@ -10,10 +10,14 @@ import ffeatools.ffea_rod as ffea_rod
 import matplotlib as mpl
 mpl.use('Agg')
 
+"""
+This test expects a single runarg which points to the location of the ffea binary to be tested
+e.g. python run_test <path to ffea>
+"""
 def main():
 
     subprocess.call(["bash", "cleanup.sh"])
-    py_return_status = subprocess.call(["python", "create_straight_rod.py"])
+    py_return_status = subprocess.call([sys.executable, "create_straight_rod.py"])
 
     if py_return_status != 0:
         sys.exit("Error calling create_straight_rod.py")
@@ -26,7 +30,7 @@ def main():
 
     # test function located in: src/ffea_test.cpp
     print("Calling FFEA from Python script")
-    subprocess.call(["ffea", ffea_script_name + ".ffea"])
+    subprocess.call([sys.argv[1], ffea_script_name + ".ffea"])
 
     # load both rod trajectories
     print("Analysing output of FFEA simulation" + str("\n"))

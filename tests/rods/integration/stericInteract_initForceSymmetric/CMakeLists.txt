@@ -21,13 +21,16 @@
 #  the research papers on the package.
 #
 
-set (COLLISION_SYM_DIR          stericInteract_initForceSymmetric)
-set (COLLISION_SYM_CTEST        int_rod_${COLLISION_SYM_DIR})
-set (COLLISION_SYM_DIR_PATH     "${PROJECT_BINARY_DIR}/tests/rods/integration/${COLLISION_SYM_DIR}/")
+if(Python3_EXECUTABLE)
+    set (COLLISION_SYM_DIR          stericInteract_initForceSymmetric)
+    set (COLLISION_SYM_CTEST        int_rod_${COLLISION_SYM_DIR})
+    set (COLLISION_SYM_DIR_PATH     "${PROJECT_BINARY_DIR}/tests/rods/integration/${COLLISION_SYM_DIR}/")
 
-file (COPY run_test.py                          DESTINATION ${COLLISION_SYM_DIR_PATH})
-file (COPY create_straight_rod.py               DESTINATION ${COLLISION_SYM_DIR_PATH})
-file (COPY z-axis.rod                           DESTINATION ${COLLISION_SYM_DIR_PATH})
-file (COPY collision_twoRods_singleFrame.ffea   DESTINATION ${COLLISION_SYM_DIR_PATH})
+    file (COPY run_test.py                          DESTINATION ${COLLISION_SYM_DIR_PATH})
+    file (COPY create_straight_rod.py               DESTINATION ${COLLISION_SYM_DIR_PATH})
+    file (COPY z-axis.rod                           DESTINATION ${COLLISION_SYM_DIR_PATH})
+    file (COPY collision_twoRods_singleFrame.ffea   DESTINATION ${COLLISION_SYM_DIR_PATH})
 
-add_test(NAME ${COLLISION_SYM_CTEST} COMMAND ${PYTHON_EXECUTABLE} run_test.py)
+    add_test(NAME ${COLLISION_SYM_CTEST} COMMAND ${Python3_EXECUTABLE} run_test.py "${PROJECT_BINARY_DIR}/src/ffea")
+    set_tests_properties(${COLLISION_SYM_CTEST} PROPERTIES ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

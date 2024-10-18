@@ -97,13 +97,17 @@ def get_max_steric_energy():
         return 50
 
 
+"""
+This test expects a single runarg which points to the location of the ffea binary to be tested
+e.g. python run_test <path to ffea>
+"""
 def main():
     # =========================== PREAMBLE =========================== #
 
     shutil.rmtree("outputs", ignore_errors=True)
     os.makedirs("outputs")
 
-    py_return_status = subprocess.call(["python", "create_straight_rod_vdw.py"])
+    py_return_status = subprocess.call([sys.executable, "create_straight_rod_vdw.py"])
 
     if py_return_status != 0:
         sys.exit("Error calling create_straight_rod_vdw.py")
@@ -146,7 +150,7 @@ def main():
         # test function located in: src/ffea_test.cpp
         print("Calling FFEA from Python script")
         ffea_proc = subprocess.run(
-            ["ffea", ffea_script_name + ".ffea"], capture_output=True, text=True
+            [sys.argv[1], ffea_script_name + ".ffea"], capture_output=True, text=True
         )
 
         with open("outputs/" + ffea_script_name + "_stdout.txt", "w") as f:

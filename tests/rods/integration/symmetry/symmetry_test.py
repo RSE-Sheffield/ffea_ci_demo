@@ -9,12 +9,12 @@ Created on Tue Mar 13 05:23:33 2018
 import sys
 try:
     import wrap
-    import FFEA_script
-    import FFEA_rod
+    import ffea_script
+    import ffea_rod
 except ImportError:
     from ffeatools import wrap
-    from ffeatools import FFEA_script
-    from ffeatools import FFEA_rod
+    from ffeatools import ffea_script
+    from ffeatools import ffea_rod
 
 def main():
 
@@ -25,16 +25,16 @@ def main():
     except OSError:
         raise
     
-    bend_script = FFEA_script.FFEA_script("symmetry_test_bend_only.ffea")
+    bend_script = ffea_script.ffea_script("symmetry_test_bend_only.ffea")
     bend_rod = bend_script.rod[0]
     bend_rod.set_avg_energies()
-    bend_analysis = FFEA_rod.anal_rod(bend_rod)
+    bend_analysis = ffea_rod.anal_rod(bend_rod)
     bend_test_result = bend_analysis.do_bend_symmetry_test()
     
-    stretch_script = FFEA_script.FFEA_script("symmetry_test_stretch_only.ffea")
+    stretch_script = ffea_script.ffea_script("symmetry_test_stretch_only.ffea")
     stretch_rod = stretch_script.rod[0]
     stretch_rod.set_avg_energies()
-    stretch_analysis = FFEA_rod.anal_rod(stretch_rod)
+    stretch_analysis = ffea_rod.anal_rod(stretch_rod)
     stretch_test_result = stretch_analysis.do_stretch_symmetry_test()
     
     if bend_test_result == False or stretch_test_result == False:

@@ -21,13 +21,10 @@
 #  the research papers on the package.
 #
 
+if(Python3_EXECUTABLE)
+    add_test(NAME lennardJones COMMAND ${PROJECT_BINARY_DIR}/src/ffea cube_veryFine.ffea)
+    set_tests_properties(lennardJones PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
 
-add_test(NAME lennardJones COMMAND ${PROJECT_BINARY_DIR}/src/ffea cube_veryFine.ffea)
-set_tests_properties(lennardJones PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
-
-add_test(NAME lennardJones_check COMMAND ${PYTHON_EXECUTABLE} checkE.py)
-set_tests_properties(lennardJones_check PROPERTIES DEPENDS lennardJones)
-
-
-
-
+    add_test(NAME lennardJones_check COMMAND ${Python3_EXECUTABLE} checkE.py)
+    set_tests_properties(lennardJones_check PROPERTIES DEPENDS lennardJones ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

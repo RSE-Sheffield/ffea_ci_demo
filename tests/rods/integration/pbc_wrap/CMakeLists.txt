@@ -21,13 +21,16 @@
 #  the research papers on the package.
 #
 
-set (WRAP_PBC_DIR          pbc_wrap)
-set (WRAP_PBC_CTEST        int_rod_${WRAP_PBC_DIR} )
-set (WRAP_PBC_DIR_PATH     "${PROJECT_BINARY_DIR}/tests/rods/integration/${WRAP_PBC_DIR}/")
+if(Python3_EXECUTABLE)
+    set (WRAP_PBC_DIR          pbc_wrap)
+    set (WRAP_PBC_CTEST        int_rod_${WRAP_PBC_DIR} )
+    set (WRAP_PBC_DIR_PATH     "${PROJECT_BINARY_DIR}/tests/rods/integration/${WRAP_PBC_DIR}/")
 
-file (COPY run_test.py                          DESTINATION ${WRAP_PBC_DIR_PATH})
-file (COPY create_straight_rod.py               DESTINATION ${WRAP_PBC_DIR_PATH})
-file (COPY wrap.ffea                            DESTINATION ${WRAP_PBC_DIR_PATH})
-file (COPY cleanup.sh                           DESTINATION ${WRAP_PBC_DIR_PATH})
+    file (COPY run_test.py                          DESTINATION ${WRAP_PBC_DIR_PATH})
+    file (COPY create_straight_rod.py               DESTINATION ${WRAP_PBC_DIR_PATH})
+    file (COPY wrap.ffea                            DESTINATION ${WRAP_PBC_DIR_PATH})
+    file (COPY cleanup.sh                           DESTINATION ${WRAP_PBC_DIR_PATH})
 
-add_test(NAME ${WRAP_PBC_CTEST} COMMAND ${PYTHON_EXECUTABLE} run_test.py)
+    add_test(NAME ${WRAP_PBC_CTEST} COMMAND ${Python3_EXECUTABLE} run_test.py "${PROJECT_BINARY_DIR}/src/ffea")
+    set_tests_properties(${WRAP_PBC_CTEST} PROPERTIES ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

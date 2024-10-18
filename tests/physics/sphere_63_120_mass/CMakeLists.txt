@@ -21,12 +21,9 @@
 #  the research papers on the package.
 #
 
-
-add_test(NAME sphere_mass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_63_120_mass.ffea)
-set_tests_properties(sphere_mass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
-add_test(NAME sphere_mass_check COMMAND ${PYTHON_EXECUTABLE} testAverages.py)
-set_tests_properties(sphere_mass_check PROPERTIES DEPENDS sphere_mass)
-
-
-
-
+if(Python3_EXECUTABLE)
+    add_test(NAME sphere_mass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_63_120_mass.ffea)
+    set_tests_properties(sphere_mass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
+    add_test(NAME sphere_mass_check COMMAND ${Python3_EXECUTABLE} testAverages.py)
+    set_tests_properties(sphere_mass_check PROPERTIES DEPENDS sphere_mass ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

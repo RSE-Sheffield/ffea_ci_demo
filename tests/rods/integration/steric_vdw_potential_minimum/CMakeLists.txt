@@ -21,16 +21,19 @@
 #  the research papers on the package.
 #
 
-set (VDW_MIN_DIR          steric_vdw_potential_minimum)
-set (VDW_MIN_CTEST        int_rod_${VDW_MIN_DIR})
-set (VDW_MIN_DIR_PATH     "${PROJECT_BINARY_DIR}/tests/rods/integration/${VDW_MIN_DIR}/")
+if(Python3_EXECUTABLE)
+    set (VDW_MIN_DIR          steric_vdw_potential_minimum)
+    set (VDW_MIN_CTEST        int_rod_${VDW_MIN_DIR})
+    set (VDW_MIN_DIR_PATH     "${PROJECT_BINARY_DIR}/tests/rods/integration/${VDW_MIN_DIR}/")
 
-file (COPY run_test.py                  DESTINATION ${VDW_MIN_DIR_PATH})
-file (COPY create_straight_rod_vdw.py   DESTINATION ${VDW_MIN_DIR_PATH})
-file (COPY params.yml                   DESTINATION ${VDW_MIN_DIR_PATH})
-file (COPY z-axis.rod                   DESTINATION ${VDW_MIN_DIR_PATH})
-file (COPY steric_twoRods.ffea          DESTINATION ${VDW_MIN_DIR_PATH})
-file (COPY interp_twoRods.ffea          DESTINATION ${VDW_MIN_DIR_PATH})
-file (COPY lj_twoRods.ffea              DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY run_test.py                  DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY create_straight_rod_vdw.py   DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY params.yml                   DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY z-axis.rod                   DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY steric_twoRods.ffea          DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY interp_twoRods.ffea          DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY lj_twoRods.ffea              DESTINATION ${VDW_MIN_DIR_PATH})
 
-add_test(NAME ${VDW_MIN_CTEST} COMMAND ${PYTHON_EXECUTABLE} run_test.py)
+    add_test(NAME ${VDW_MIN_CTEST} COMMAND ${Python3_EXECUTABLE} run_test.py "${PROJECT_BINARY_DIR}/src/ffea")
+    set_tests_properties(${VDW_MIN_CTEST} PROPERTIES ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()
