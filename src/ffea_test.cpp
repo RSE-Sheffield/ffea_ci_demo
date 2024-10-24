@@ -163,6 +163,10 @@ int ffea_test::do_ffea_test(std::string filename)
 
 int ffea_test::connection_test()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     std::cout << "Performing connection test...\n";
     World world = World();
     world.init("tet_ascii.1.ffea", 0, 0, 1);
@@ -255,6 +259,10 @@ int ffea_test::connection_test()
 
 int ffea_test::arbitrary_equilibrium_twist()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     std::cout << "Performing equilibrium twist test...\n";
     float reference_energy = 2.0955089065982904;
 
@@ -304,6 +312,10 @@ int ffea_test::arbitrary_equilibrium_twist()
 
 int ffea_test::connection_orientation_test()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     std::cout << "Performing connection orientation test...\n";
     World world = World();
     world.init("tet_ascii.1.ffea", 0, 0, 1);
@@ -363,6 +375,10 @@ int ffea_test::connection_orientation_test()
 
 int ffea_test::arbitrary_equilibrium_bend()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     rod::float4 B_i_equil = {1, 0, 0, 1};
     rod::float4 B_im1_equil{1, 0, 0, 1};
     rod::float3 p_i = {1, 0, 0};
@@ -463,6 +479,10 @@ int ffea_test::arbitrary_equilibrium_bend()
 
 int ffea_test::identify_face()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     std::cout << "Identify face\n";
 
     World world = World();
@@ -546,6 +566,10 @@ int ffea_test::identify_face()
 int ffea_test::connection_energy()
 { // this test just checks that the energy
     // is zero at connection equilibrium!!!
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
 
     std::cout << "doin a connection energy test \n";
 
@@ -656,6 +680,10 @@ int ffea_test::connection_energy()
 
 int ffea_test::connection_energy_2()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     World world = World();
     world.init("realistic.ffea", 0, 0, 1);
 
@@ -783,6 +811,10 @@ int ffea_test::connection_energy_2()
 
 int ffea_test::jacobian_rotate()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     std::array<mesh_node*, NUM_NODES_LINEAR_TET> node_up = {};
     for (int i = 0; i < 4; i++)
     {
@@ -837,6 +869,10 @@ int ffea_test::jacobian_rotate()
 
 int ffea_test::connection_energy_3()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     World *world;
     world = new World();
     world->init("realistic.ffea", 0, 0, 1);
@@ -853,6 +889,10 @@ int ffea_test::connection_energy_3()
 
 int ffea_test::connection_propagation_every_way()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     int tests_failed = 0;
     // mode 0 = twist, mode 1 = bend, mode 2 = stretch
     // tests_failed += connection_propagation(0, true);
@@ -866,6 +906,10 @@ int ffea_test::connection_propagation(
     bool ends_at_rod)
 { // mode 0 = twist, mode 1 = bend, mode 2 = stretch
 
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     rod::dbg_print = false;
 
     World world = World();
@@ -1219,6 +1263,10 @@ int ffea_test::connection_propagation(
 
 int ffea_test::recover_normal()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     World world = World();
     world.init("realistic.ffea", 0, 0, 1);
 
@@ -1259,6 +1307,10 @@ int ffea_test::recover_normal()
 
 int ffea_test::dump_twist_info()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     rod::float9 everything_rotmat = {0.6092191, -0.7677125, -0.1986693,
                                      0.6734007, 0.6331432, -0.3816559,
                                      0.4187881, 0.0987280, 0.9027011};
@@ -1338,6 +1390,10 @@ int ffea_test::dump_twist_info()
 
 int ffea_test::lower_sphere()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     World world = World();
     world.init("ndc80c_mt_multi.ffea", 0, 0, 1);
 
@@ -1372,6 +1428,10 @@ int ffea_test::lower_sphere()
 // where c = r2 when t = 1. t is a multiplier.
 int ffea_test::point_lies_within_rod_element()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     rod::float6 t = {-1, 0, 0.3, 0.7, 1, 1.5};
     rod::float3 c_init = {0};
     rod::float3 c_out = {0};
@@ -1462,6 +1522,10 @@ element, it gets corrected to be at the node end anyway. Becomes more of a
 problem if using long rod elements. May not be a huge issue. */
 int ffea_test::line_connecting_rod_elements()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     float radius_a = 0.25;
     float radius_b = 0.5;
     rod::float3 r_a1 = {0.0, 0.0, 0.0}; // fixed
@@ -1598,6 +1662,10 @@ int ffea_test::line_connecting_rod_elements()
  */
 int ffea_test::rod_neighbour_list_construction()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     int num_rods = 4;
     std::string filename;
 
@@ -1694,6 +1762,10 @@ int ffea_test::rod_neighbour_list_construction()
 // Move two circles away from each other and compute the rod-rod interaction energies.
 int ffea_test::rod_steric_lj_potential()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     float radius = 6;  // ~ 1 nm, approaching continuum limit (DNA width ~ 2 nm)
     float eps = 10;    // 10 kT
     float r_min = 2 * radius;
@@ -1772,6 +1844,10 @@ ijk = {-1, 0, 1}
 */
 int ffea_test::nearest_image_pbc()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     std::vector<float> dim = {1, 1, 1};
     float xmin = 0.1;
     float xmax = 0.9;
@@ -1887,6 +1963,10 @@ int ffea_test::nearest_image_pbc()
 
 int ffea_test::rod_vdw_site_placement()
 {
+    if (std::filesystem::exists("bend.rodtraj")) {
+        std::cout << "Removing previous bend.rodtraj\n";
+        std::filesystem::remove("bend.rodtraj");
+    }
     std::string rod_file;
     std::string rodvdw_file;
     int num_rods = 2;
