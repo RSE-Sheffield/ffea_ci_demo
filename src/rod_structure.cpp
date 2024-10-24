@@ -54,6 +54,9 @@ namespace rod
     */
     std::vector<float> stof_vec(std::vector<std::string> vec_in)
     {
+        // Edge-case where vdw_site_pos was exported as an empty vector, outputting only \n
+        if (vec_in.size() == 1 && vec_in[0].empty())
+            return {};
         std::vector<float> vec_out(vec_in.size());
         for (unsigned int i = 0; i < vec_in.size(); i++)
         {
@@ -800,6 +803,7 @@ namespace rod
 
         for (std::string line; getline(infile, line);)
         {
+            printf("Line: %s\n", line.c_str());
             /** Find the last frame from the line number we got earlier */
             if (n > line_of_last_frame)
             {
