@@ -13,11 +13,11 @@ try:
     import FFEA_script
     import FFEA_rod
     ndc_extractor = FFEA_rod.cc_extractor
-except ImportError:
+except ModuleNotFoundError:
     from ffeatools import wrap
-    from ffeatools import FFEA_script
-    from ffeatools import FFEA_rod
-    import ffeatools.rod.cc_extractor as ndc_extractor
+    from ffeatools import ffea_script
+    from ffeatools import ffea_rod
+    import ffeatools.rod.ndc_lib as ndc_lib
 
 try:
     np
