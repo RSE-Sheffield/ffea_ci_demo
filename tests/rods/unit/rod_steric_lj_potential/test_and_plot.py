@@ -82,7 +82,7 @@ def steric(r, k):
 def auto():
     test_name = os.getcwd().split("/")[-1]
     # The FFEA test is called from within python, to allow plotting of results
-    subprocess.call(["ffea", test_name + ".ffeatest"])
+    subprocess.call([sys.argv[1], test_name + ".ffeatest"])
 
     const = pd.read_csv("const.csv").to_dict("list")
     radius = const["R"][0]
