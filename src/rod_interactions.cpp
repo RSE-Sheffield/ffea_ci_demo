@@ -167,6 +167,10 @@ void finite_length_correction(const float3 &c, const float3 &r, const float3 &p,
     {
         vec3d(n) { c_out[n] = r[n] + p[n]; }
     }
+    else
+    {
+        c_out = c;
+    }
 
     // if (rod::dbg_print)
     // {
