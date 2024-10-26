@@ -76,6 +76,7 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         add_compile_options($<$<CONFIG:Debug>:-ggdb3>)
+        add_compile_definitions($<$<CONFIG:Debug>:_GLIBCXX_DEBUG=1>)
     endif()
 endif()
 
