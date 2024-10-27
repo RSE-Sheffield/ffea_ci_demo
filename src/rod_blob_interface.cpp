@@ -191,19 +191,21 @@ void get_gradient_deformation(const float9 &J_inv_0, std::array<mesh_node*, NUM_
     float_3x3_mult_unrolled(J_after, J_inv_0, gradient_deformation_3x3);
     transpose_3x3(gradient_deformation_3x3, transposed_gradient_deformation_3x3);
     
-//    print_array("  Tet before node 0", nodes_before[0]->pos, 3);
-//    print_array("  Tet before node 1", nodes_before[1]->pos, 3);
-//    print_array("  Tet before node 2", nodes_before[2]->pos, 3);
-//    print_array("  Tet before node 3", nodes_before[3]->pos, 3);
-    print_array("  Tet after node 0", nodes_curr[0]->pos);
-    print_array("  Tet after node 1", nodes_curr[1]->pos);
-    print_array("  Tet after node 2", nodes_curr[2]->pos);
-    print_array("  Tet after node 3", nodes_curr[3]->pos);
-    
-    print_array("  J after", J_after);
-    print_array("  before inverse", J_inv_0);
-    print_array("  gradient_deformation_3x3", gradient_deformation_3x3);
-    print_array("  transposed_gradient_deformation_3x3", transposed_gradient_deformation_3x3);
+    if(dbg_print) {
+        // print_array("  Tet before node 0", nodes_before[0]->pos, 3);
+        // print_array("  Tet before node 1", nodes_before[1]->pos, 3);
+        // print_array("  Tet before node 2", nodes_before[2]->pos, 3);
+        // print_array("  Tet before node 3", nodes_before[3]->pos, 3);
+        print_array("  Tet after node 0", nodes_curr[0]->pos);
+        print_array("  Tet after node 1", nodes_curr[1]->pos);
+        print_array("  Tet after node 2", nodes_curr[2]->pos);
+        print_array("  Tet after node 3", nodes_curr[3]->pos);
+        
+        print_array("  J after", J_after);
+        print_array("  before inverse", J_inv_0);
+        print_array("  gradient_deformation_3x3", gradient_deformation_3x3);
+        print_array("  transposed_gradient_deformation_3x3", transposed_gradient_deformation_3x3);
+    }
 }
 
 /**
@@ -448,10 +450,12 @@ void mesh_node_null_check(mesh_node* node, std::string location){
 */
 void rescale_attachment_node(const float3 &attachment_node, const float3 &end_node, const float3 &attachment_node_equil, const float3 &end_node_equil, OUT float3 &scaled_attachment_node, float3 &scaled_attachment_node_equil){
     if(dbg_print){std::cout << "      Rescaling attachment node...\n";}
-    print_array("      attachment node      ", attachment_node);
-    print_array("      attachment node equil", attachment_node_equil);    
-    print_array("      end_node             ", end_node);
-    print_array("      end_node_equil       ", end_node_equil);
+    if(dbg_print) {
+        print_array("      attachment node      ", attachment_node);
+        print_array("      attachment node equil", attachment_node_equil);
+        print_array("      end_node             ", end_node);
+        print_array("      end_node_equil       ", end_node_equil);
+    }
     
     float desired_length = absolute(end_node_equil)*2;
     float attachment_node_scale = desired_length - absolute(end_node);
@@ -461,8 +465,10 @@ void rescale_attachment_node(const float3 &attachment_node, const float3 &end_no
     if(dbg_print){std::cout << "      desired length       " << desired_length << "\n";}
     if(dbg_print){std::cout << "      attachment_node_scale " << attachment_node_scale << "\n";}
     if(dbg_print){std::cout << "      attachment_node_equil_scale " << attachment_node_equil_scale << "\n";}
-    print_array("      scaled_attachment_node", scaled_attachment_node);
-    print_array("      scaled_attachment_node_equil", scaled_attachment_node_equil);
+    if(dbg_print) {
+        print_array("      scaled_attachment_node", scaled_attachment_node);
+        print_array("      scaled_attachment_node_equil", scaled_attachment_node_equil);
+    }
 }
 
 /**
@@ -1045,8 +1051,10 @@ void Rod_blob_interface::reorientate_connection(float3 &attachment_element_orig,
     QR_decompose_gram_schmidt(gradient_deformation, Q, R);
     apply_rotation_matrix(attachment_element_orig, Q, new_attachment_element); // yes, really
     apply_rotation_matrix(attachment_material_axis_orig, Q, new_attachment_material_axis);
-    print_array("  R", R); //dbg
-    print_array("  Q", Q); //dbg
+    if(dbg_print) {
+        print_array("  R", R); //dbg
+        print_array("  Q", Q); //dbg
+    }
 }
 
 /**
@@ -1394,22 +1402,24 @@ void Rod_blob_interface::get_node_energy(
     for (int i=0; i<4; i++){ B[0][i] = this->connected_rod->B_matrix[(adjacent_index*4)+i]; }
     for (int i=0; i<4; i++){ B[1][i] = this->connected_rod->B_matrix[(double_adjacent_index*4)+i]; }
     
-    print_array(" undeformed tetrahedron node 0", this->deformed_tet_nodes[0]->pos);
-    print_array(" undeformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos);
-    print_array(" undeformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos);
-    print_array(" undeformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos);
-    print_array(" attachment_node_equil", attachment_node_equil);
-    print_array(" attachment_n_equil", attachment_n_equil);
-    print_array(" attachment_material_axis_equil", attachment_material_axis_equil);
-    print_array(" p_equil[0]", p_equil[0]); //dbg
-    print_array(" p_equil[1]", p_equil[1]); //dbg
-    print_array(" m_equil[0]", m_equil[0]); //dbg
-    print_array(" m_equil[1]", m_equil[1]); //dbg
-    print_array(" n_equil[0]", n_equil[0]); //dbg
-    print_array(" n_equil[1]", n_equil[1]); //dbg
-    print_array(" B[0]", B[0]); //dbg
-    print_array(" B[1]", B[1]); //dbg
-    print_array(" beta", beta); //dbg
+    if(dbg_print) {
+        print_array(" undeformed tetrahedron node 0", this->deformed_tet_nodes[0]->pos);
+        print_array(" undeformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos);
+        print_array(" undeformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos);
+        print_array(" undeformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos);
+        print_array(" attachment_node_equil", attachment_node_equil);
+        print_array(" attachment_n_equil", attachment_n_equil);
+        print_array(" attachment_material_axis_equil", attachment_material_axis_equil);
+        print_array(" p_equil[0]", p_equil[0]); //dbg
+        print_array(" p_equil[1]", p_equil[1]); //dbg
+        print_array(" m_equil[0]", m_equil[0]); //dbg
+        print_array(" m_equil[1]", m_equil[1]); //dbg
+        print_array(" n_equil[0]", n_equil[0]); //dbg
+        print_array(" n_equil[1]", n_equil[1]); //dbg
+        print_array(" B[0]", B[0]); //dbg
+        print_array(" B[1]", B[1]); //dbg
+        print_array(" beta", beta); //dbg
+    }
     if(dbg_print){std::cout << " k:  " << k << "\n";} //dbg
     
     for(int i=0; i<6; i++){ //dimensions, + and -
@@ -1479,26 +1489,28 @@ void Rod_blob_interface::get_node_energy(
         // attachment node is scaled to provide neutral weighting for bend energy
         rescale_attachment_node(attachment_node, p[0], attachment_node_equil, p_equil[0], attachment_node, attachment_node_equil);
         
-        print_array(" deformed tetrahedron node 0", this->deformed_tet_nodes[0]->pos);
-        print_array(" deformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos);
-        print_array(" deformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos);
-        print_array(" deformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos);
-        print_array(" attachment_node", attachment_node);
-        print_array(" attachment_node_pos", attachment_node_pos);
-        print_array(" attachment_material_axis", attachment_material_axis);
-        print_array(" attachment_n", attachment_n);
-        print_array(" p[0]", p[0]);
-        print_array(" p[1]", p[1]);
-        print_array(" n[0]", n[0]);
-        print_array(" n[1]", n[1]);
-        print_array(" m[0]", m[0]);
-        print_array(" m[1]", m[1]);
-        print_array(" p_equil[0]", p_equil[0]);
-        print_array(" p_equil[1]", p_equil[1]);
-        print_array(" n_equil[0]", n_equil[0]);
-        print_array(" m_equil[0]", m_equil[0]);
-        print_array(" n_equil[1]", n_equil[1]);
-        print_array(" m_equil[1]", m_equil[1]);
+        if(dbg_print) {
+            print_array(" deformed tetrahedron node 0", this->deformed_tet_nodes[0]->pos);
+            print_array(" deformed tetrahedron node 1", this->deformed_tet_nodes[1]->pos);
+            print_array(" deformed tetrahedron node 2", this->deformed_tet_nodes[2]->pos);
+            print_array(" deformed tetrahedron node 3", this->deformed_tet_nodes[3]->pos);
+            print_array(" attachment_node", attachment_node);
+            print_array(" attachment_node_pos", attachment_node_pos);
+            print_array(" attachment_material_axis", attachment_material_axis);
+            print_array(" attachment_n", attachment_n);
+            print_array(" p[0]", p[0]);
+            print_array(" p[1]", p[1]);
+            print_array(" n[0]", n[0]);
+            print_array(" n[1]", n[1]);
+            print_array(" m[0]", m[0]);
+            print_array(" m[1]", m[1]);
+            print_array(" p_equil[0]", p_equil[0]);
+            print_array(" p_equil[1]", p_equil[1]);
+            print_array(" n_equil[0]", n_equil[0]);
+            print_array(" m_equil[0]", m_equil[0]);
+            print_array(" n_equil[1]", n_equil[1]);
+            print_array(" m_equil[1]", m_equil[1]);
+        }
 
         energy[i] += get_bend_energy_mutual_parallel_transport(attachment_node, p[0], attachment_node_equil, p_equil[0], attachment_n, attachment_material_axis, attachment_n_equil, attachment_material_axis_equil, n[0], m[0], n_equil[0], m_equil[0], B[0], B[0]);
         energy[i] += get_bend_energy_mutual_parallel_transport(p[0], p[1], p_equil[0], p_equil[1], n[0], m[0], n_equil[0], m_equil[0], n[1], m[1], n_equil[1], m_equil[1], B[1], B[1]);
@@ -1575,7 +1587,7 @@ void Rod_blob_interface::do_connection_timestep(){ // run this after regular blo
         get_node_energy(i, this->attachment_node_equil, this->attachment_m_equil, this->attachment_node, this->attachment_m, dynamics_displacement*0.5, curr_node_energy)   ; 
         arr3 force;
         vec3d(n){force[n] = (curr_node_energy[n+3] - curr_node_energy[n])/dynamics_displacement;}
-        print_array("Force added to node: ", force);
+        if(dbg_print){print_array("Force added to node: ", force);}
         //std::cout << "Interface " << this->order << " node " << i << " force: [" << force.data[0] << ", " << force.data[1] << ", " << force.data[2] << "]\n"; //DEBUGGO
         this->connected_blob->add_force_to_node(force, this->connected_tet->n[i]->index);
     }
