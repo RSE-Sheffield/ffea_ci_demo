@@ -143,6 +143,24 @@ void sub(const std::vector<T> &vecA, const std::vector<T> &vecB, std::vector<T> 
     }
 }
 
+/** res = vecA * vecB */
+/** res can be either vecA or vecB */
+template <typename T, size_t N,
+    template<typename, size_t> typename Array1,
+    template<typename, size_t> typename Array2,
+    template<typename, size_t> typename Array3>
+void prod(const Array1<T, N> &vecA, const Array2<T, N>&vecB, Array3<T, N>&res) {
+    for (int i = 0; i < N; ++i) {
+        res[i] = vecA[i] * vecB[i];
+    }
+}
+template <typename T>
+void prod(const std::vector<T> &vecA, const std::vector<T> &vecB, std::vector<T> &res) {
+    for (int i = 0; i < res.size(); ++i) {
+        res[i] = vecA[i] * vecB[i];
+    }
+}
+
 /** res = vecA - vecB */
 /** res can be either vecA or vecB */
 template <typename T, size_t N,
@@ -280,6 +298,28 @@ T distance(const std::vector<T> &a, const std::vector<T> &b) {
         result += t * t;
     }
     return std::sqrt(result);
+}
+template <typename T, size_t N,
+    template<typename, size_t> typename Array1,
+    template<typename, size_t> typename Array2>
+T distance2(const Array1<T, N>& a, const Array2<T, N>& b) {
+    T result = 0;
+#pragma omp simd reduction(+:result)
+    for (int i = 0; i < N; ++i) {
+        const T t = a[i] - b[i];
+        result += t * t;
+    }
+    return result;
+}
+template <typename T>
+T distance2(const std::vector<T>& a, const std::vector<T>& b) {
+    T result = 0;
+#pragma omp simd reduction(+:result)
+    for (int i = 0; i < a.size(); ++i) {
+        const T t = a[i] - b[i];
+        result += t * t;
+    }
+    return result;
 }
 /** Return the length of a vector */
 template <typename T, size_t N, template<typename, size_t> typename Array>

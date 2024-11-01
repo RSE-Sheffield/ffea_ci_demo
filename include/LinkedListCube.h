@@ -24,9 +24,6 @@
 #ifndef LINKEDLISTCUBE_H_INCLUDED
 #define LINKEDLISTCUBE_H_INCLUDED
 
-#include "FFEA_return_codes.h"
-#include "Face.h"
-
 template <class T>
 struct LinkedListNode {
     /** Pointer to the object this LinkedListNode represents */
@@ -44,6 +41,10 @@ struct LinkedListNode {
     //@} 
 };
 
+/**
+ * @note The implementation of this class could do with overhauling and modernisation,
+ *       however without a specific test suite it's hard to guarantee consistent behaviour.
+ */
 template <class T>
 class LinkedListCube {
 public:

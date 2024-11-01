@@ -23,17 +23,6 @@
 
 #include "MassLumpedSolver.h"
 
-/**/
-MassLumpedSolver::MassLumpedSolver() {
-    num_rows = 0;
-}
-
-/* */
-MassLumpedSolver::~MassLumpedSolver() {
-    inv_M.clear();
-    num_rows = 0;
-}
-
 /* */
 void MassLumpedSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) {
     // Store the number of rows, error threshold (stopping criterion for solver) and max

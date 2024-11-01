@@ -23,13 +23,7 @@
 
 #include "SparseMatrixTypes.h" 
 
-sparse_entry_sources::sparse_entry_sources() {
-    sources = {};
-}
-
-sparse_entry_sources::~sparse_entry_sources() {
-    sources.clear();
-}
+#include "FFEA_return_codes.h"
 
 void sparse_entry_sources::init(int num_sources) {
     try {

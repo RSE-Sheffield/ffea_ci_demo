@@ -50,29 +50,24 @@ using namespace std;
 
 class LJ_pair {
 public:
-    LJ_pair();
-    ~LJ_pair();
-    scalar Emin;
-    scalar Rmin;
+    scalar Emin = 0;
+    scalar Rmin = 0;
 };
 
 class SSINT_matrix {
 public:
-    SSINT_matrix();
-    ~SSINT_matrix(); 
-
-    void init(string ssint_params_fname, string ssint_type, int calc_ssint, scalar ssint_cutoff);
+    void init(const string &ssint_params_fname, const string &ssint_type, int calc_ssint, scalar ssint_cutoff);
 
    // void get_SSINT_params(int type1, int type2, map<string, scalar> *parmap);
     map<string, scalar> get_SSINT_params(int type1, int type2);   
     int get_num_types();
 
 private:
-    void init_ssint(string ssint_params_fname, string ssint_type, scalar ssint_cutoff);
+    void init_ssint(const string &ssint_params_fname, const string &ssint_type, scalar ssint_cutoff);
     void init_steric();
     //LJ_pair *params;
-    std::vector<map<string, scalar>> params;
-    int num_ssint_face_types;
+    std::vector<map<string, scalar>> params = {};
+    int num_ssint_face_types = 0;
 };
 
 #endif

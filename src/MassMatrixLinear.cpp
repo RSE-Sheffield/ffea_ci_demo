@@ -23,11 +23,9 @@
 
 #include "MassMatrixLinear.h"
 
-MassMatrixLinear::MassMatrixLinear() {
-    zero();
-}
-
-scalar * MassMatrixLinear::get_M_alpha_mem_loc(int i, int j) {
+MassMatrixLinear::MassMatrixLinear()
+    : M_alpha({}) {}
+scalar *MassMatrixLinear::get_M_alpha_mem_loc(int i, int j) {
     // Symmetric Matrix
     if (i < j) {
         int temp = i;
@@ -36,7 +34,7 @@ scalar * MassMatrixLinear::get_M_alpha_mem_loc(int i, int j) {
     }
 
     // Get the index of the element corresponding to the position i,j in our lower triangular K_alpha matrix
-    int c = (i * (i + 1)) / 2 + j;
+    const int c = (i * (i + 1)) / 2 + j;
 
     if (c < 0 || c > 9) {
         return nullptr;
@@ -47,18 +45,17 @@ scalar * MassMatrixLinear::get_M_alpha_mem_loc(int i, int j) {
 }
 
 void MassMatrixLinear::build(scalar density, scalar vol) {
-
 	// Assigning the mass based on the solver (0.1 if i == j, 0.05 otherwise for all i,j < 4)  
-	int i, j, c=0;
+	int c=0;
 	scalar mult = density * vol;
-	for(i = 0; i < 4; ++i) {
-		for(j = 0; j <= i; ++j) {
+	for(int i = 0; i < 4; ++i) {
+		for(int j = 0; j <= i; ++j) {
 			if(i == j) {
 				M_alpha[c] = 0.1 * mult;
 			} else {
 				M_alpha[c] = 0.05 * mult;
 			}
-			c++;
+			++c;
 		}
 	}
 }
@@ -67,13 +64,11 @@ scalar MassMatrixLinear::get_M_alpha_value(int i, int j) {
     // Poisson matrix is symmetric, so convert any request for an upper triangular element into its
     // corresponding (equivalent) lower triangular element
     if (i < j) {
-        int temp = i;
-        i = j;
-        j = temp;
+        std::swap(i, j);
     }
 
     // Get the index of the element corresponding to the position i,j in our lower triangular K_alpha matrix
-    int c = (i * (i + 1)) / 2 + j;
+    const int c = (i * (i + 1)) / 2 + j;
 
     if (c < 0 || c > 9) {
         return 0.0;
@@ -83,25 +78,19 @@ scalar MassMatrixLinear::get_M_alpha_value(int i, int j) {
     return M_alpha[c];
 }
 
-void MassMatrixLinear::zero() {
-    for (int i = 0; i < NUM_ELEMENTS_LOWER_TRIANGULAR_4X4; i++) {
-        M_alpha[i] = 0;
-    }
-}
-
 void MassMatrixLinear::print_details() {
     // Printing total mass
     int c = 0;
     scalar tot = 0.0;
     for(int i = 0; i < 4; ++i) {
-	for(int j = i; j < 4; ++j) {
-	    if(i != j) {
-		tot += 2 * M_alpha[c];
-	    } else {
-		tot += M_alpha[c];
+	    for(int j = i; j < 4; ++j) {
+	        if(i != j) {
+		        tot += 2 * M_alpha[c];
+	        } else {
+		        tot += M_alpha[c];
+	        }
+	        c++;
 	    }
-	    c++;
-	}
     }
     // printf("Total Mass = %e\n", tot * mesoDimensions::mass);
 }

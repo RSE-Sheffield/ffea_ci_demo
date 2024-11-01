@@ -23,12 +23,9 @@
 
 #include "PoissonMatrixQuadratic.h"
 
-PoissonMatrixQuadratic::PoissonMatrixQuadratic() {
-    zero();
-}
-
+#include "mat_vec_fns_II.h"
 /* */
-scalar * PoissonMatrixQuadratic::get_K_alpha_mem_loc(int i, int j) {
+scalar *PoissonMatrixQuadratic::get_K_alpha_mem_loc(int i, int j) {
     // Poisson matrix is symmetric, so convert any request for an upper triangular element into its
     // corresponding (equivalent) lower triangular element
     if (i < j) {
@@ -50,46 +47,46 @@ scalar * PoissonMatrixQuadratic::get_K_alpha_mem_loc(int i, int j) {
 
 /*  */
 void PoissonMatrixQuadratic::build(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n, scalar epsilon) {
-    const struct tetrahedron_gauss_point gauss_points[NUM_TET_GAUSS_QUAD_POINTS] ={
+    constexpr std::array<tetrahedron_gauss_point, NUM_TET_GAUSS_QUAD_POINTS> gauss_points = {
         // Weight, eta1, eta2, eta3, eta4
-        {0.317460317460317450e-2,
+        tetrahedron_gauss_point{0.317460317460317450e-2,
             {0.5, 0.5, 0.0, 0.0}},
-        {0.317460317460317450e-2,
+        tetrahedron_gauss_point{0.317460317460317450e-2,
             {0.5, 0.0, 0.5, 0.0}},
-        {0.317460317460317450e-2,
+        tetrahedron_gauss_point{0.317460317460317450e-2,
             {0.5, 0.0, 0.0, 0.5}},
-        {0.317460317460317450e-2,
+        tetrahedron_gauss_point{0.317460317460317450e-2,
             {0.0, 0.5, 0.5, 0.0}},
-        {0.317460317460317450e-2,
+        tetrahedron_gauss_point{0.317460317460317450e-2,
             {0.0, 0.0, 0.5, 0.5}},
-        {0.317460317460317450e-2,
+        tetrahedron_gauss_point{0.317460317460317450e-2,
             {0.0, 0.5, 0.0, 0.5}},
-        {0.147649707904967828e-1,
+        tetrahedron_gauss_point{0.147649707904967828e-1,
             {0.100526765225204467, 0.100526765225204467, 0.100526765225204467, 0.698419704324386603}},
-        {0.147649707904967828e-1,
+        tetrahedron_gauss_point{0.147649707904967828e-1,
             {0.100526765225204467, 0.100526765225204467, 0.698419704324386603, 0.100526765225204467}},
-        {0.147649707904967828e-1,
+        tetrahedron_gauss_point{0.147649707904967828e-1,
             {0.100526765225204467, 0.698419704324386603, 0.100526765225204467, 0.100526765225204467}},
-        {0.147649707904967828e-1,
+        tetrahedron_gauss_point{0.147649707904967828e-1,
             {0.698419704324386603, 0.100526765225204467, 0.100526765225204467, 0.100526765225204467}},
-        {0.221397911142651221e-1,
+        tetrahedron_gauss_point{0.221397911142651221e-1,
             {0.314372873493192195, 0.314372873493192195, 0.314372873493192195, 0.568813795204234229e-1}},
-        {0.221397911142651221e-1,
+        tetrahedron_gauss_point{0.221397911142651221e-1,
             {0.314372873493192195, 0.314372873493192195, 0.568813795204234229e-1, 0.314372873493192195}},
-        {0.221397911142651221e-1,
+        tetrahedron_gauss_point{0.221397911142651221e-1,
             {0.314372873493192195, 0.568813795204234229e-1, 0.314372873493192195, 0.314372873493192195}},
-        {0.221397911142651221e-1,
+        tetrahedron_gauss_point{0.221397911142651221e-1,
             {0.568813795204234229e-1, 0.314372873493192195, 0.314372873493192195, 0.314372873493192195}}
     };
 
-    SecondOrderFunctions::abcd J_coeff[3][3];
+    SecondOrderFunctions::abcd_mat3x3 J_coeff;
     std::array<arr3, NUM_NODES_QUADRATIC_TET> grad_psi = {};
 
     SecondOrderFunctions::calc_jacobian_column_coefficients(n, J_coeff);
 
-    zero();
+    initialise(K_alpha);
 
-    scalar J_inv[9];
+    vector9 J_inv;
 
     for (int i = 0; i < NUM_TET_GAUSS_QUAD_POINTS; i++) {
         scalar det_J = SecondOrderFunctions::calc_det_J(J_coeff, gauss_points[i].eta[0], gauss_points[i].eta[1], gauss_points[i].eta[2], J_inv);
@@ -98,28 +95,7 @@ void PoissonMatrixQuadratic::build(std::array<mesh_node*, NUM_NODES_QUADRATIC_TE
         add_grad_dot_products(grad_psi, det_J, gauss_points[i].W);
     }
 
-    scale(epsilon);
-
-    /*
-                            printf("YO WASSUP BRO POISSONMATRIXQUADRATIC:\n");
-                            scalar K[10][10];
-                            int c = 0;
-                            for(int j = 0; j < 10; j++) {
-                                    for(int i = 0; i <= j; i++) {
-                                            K[i][j] = K_alpha[c];
-                                            K[j][i] = K_alpha[c];
-                                            c++;
-                                    }
-                            }
-
-                            for(int i = 0; i < 10; i++) {
-                                    for(int j = 0; j < 10; j++) {
-                                            printf("%e ", K[i][j]);
-                                    }
-                                    printf("\n");
-                            }
-                            printf("\n");
-     */
+    resize(epsilon, K_alpha);
 }
 
 // 
@@ -147,7 +123,7 @@ scalar PoissonMatrixQuadratic::get_K_alpha_value(int i, int j) {
 /* */
 void PoissonMatrixQuadratic::add_grad_dot_products(std::array<arr3, NUM_NODES_QUADRATIC_TET> &grad_psi, scalar det_J, scalar weight) {
     int c = 0;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
         for (int j = 0; j <= i; j++) {
             K_alpha[c] += det_J * weight * grad_dot(grad_psi[i], grad_psi[j]);
             c++;
@@ -157,16 +133,4 @@ void PoissonMatrixQuadratic::add_grad_dot_products(std::array<arr3, NUM_NODES_QU
 
 scalar PoissonMatrixQuadratic::grad_dot(arr3 &grad_psi_i, arr3 &grad_psi_j) {
     return grad_psi_i[0] * grad_psi_j[0] + grad_psi_i[1] * grad_psi_j[1] + grad_psi_i[2] * grad_psi_j[2];
-}
-
-void PoissonMatrixQuadratic::zero() {
-    for (int i = 0; i < NUM_ELEMENTS_LOWER_TRIANGULAR_10X10; i++) {
-        K_alpha[i] = 0;
-    }
-}
-
-void PoissonMatrixQuadratic::scale(scalar factor) {
-    for (int i = 0; i < NUM_ELEMENTS_LOWER_TRIANGULAR_10X10; i++) {
-        K_alpha[i] *= factor;
-    }
 }

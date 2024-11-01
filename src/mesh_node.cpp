@@ -28,37 +28,6 @@
 
 #include "mesh_node.h"
 
-#include <cstring>
-
-/*
- * Structure for a mesh_node: the points FEM meshes are built from.
- */
-mesh_node::mesh_node() {
-    num_element_contributors = 0;
-    force_contributions = {};
-    memset(&pos, 0, sizeof(arr3));
-    memset(&vel, 0, sizeof(arr3));
-    phi = 0;
-    index = 0;
-    memset(&pos_0, 0, sizeof(arr3));
-    stokes_radius = 0;
-    stokes_drag = 0;
-    linear = false;
-}
-
-mesh_node::~mesh_node() {
-    force_contributions.clear();
-    memset(&pos, 0, sizeof(arr3));
-    memset(&vel, 0, sizeof(arr3));
-    phi = 0;
-    index = 0;
-    memset(&pos_0, 0, sizeof(arr3));
-    num_element_contributors = 0;
-    stokes_radius = 0;
-    stokes_drag = 0;
-    linear = false;
-}
-
 void mesh_node::move(int direction, scalar dx) {
 	switch(direction) {
 		case(0):

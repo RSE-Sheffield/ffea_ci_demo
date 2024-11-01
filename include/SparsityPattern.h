@@ -44,10 +44,6 @@ typedef struct {
 
 class SparsityPattern {
 public:
-    SparsityPattern();
-
-    ~SparsityPattern();
-
     void init(int num_rows);
 
     /* * */
@@ -62,9 +58,9 @@ public:
 
 private:
     /** An array of vectors containing the indices of the occupied sites */
-    std::vector<list<sparse_contribution_location*>> row;
+    std::vector<list<std::unique_ptr<sparse_contribution_location>>> row;
 
-    int num_nonzero_elements; ///< Total number of nonzero elements in the sparsity pattern */
+    int num_nonzero_elements = 0; ///< Total number of nonzero elements in the sparsity pattern */
 };
 
 #endif

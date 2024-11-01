@@ -38,10 +38,6 @@
  */
 class mesh_node {
 public:
-
-    mesh_node();
-    ~mesh_node();
-
     void move(int direction, scalar dx);
 
     void set_pos(scalar x, scalar y, scalar z);
@@ -49,38 +45,38 @@ public:
     void print();
 
     /** Position of node */
-    arr3 pos;
+    arr3 pos = {};
 
     /** Velocity of node */
-    arr3 vel;
+    arr3 vel = {};
 
     /** Electrostatic potential at this node */
-    scalar phi;
+    scalar phi = 0;
 
-    int num_element_contributors;
+    int num_element_contributors = 0;
 
     /** An array of pointers to contributions to the total force on this node. There should be one
      * contribution from each element this node is a part of (so the length will be num_element_contributors).
      */
-    std::vector<arr3 *>force_contributions;
+    std::vector<arr3 *> force_contributions = {};
 
     /** Required for some general matrix constructions in which we need to know this node's 'index' in the node vector */
-    int index;
+    int index = 0;
 
     /** Equilibrium position of nodes (for RMSD calculations) */
-    arr3 pos_0;
+    arr3 pos_0 = {};
 
     /** Charge density on this node */
-    scalar rho;
+    scalar rho = 0;
 
     /** Stokes radius of this node */
-    scalar stokes_radius;
+    scalar stokes_radius = 0;
 
     /** The drag due to stokes on this node, not including velocity */
-    scalar stokes_drag;
+    scalar stokes_drag = 0;
 
     /** Stores whether or not this node is linear (as the order is surface - interior, not linear - secondary) */
-    bool linear;
+    bool linear = false;
 
     void set_linear();
     bool am_I_linear();

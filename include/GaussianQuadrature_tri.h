@@ -126,15 +126,19 @@ typedef struct {
 
 class GaussianQuadrature_tri {
 public:
+    // Typedef the function prototype used by this classes methods for readability
+    typedef scalar gq_func(arr3&, arr3&);
 
-    virtual ~GaussianQuadrature_tri() {
-    }
+    /**
+     * Virtual destructor is required for correct inheritance behaviour
+     */
+    virtual ~GaussianQuadrature_tri() = default;
 
     /** Integrates function f(p,q), for fixed point p and face coordinate q, at the given precision */
-    scalar integrate_point_to_face(scalar(*f)(arr3&, arr3&), const arr3 &p, Face *face, int precision);
+    scalar integrate_point_to_face(gq_func *f, const arr3 &p, Face *face, int precision);
 
     /** Integrates function f(p, q) between two faces, at the given precision */
-    scalar integrate_face_to_face(scalar(*f)(arr3&, arr3&), Face *f1, Face *f2, int precision);
+    scalar integrate_face_to_face(gq_func *f, Face *f1, Face *f2, int precision);
 
 protected:
     virtual scalar f_3d(const arr3 &p, const arr3 &q) = 0;

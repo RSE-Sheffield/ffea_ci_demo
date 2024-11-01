@@ -21,21 +21,18 @@
 //  the research papers on the package.
 //
 
+#ifndef SPRING_H_INCLUDED
+#define SPRING_H_INCLUDED
+
+#include <array>
 #include "mat_vec_types.h"
-#include <stdlib.h>
 
-class Spring {
-public:
-
-    Spring();
-
-    ~Spring();
-
+struct Spring {
     /* *  Variables */
 
-    scalar k; ///< Spring constant
+    scalar k = 0; ///< Spring constant
 
-    scalar l; ///< Equilibrium length
+    scalar l = 0; ///< Equilibrium length
 
     std::array<int, 2> blob_index; ///< Blobs connected to
 
@@ -43,5 +40,7 @@ public:
 
     std::array<int, 2> node_index; ///< Nodes connected to
 
-    bool am_i_active; ///< Check if spring is active
+    bool am_i_active = false; ///< Check if spring is active
 };
+
+#endif // SPRING_H_INCLUDED

@@ -33,9 +33,10 @@
 
 class VdW_solver {
 public:
-    VdW_solver();
-
-    ~VdW_solver();
+    /**
+     * @brief Virtual destructor required for correct inheritance behaviour
+     */
+    virtual ~VdW_solver() = default;
 
     void init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs);
 
@@ -50,33 +51,33 @@ public:
 
 protected:
 
-    int total_num_surface_faces;
-    NearestNeighbourLinkedListCube *surface_face_lookup;
+    int total_num_surface_faces = 0;
+    NearestNeighbourLinkedListCube *surface_face_lookup = nullptr;
 
-    arr3 box_size;
+    arr3 box_size = {};
     SSINT_matrix *ssint_matrix;
 
     std::vector<std::vector<scalar>> fieldenergy;
-    int num_blobs;
-    int inc_self_ssint;  ///< whether to include interactions between faces within the same blob, or not.
-    int calc_kinetics; 
-    bool working_w_static_blobs;
+    int num_blobs = 0;
+    int inc_self_ssint = 0;  ///< whether to include interactions between faces within the same blob, or not.
+    int calc_kinetics = 0; 
+    bool working_w_static_blobs = false;
     struct adjacent_cell_lookup_table_entry {
         int ix, iy, iz;
     };
 
-    scalar steric_factor; ///< Proportionality factor to the Steric repulsion.
-    scalar steric_dr; ///< Constant to calculate the numerical derivative.
+    scalar steric_factor = 0; ///< Proportionality factor to the Steric repulsion.
+    scalar steric_dr = 0; ///< Constant to calculate the numerical derivative.
     // static const scalar phi_f[4]; ///< shape function for the center of the "element"
-    static const int adjacent_cell_lookup_table[27][3];
+    static const std::array<adjacent_cell_lookup_table_entry, 27> adjacent_cell_lookup_table;
 
     static const int num_tri_gauss_quad_points = 3; 
     struct tri_gauss_point {
         scalar W;
-        scalar eta[3];
+        arr3 eta;
     };
     // static const struct tri_gauss_point gauss_pointx[num_tri_gauss_quad_points];
-    static const tri_gauss_point gauss_points[];
+    static const std::array<tri_gauss_point, 3> gauss_points;
 
     bool consider_interaction(Face *f1, int l_index_i, int motion_state_i, LinkedListNode<Face> *l_j, scalar *blob_corr);
 
@@ -113,15 +114,11 @@ protected:
     void calc_gensoft_factors(scalar &mag_r, int index_k, int index_l, scalar &Emin, scalar &Rmin_2, scalar &Rmin_3, scalar &k0, 
                                  scalar &force_mag, scalar &e);
 
-    scalar distance2(const arr3 &p, const arr3 &q);
-
-    scalar dot(const arr3 &p, const arr3 &q);
-
     scalar dot_with_normal(const arr3 &p, const arr3 &q, const arr3 &n);
 
     scalar minimum_image(scalar delta, scalar size);
 
-    int ssint_type;
+    int ssint_type = SSINT_TYPE_UNDEFINED;
 };
 
 #endif

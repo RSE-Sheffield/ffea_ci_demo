@@ -29,11 +29,11 @@
 // scalar volumeIntersection(arr3 (&tetA)[4], arr3 (&tetB)[4]);
 /** return the the overlapping volume between tetrahedra tetA and tetB */ 
 template <typename T>
-T volumeIntersection(std::array<std::array<T,3>, 4> &tetA, std::array<std::array<T,3>, 4> &tetB, bool calcCM, std::array<T,3> &cm);
+T volumeIntersection(const std::array<std::array<T,3>, 4> &tetA, const std::array<std::array<T,3>, 4> &tetB, bool calcCM, std::array<T,3> &cm);
 template <typename T>
-T volumeIntersectionII(std::array<T,3> &tetA0, std::array<T,3> &tetA1, std::array<T,3> &tetA2, std::array<T,3> &tetA3, std::array<T,3> &tetB0, std::array<T,3> &tetB1, std::array<T,3> &tetB2, std::array<T,3> &tetB3, bool calcCM, std::array<T,3> &cm);
+T volumeIntersectionII(const std::array<T,3> &tetA0, const std::array<T,3> &tetA1, const std::array<T,3> &tetA2, const std::array<T,3> &tetA3, const std::array<T,3> &tetB0, const std::array<T,3> &tetB1, const std::array<T,3> &tetB2, const std::array<T,3> &tetB3, bool calcCM, std::array<T,3> &cm);
 /** return the the overlapping volume between tetrahedra tetA and tetB, and the area enclosing this volume */ 
 template <typename T>
-void volumeAndAreaIntersection(std::array<std::array<T,3>,4> &tetA, std::array<std::array<T,3>,4> &tetB, T &vol, T &area);
+void volumeAndAreaIntersection(const std::array<std::array<T,3>,4> &tetA, const std::array<std::array<T,3>,4> &tetB, T &vol, T &area);
 
 #endif

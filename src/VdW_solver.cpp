@@ -22,13 +22,15 @@
 //
 
 #include "VdW_solver.h"
+#include "mat_vec_fns_II.h"
 #ifdef USE_MPI
 #include "mpi.h"
 #endif
 
 // const scalar VdW_solver::phi_f[4] = { 0.25, 0.25, 0.25, 0.25};
 
-const int VdW_solver::adjacent_cell_lookup_table[27][3] = {
+const std::array<VdW_solver::adjacent_cell_lookup_table_entry, 27> VdW_solver::adjacent_cell_lookup_table = {
+    VdW_solver::adjacent_cell_lookup_table_entry
     {-1, -1, -1},
     {-1, -1, 0},
     {-1, -1, +1},
@@ -58,7 +60,8 @@ const int VdW_solver::adjacent_cell_lookup_table[27][3] = {
     {+1, +1, +1}
 };
 
-const VdW_solver::tri_gauss_point VdW_solver::gauss_points[] = {
+const std::array<VdW_solver::tri_gauss_point, 3> VdW_solver::gauss_points = {
+    VdW_solver::tri_gauss_point
     // Weight, eta1, eta2, eta3
     {   0.333333333333333,
         {0.666666666666667, 0.166666666666667, 0.166666666666667}
@@ -70,27 +73,6 @@ const VdW_solver::tri_gauss_point VdW_solver::gauss_points[] = {
         {0.166666666666667, 0.166666666666667, 0.666666666666667}
     }
 };
-
-VdW_solver::VdW_solver() {
-    total_num_surface_faces = 0;
-    surface_face_lookup = nullptr;
-    box_size[0] = 0;
-    box_size[1] = 0;
-    box_size[2] = 0;
-    num_blobs = 0;
-    ssint_type = SSINT_TYPE_UNDEFINED;
-}
-
-VdW_solver::~VdW_solver() {
-    total_num_surface_faces = 0;
-    surface_face_lookup = nullptr;
-    box_size[0] = 0;
-    box_size[1] = 0;
-    box_size[2] = 0;
-    fieldenergy.clear();
-    num_blobs = 0;
-    ssint_type = SSINT_TYPE_UNDEFINED;
-}
 
 void VdW_solver::init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs) {
     this->surface_face_lookup = surface_face_lookup;
@@ -171,9 +153,9 @@ void VdW_solver::solve(scalar *blob_corr) {
         // Remember to check that the face is not interacting with itself or connected faces
         for (c = 0; c < 27; c++) {
             l_j = surface_face_lookup->get_top_of_stack(
-                      l_i->x + adjacent_cell_lookup_table[c][0],
-                      l_i->y + adjacent_cell_lookup_table[c][1],
-                      l_i->z + adjacent_cell_lookup_table[c][2]);
+                      l_i->x + adjacent_cell_lookup_table[c].ix,
+                      l_i->y + adjacent_cell_lookup_table[c].iy,
+                      l_i->z + adjacent_cell_lookup_table[c].iz);
             while (l_j != nullptr) {
                 if (consider_interaction(f_i, l_index_i, motion_state_i, l_j, blob_corr)) {
                     do_interaction(f_i, l_j->obj, blob_corr);
@@ -272,19 +254,14 @@ void VdW_solver::do_lj_interaction(Face *f1, Face *f2, scalar *blob_corr) {
             f2->add_force_to_node(j, force2);
         } // end updating face nodes.
     } // end of critical
-
-
 }
 
 /**Alters interaction calculations to apply periodic boundary conditions*/
 void VdW_solver::do_interaction(Face *f1, Face *f2, scalar *blob_corr) {
-
     do_lj_interaction(f1, f2, blob_corr);
-
 }
 
 bool VdW_solver::consider_interaction(Face *f_i, int l_index_i, int motion_state_i, LinkedListNode<Face> *l_j, scalar *blob_corr) {
-
     bool interaction_needed = false;
     if (l_index_i < l_j->index) {
         if ((inc_self_ssint == 1) || ( (inc_self_ssint == 0 ) && (f_i->daddy_blob != l_j->obj->daddy_blob))) {
@@ -317,7 +294,7 @@ bool VdW_solver::consider_interaction(Face *f_i, int l_index_i, int motion_state
                 for (int i = 0; i < 3; ++i)
                     sep[i] = f_j->centroid[i] - f_i->centroid[i] - blob_corr[f_i->daddy_blob->blob_index * (num_blobs) * 3 + f_j->daddy_blob->blob_index * 3 + i];
             }
-            if ((dot(sep, f_i->normal) < 0) &&
+            if (dot(sep, f_i->normal) < 0 &&
                 dot(sep, f_j->normal) > 0) return false;
 
 
@@ -340,11 +317,9 @@ bool VdW_solver::consider_interaction(Face *f_i, int l_index_i, int motion_state
     }
 
     return interaction_needed;
-
 }
 
 void VdW_solver::do_sticky_xz_interaction(Face *f, bool bottom_wall, scalar dim_y) {
-
     scalar y_wall = 0; //-Rmin;
     if (bottom_wall == false) {
         y_wall = dim_y; // + Rmin;
@@ -386,7 +361,7 @@ void VdW_solver::do_sticky_xz_interaction(Face *f, bool bottom_wall, scalar dim_
 
     // Record energy with xz plane
     scalar Asq = f->area * f->area;
-    energy *= Asq;
+    // energy *= Asq;
     // f->add_xz_vdw_energy_to_record(energy); // DEPRECATED
 
     for (int j = 0; j < 3; j++) {
@@ -402,11 +377,9 @@ void VdW_solver::do_sticky_xz_interaction(Face *f, bool bottom_wall, scalar dim_
         f->add_force_to_node(j, force);
         // f->add_xz_vdw_force_to_record(&force); // DEPRECATED
     }
-
 }
 
 bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr) {
-
     int f1_daddy_blob_index = f1->daddy_blob->blob_index;
     int f2_daddy_blob_index = f2->daddy_blob->blob_index;
 
@@ -416,9 +389,11 @@ bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     grr4 phi1, phi2;
 
     if (!blob_corr) {
-      if (!f1->getTetraIntersectionVolumeTotalGradientAndShapeFunctions(f2, steric_dr, dVdr, vol, phi1, phi2)) return false;
+      if (!f1->getTetraIntersectionVolumeTotalGradientAndShapeFunctions(f2, steric_dr, dVdr, vol, phi1, phi2))
+          return false;
     } else {
-      if (!f1->getTetraIntersectionVolumeTotalGradientAndShapeFunctions(f2, steric_dr, dVdr, vol, phi1, phi2,blob_corr,f1_daddy_blob_index, f2_daddy_blob_index)) return false;
+      if (!f1->getTetraIntersectionVolumeTotalGradientAndShapeFunctions(f2, steric_dr, dVdr, vol, phi1, phi2,blob_corr,f1_daddy_blob_index, f2_daddy_blob_index))
+          return false;
     }
 
     vol *= steric_factor;
@@ -486,7 +461,6 @@ bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     } */
 
     return true;
-
 }
 
 void VdW_solver::do_gensoft_interaction(Face *f1, Face *f2, scalar *blob_corr) {
@@ -568,15 +542,6 @@ void VdW_solver::do_gensoft_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     } // end of critical
 }
 
-scalar VdW_solver::distance2(const arr3 &p, const arr3 &q) {
-    scalar dx = p[0] - q[0], dy = p[1] - q[1], dz = p[2] - q[2];
-    return dx * dx + dy * dy + dz * dz;
-}
-
-scalar VdW_solver::dot(const arr3 &p, const arr3 &q) {
-    return p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
-}
-
 scalar VdW_solver::dot_with_normal(const arr3 &p, const arr3 &q, const arr3 &n) {
     return (q[0] - p[0]) * n[0] + (q[1] - p[1]) * n[1] + (q[2] - p[2]) * n[2];
 }
@@ -585,12 +550,10 @@ scalar VdW_solver::minimum_image(scalar delta, scalar size) {
     if (fabs(delta) > size * .5) {
         return size - delta;
     }
-
     return delta;
 }
 
 scalar VdW_solver::get_field_energy(int index0, int index1) {
-
     // Sum over all field
     if(index0 == -1 || index1 == -1) {
         scalar energy = 0.0;
@@ -706,7 +669,7 @@ void VdW_solver::calc_gensoft_factors(scalar &mag_r, int index_k, int index_l, s
 
       scalar k0rm, k0rm2, epsonrm, Rmin_2, mag_r_2, mag_r_3, gensoftfac_2, gensoftfac_3, emag, korm2;
       mag_r_2 = mag_r * mag_r;
-      mag_r_3 = mag_r_2 * mag_r;
+      // mag_r_3 = mag_r_2 * mag_r;
       Rmin_2 = Rmin * Rmin;
       gensoftfac_2 = mag_r_2 / Rmin_2;
       gensoftfac_3 = gensoftfac_2 * mag_r / Rmin;

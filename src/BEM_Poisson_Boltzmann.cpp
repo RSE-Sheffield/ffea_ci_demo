@@ -78,21 +78,18 @@ void BEM_Poisson_Boltzmann::set_kappa(scalar kappa) {
  *
  */
 void BEM_Poisson_Boltzmann::build_BEM_matrices() {
-    int i;
-    LinkedListNode<Face> *l_i;
-    Face *f;
-    arr3 gqp[4];
+    std::array<arr3, 4> gqp = {};
 
     /* Clear the C and D matrices */
     mat_C->zero();
     mat_D->zero();
 
     /* For each face, calculate the interaction with all other relevant faces and add the contribution to mat_C and mat_D */
-    for (i = 0; i < num_faces; i++) {
+    for (int i = 0; i < num_faces; i++) {
 
         // get the ith face
-        l_i = lookup->get_from_pool(i);
-        f = l_i->obj;
+        LinkedListNode<Face> *l_i = lookup->get_from_pool(i);
+        Face *f = l_i->obj;
 
         // Create matrix C diagonal (self term) for constant element case
         mat_C->set_diagonal_element(i, -.5 * 4.0 * M_PI);
@@ -129,7 +126,7 @@ void BEM_Poisson_Boltzmann::build_BEM_matrices() {
     }
 }
 
-void BEM_Poisson_Boltzmann::perform_integrals_for_lookup_cell_self(LinkedListNode<Face> *l_i, arr3 gqp[4]) {
+void BEM_Poisson_Boltzmann::perform_integrals_for_lookup_cell_self(const LinkedListNode<Face> *l_i, std::array<arr3, 4> &gqp) {
     scalar mat_C_contribution, mat_D_contribution;
 
     // Get the top of the stack in the cell in which face f lies
@@ -138,8 +135,8 @@ void BEM_Poisson_Boltzmann::perform_integrals_for_lookup_cell_self(LinkedListNod
         if (l_j->index != l_i->index) {
             gauss_quadrature_4_point(gqp,
                     l_j->obj->centroid,
-                    &mat_D_contribution,
-                    &mat_C_contribution,
+                    mat_D_contribution,
+                    mat_C_contribution,
                     l_i->obj);
 
             mat_C->add_off_diagonal_element(l_i->index, l_j->index, mat_C_contribution);
@@ -149,15 +146,15 @@ void BEM_Poisson_Boltzmann::perform_integrals_for_lookup_cell_self(LinkedListNod
     }
 }
 
-void BEM_Poisson_Boltzmann::perform_integrals_for_lookup_cell_relative(LinkedListNode<Face> *l_i, arr3 gqp[4], int dx, int dy, int dz) {
+void BEM_Poisson_Boltzmann::perform_integrals_for_lookup_cell_relative(const LinkedListNode<Face> *l_i, std::array<arr3, 4>& gqp, int dx, int dy, int dz) {
     scalar mat_C_contribution, mat_D_contribution;
 
     LinkedListNode<Face> *l_j = lookup->get_top_of_stack(l_i->x + dx, l_i->y + dy, l_i->z + dz);
     while (l_j != nullptr) {
         gauss_quadrature_4_point(gqp,
                 l_j->obj->centroid,
-                &mat_D_contribution,
-                &mat_C_contribution,
+                mat_D_contribution,
+                mat_C_contribution,
                 l_i->obj);
 
         mat_C->add_off_diagonal_element(l_i->index, l_j->index, mat_C_contribution);
@@ -200,7 +197,7 @@ scalar BEM_Poisson_Boltzmann::grad_u_4pi(scalar r, scalar r2) {
                 }
  */
 
-void BEM_Poisson_Boltzmann::gauss_quadrature_4_point(arr3 gqp[4], arr3 &p, scalar *int_u, scalar *int_du, Face *f) {
+void BEM_Poisson_Boltzmann::gauss_quadrature_4_point(std::array<arr3, 4> &gqp, arr3 &p, scalar &int_u, scalar &int_du, Face *f) {
     scalar r_hat_dot_n[4], r2[4], r_mag[4];
     arr3 r;
 
@@ -214,8 +211,8 @@ void BEM_Poisson_Boltzmann::gauss_quadrature_4_point(arr3 gqp[4], arr3 &p, scala
         r_hat_dot_n[i] = (r[0] * f->normal[0] + r[1] * f->normal[1] + r[2] * f->normal[2]) / r_mag[i];
     }
 
-    *int_u = -f->area * (-.5625 * u_4pi(r_mag[0]) + 0.5208333333 * (u_4pi(r_mag[1]) + u_4pi(r_mag[2]) + u_4pi(r_mag[3])));
-    *int_du = f->area * (-.5625 * grad_u_4pi(r_mag[0], r2[0]) * r_hat_dot_n[0] + 0.5208333333 * (
+    int_u = -f->area * (-.5625 * u_4pi(r_mag[0]) + 0.5208333333 * (u_4pi(r_mag[1]) + u_4pi(r_mag[2]) + u_4pi(r_mag[3])));
+    int_du = f->area * (-.5625 * grad_u_4pi(r_mag[0], r2[0]) * r_hat_dot_n[0] + 0.5208333333 * (
             grad_u_4pi(r_mag[1], r2[1]) * r_hat_dot_n[1] +
             grad_u_4pi(r_mag[2], r2[2]) * r_hat_dot_n[2] +
             grad_u_4pi(r_mag[3], r2[3]) * r_hat_dot_n[3]));

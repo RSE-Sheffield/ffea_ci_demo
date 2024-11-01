@@ -23,20 +23,6 @@
 
 #include "SparseSubstitutionSolver.h"
 
-SparseSubstitutionSolver::SparseSubstitutionSolver() {
-    // Initialise everything to zero
-    num_rows = 0;
-}
-
-SparseSubstitutionSolver::~SparseSubstitutionSolver() {
-    num_rows = 0;
-    L_key.clear();
-    U_key.clear();
-    inverse_diag.clear();
-    L.clear();
-    U.clear();
-}
-
 void SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) {
     // Mass matrix will have as many rows as there are nodes in the mesh
     num_rows = node.size();
@@ -149,7 +135,7 @@ void SparseSubstitutionSolver::init(std::vector<mesh_node> &node, std::vector<te
     }
 
     // Build the upper triangular matrix key
-    total_entries_in_U = 0;
+    int total_entries_in_U = 0;
     for (int i = 0; i < num_rows; i++)
         for (int j = 0; j <= i; j++)
             if (mass_LU[i * num_rows + j] != 0) {
@@ -202,7 +188,7 @@ void SparseSubstitutionSolver::solve(std::vector<arr3> &x) {
     }
 
     // Backward substitution step Ux = y :
-    index = total_entries_in_U - 1;
+    index = U.size() - 1;
     for (i = num_rows - 1; i >= 0; i--) {
 
         x[i][0] *= inverse_diag[i];
@@ -220,5 +206,5 @@ void SparseSubstitutionSolver::solve(std::vector<arr3> &x) {
 }
 
 void SparseSubstitutionSolver::apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) {
+    throw FFEAException("SparseSubstitutionSolver::apply_matrix() has not been implemented.");
 }
-

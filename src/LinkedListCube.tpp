@@ -32,8 +32,8 @@ LinkedListCube<T>::LinkedListCube() {
     max_num_nodes_in_pool = 0;
     num_nodes_in_pool = 0;
     add_index = 0;
-    root = NULL;
-    pool = NULL;
+    root = nullptr;
+    pool = nullptr;
     can_swap = true; 
     active_layer = 1;
     shadow_layer = 2;
@@ -51,8 +51,8 @@ LinkedListCube<T>::~LinkedListCube() {
     max_num_nodes_in_pool = 0;
     num_nodes_in_pool = 0;
     add_index = 0;
-    root = NULL;
-    pool = NULL;
+    root = nullptr;
+    pool = nullptr;
 }
 
 /* */
@@ -66,11 +66,11 @@ void LinkedListCube<T>::alloc(int N_x, int N_y, int N_z, int max_num_nodes_in_po
     root = new(std::nothrow) LinkedListNode<T> * [N_x * N_y * N_z];
     pool = new(std::nothrow) LinkedListNode<T>[max_num_nodes_in_pool];
 
-    if (root == NULL || pool == NULL) {
+    if (root == nullptr || pool == nullptr) {
         throw FFEAException("Could not allocate memory (for root and pool arrays) in LinkedListCube.");
     }
 
-    // Make sure all pointers are initialised to NULL
+    // Make sure all pointers are initialised to nullptr
     clear();
 
     // Set the current addition index to the beginning of the pool array
@@ -90,7 +90,7 @@ void LinkedListCube<T>::alloc_dual(int N_x, int N_y, int N_z, int max_num_nodes_
     root2 = new(std::nothrow) LinkedListNode<T> * [N_x * N_y * N_z];
     pool2 = new(std::nothrow) LinkedListNode<T>[max_num_nodes_in_pool];
 
-    if (root1 == NULL || pool1 == NULL || root2 == NULL || pool2 == NULL) {
+    if (!root1||!pool1||!root2||!pool2) {
         throw FFEAException("Could not allocate memory (for root and pool arrays) in LinkedListCube.");
     }
 
@@ -149,14 +149,12 @@ LinkedListNode<T> * LinkedListCube<T>::get_from_pool(int i) {
 template <class T>
 void LinkedListCube<T>::clear() {
     // Clear the grid
-    #pragma omp simd
-    for (int i = 0; i < N_x * N_y * N_z; i++)
-        root[i] = NULL;
+    memset(root, 0, sizeof(void*) * N_x * N_y * N_z);
 
     // Clear the pool
     for (int i = 0; i < max_num_nodes_in_pool; i++) {
-        pool[i].next = NULL;
-	//pool[i].obj = NULL;
+        pool[i].next = nullptr;
+	//pool[i].obj = nullptr;
     }
 }
 
@@ -166,22 +164,22 @@ void LinkedListCube<T>::clear_layer(int l) {
 	if (l == 1) {
 		// Clear the grid
 		for (int i = 0; i < N_x * N_y * N_z; i++) {
-			root1[i] = NULL;
+			root1[i] = nullptr;
 		}
 		// Clear the pool
 		for (int i = 0; i < max_num_nodes_in_pool; i++) {
-			pool1[i].next = NULL;
-		//	pool1[i].obj = NULL;
+			pool1[i].next = nullptr;
+		//	pool1[i].obj = nullptr;
 		}
 	} else if (l == 2) {
 		// Clear the grid
 		for (int i = 0; i < N_x * N_y * N_z; i++) {
-			root2[i] = NULL;
+			root2[i] = nullptr;
 		}
 		// Clear the pool
 		for (int i = 0; i < max_num_nodes_in_pool; i++) {
-			pool2[i].next = NULL;
-		//	pool2[i].obj = NULL;
+			pool2[i].next = nullptr;
+		//	pool2[i].obj = nullptr;
 		}
 	}
 }
@@ -238,7 +236,7 @@ LinkedListNode<T> * LinkedListCube<T>::get_top_of_stack(int x, int y, int z) {
     pbc(&x, &y, &z);
     if (x < 0 || x >= N_x || y < 0 || y >= N_y || z < 0 || z >= N_z) {
         printf("Error: Looking for stack in out of bounds cell %d %d %d\n", x, y, z);
-        return NULL;
+        return nullptr;
     }
 
     return root[x * N_y * N_z + y * N_z + z];

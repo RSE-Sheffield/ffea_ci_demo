@@ -35,22 +35,20 @@ class checkVars {
 		~checkVars(); */ 
 		
 		// Member variables
-		scalar e_v1[6][3];            ///< vector edge-oriented 
-      scalar e_v2[6][3];            ///< vectors edge-oriented
+		arr3 e_v1[6];            ///< vector edge-oriented 
+		arr3 e_v2[6];            ///< vectors edge-oriented
 		int masks[4];  ///< for each face of the first tetrahedron stores the halfspace each vertex of the second tetrahedron belongs to
 
-		scalar P_V1[4][3]; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
-      scalar P_V2[4][3]; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
+		arr3 P_V1[4]; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
+		arr3 P_V2[4]; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
 
-		scalar  Coord_1[4][4]; ///< vertices coordinates in the affine space
-      scalar  Coord_2[4][4]; ///< vertices coordinates in the affine space
-		scalar n[3];	  ///< variable to store the normals
+		arr4  Coord_1[4]; ///< vertices coordinates in the affine space
+		arr4  Coord_2[4]; ///< vertices coordinates in the affine space
+		arr3 n;	  ///< variable to store the normals
 };
 
 /** Fast Tetrahedron-Tetrahedron Overlap Algorithm, by Fabio Ganovelli, Frederico Ponchio, Claudio Rocchini. ACM 2002. */
-bool tet_a_tetII(arr3 &V1_0, arr3 &V1_1, arr3 &V1_2, arr3 &V1_3,
-                 arr3 &V2_0, arr3 &V2_1, arr3 &V2_2, arr3 &V2_3);
-              
-
+bool tet_a_tetII(const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr3 &V1_3,
+	            const arr3 &V2_0, const arr3 &V2_1, const arr3 &V2_2, const arr3 &V2_3);
 
 #endif 

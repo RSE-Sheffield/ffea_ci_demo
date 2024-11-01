@@ -34,26 +34,22 @@
 
 class BiCGSTAB_solver {
 public:
-    BiCGSTAB_solver();
+    BiCGSTAB_solver() = default;
 
-    ~BiCGSTAB_solver();
+    ~BiCGSTAB_solver() = default;
 
-    void init(int N, scalar tol, int max_num_iterations);
-
-    void solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b);
-
-    void solve(unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations);
+    void init(int N, scalar _tol, int _max_num_iterations);
+    /**
+     * @param num_iterations If 0, max_num_iterations will instead be used and the method will return at convergence
+     */
+    void solve(unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, int num_iterations = 0);
 
 private:
-
-    /// The number of unknowns
-    int N;
-
     /// The convergence tolerance threshold
-    scalar tol;
+    scalar tol = 0;
 
     /// Maximum number of iterations before giving up
-    int max_num_iterations;
+    int max_num_iterations = 0;
 
     /// The inverse of the preconditioner matrix
     std::vector<scalar> inv_M;
@@ -69,26 +65,14 @@ private:
     //@}
 
     /** Calculates the residual vector, r, for the matrix equation Ax = b. Specifically, r = b - Ax. */
-    void get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, int N);
-
-    /** Copies the contents of vector b into vector a (a <- b) */
-    void copy_vector(std::vector<scalar> &a, const std::vector<scalar> &b, int N);
-
-    /** Returns the dot product of vectors a and b, of length N */
-    scalar dot(const std::vector<scalar> &a, const std::vector<scalar> &b, int N);
-
-    /** Calculates y = Mx for diagonal matrix and vectors of dimension N */
-    void apply_diagonal_matrix(std::vector<scalar> &y, const std::vector<scalar> &M, const std::vector<scalar> &x, int N);
-
-    /** Sets the given vector (length N) to zero */
-    void zero(std::vector<scalar> &x, int N);
-
+    void get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x);
+    
     /** Carries out the operation x = y + c*z, where c is a scalar, and x, y and z are vectors of length N. */
-    void scalar_vector_add(std::vector<scalar> &x, const std::vector<scalar> &y, scalar c, const std::vector<scalar> &z, int N);
+    void scalar_vector_add(std::vector<scalar> &x, const std::vector<scalar> &y, scalar c, const std::vector<scalar> &z);
 
     /** Carries out the operation w = x + a * (y + b * z) */
     // p = r + beta(p - omega * v)
-    void complicated_machine(std::vector<scalar> &w, const std::vector<scalar> &x, scalar a, const std::vector<scalar> &y, scalar b, const std::vector<scalar> &z, int N);
+    void complicated_machine(std::vector<scalar> &w, const std::vector<scalar> &x, scalar a, const std::vector<scalar> &y, scalar b, const std::vector<scalar> &z);
 };
 
 #endif

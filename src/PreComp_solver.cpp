@@ -31,57 +31,6 @@
 using std::cout;
 using std::endl; 
 
-const int PreComp_solver::adjacent_cells[27][3] = {
-        {-1, -1, -1},
-        {-1, -1, 0},
-        {-1, -1, +1},
-        {-1, 0, -1},
-        {-1, 0, 0},
-        {-1, 0, +1},
-        {-1, +1, -1},
-        {-1, +1, 0},
-        {-1, +1, +1},
-        {0, -1, -1},
-        {0, -1, 0},
-        {0, -1, +1},
-        {0, 0, -1},
-        {0, 0, 0},
-        {0, 0, +1},
-        {0, +1, -1},
-        {0, +1, 0},
-        {0, +1, +1},
-        {+1, -1, -1},
-        {+1, -1, 0},
-        {+1, -1, +1},
-        {+1, 0, -1},
-        {+1, 0, 0},
-        {+1, 0, +1},
-        {+1, +1, -1},
-        {+1, +1, 0},
-        {+1, +1, +1}
-};
-
-PreComp_solver::PreComp_solver() { 
-  nint = 0;
-  msgc = 0;
-  n_beads = 0;
-  num_blobs = 0;
-} 
-
-/** @brief destructor: deallocates pointers. */
-PreComp_solver::~PreComp_solver() {
-    U.clear();
-    F.clear();
-    isPairActive.clear();
-    b_types.clear();
-
-    b_elems.clear();
-
-    fieldenergy.clear();
-    num_blobs = 0;
-}
-
-
 int PreComp_solver::msg(int whatever){
   cout << "--- PreComp " << msgc << ": " << whatever << endl;
   msgc += 1;
@@ -554,38 +503,34 @@ void PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, B
         b_elems_ndx[i] = b_elems[i]->index;
         b_blob_ndx[i] = b_elems[i]->daddy_blob->blob_index;
       } 
-   } 
-
+   }
 
    cout << "done!" << endl;
 }
 
 void PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=nullptr*/){
     scalar d, f_ij; //, f_ijk_i, f_ijk_j; 
-    arr3 dx, dtemp, dxik;
+    arr3 dx, dxik;
     int type_i; 
-    scalar phi_i[4]; 
-    tetra_element_linear *e_i, *e_j;
+    std::array<scalar, 4> phi_i; 
+    tetra_element_linear* e_i;
 
     // 0 - clear fieldenery:
     reset_fieldenergy(); 
     //   - and reset b_forces!
     for (int i=0; i<3*n_beads; i++) {
       b_forces[i] = 0.;
-    } 
-
+    }
 
     // 1 - Compute the position of the beads:
     compute_bead_positions();
 
-
     // 2 - Compute all the i-j forces:
-    LinkedListNode<int> *b_i = nullptr; 
-    LinkedListNode<int> *b_j = nullptr; 
+    LinkedListNode<int> *b_i, *b_j;
     int b_index_i, b_index_j; 
     int daddy_i, daddy_j;
 #ifdef USE_OPENMP
-#pragma omp parallel default(none) shared(blob_corr) private(type_i,phi_i,e_i,e_j,dx,dxik,d,dtemp,f_ij,b_i,b_j,b_index_i,b_index_j,daddy_i, daddy_j)
+#pragma omp parallel default(none) shared(blob_corr) private(type_i,phi_i,e_i,dx,dxik,d,f_ij,b_i,b_j,b_index_i,b_index_j,daddy_i, daddy_j)
     {
     int thread_id = omp_get_thread_num(); 
     #pragma omp for
@@ -683,20 +628,17 @@ void PreComp_solver::solve_using_neighbours() {
     scalar d, f_ij; //, f_ijk_i, f_ijk_j; 
     arr3 dx, dtemp, dxik, dxjk;
     int type_i; 
-    scalar phi_i[4], phi_j[4];
+    std::array<scalar, 4> phi_i, phi_j;
     tetra_element_linear *e_i, *e_j;
 
     // 0 - clear fieldenery:
     reset_fieldenergy(); 
 
-
     // 1 - Compute the position of the beads:
     compute_bead_positions();
 
-
     // 2 - Compute all the i-j forces:
-    LinkedListNode<int> *b_i = nullptr; 
-    LinkedListNode<int> *b_j = nullptr; 
+    LinkedListNode<int> *b_i, *b_j;
     int b_index_i, b_index_j; 
 #ifdef USE_OPENMP
 #pragma omp parallel default(none) private(type_i,phi_i,phi_j,e_i,e_j,dx,d,dtemp,f_ij,b_i,b_j,b_index_i,b_index_j,dxik,dxjk)
@@ -788,7 +730,7 @@ void PreComp_solver::solve(scalar *blob_corr/*=nullptr*/) {
     scalar d, f_ij; //, f_ijk_i, f_ijk_j; 
     arr3 dx, dtemp;
     int type_i; 
-    scalar phi_i[4], phi_j[4];
+    std::array<scalar, 4> phi_i, phi_j;
     tetra_element_linear *e_i, *e_j;
     int daddy_i, daddy_j;
 

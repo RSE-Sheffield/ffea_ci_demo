@@ -23,7 +23,9 @@
 
 #include "mat_vec_fns.h"
 
-void mat12_apply(matrix12 A, vector12 v) {
+#include "mat_vec_fns_II.h"
+
+void mat12_apply(const matrix12 &A, vector12 &v) {
     int i, j;
     scalar temp_v[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -33,7 +35,7 @@ void mat12_apply(matrix12 A, vector12 v) {
     for (i = 0; i < 12; i++) v[i] = temp_v[i];
 }
 
-void vec3_mat3_mult(arr3 &v, matrix3 &A, arr3 &notv) {
+void vec3_mat3_mult(const arr3 &v, const matrix3 &A, arr3 &notv) {
     //int i, j;
 
     notv[0] = A[0][0]*v[0] + A[1][0]*v[1] + A[2][0]*v[2];
@@ -42,14 +44,7 @@ void vec3_mat3_mult(arr3 &v, matrix3 &A, arr3 &notv) {
 
 }
 
-/* void vec3_vec3_subs(arr3 *u, arr3 *v, arr3 *w) {
-    
-    w->x = u->x - v->x;
-    w->y = u->y - v->y;
-    w->z = u->z - v->z;
-
-}
-
+/*
 void vec3_vec3_cross(arr3 *u, arr3 *v, arr3 *w) {
 
 	w->x = u->y * v->z - u->z * v->y;
@@ -60,7 +55,7 @@ void vec3_vec3_cross(arr3 *u, arr3 *v, arr3 *w) {
 /*
  *
  */
-void mat3_mult(matrix3 A, matrix3 B, matrix3 result) {
+void mat3_mult(const matrix3 &A, const matrix3 &B, matrix3 &result) {
     int i, j, k;
 
     for (i = 0; i < 3; i++)
@@ -72,25 +67,7 @@ void mat3_mult(matrix3 A, matrix3 B, matrix3 result) {
 /*
  *
  */
-void vec12_add(vector12 A, vector12 B) {
-    for (int i = 0; i < 12; ++i) {
-        B[i] = A[i] + B[i];
-    }
-}
-
-/*
- *
- */
-void vec12_scale(vector12 A, scalar scale) {
-    for (int i = 0; i < 12; ++i) {
-        A[i] = A[i] * scale;
-    }
-}
-
-/*
- *
- */
-void mat3_mult_transpose(matrix3 A, matrix3 B, matrix3 result) {
+void mat3_mult_transpose(const matrix3 &A, const matrix3 &B, matrix3 &result) {
     int i, j, k;
     for (i = 0; i < 3; i++)
         for (j = 0; j < 3; j++)
@@ -101,7 +78,7 @@ void mat3_mult_transpose(matrix3 A, matrix3 B, matrix3 result) {
 /*
  *
  */
-void mat3_mult_both_transposed(matrix3 A, matrix3 B, matrix3 result) {
+void mat3_mult_both_transposed(const matrix3 &A, const matrix3 &B, matrix3 &result) {
     int i, j, k;
 
     for (i = 0; i < 3; i++)
@@ -113,7 +90,7 @@ void mat3_mult_both_transposed(matrix3 A, matrix3 B, matrix3 result) {
 /*
  *
  */
-void mat3_scale(matrix3 A, scalar s) {
+void mat3_scale(matrix3 &A, scalar s) {
     A[0][0] *= s;
     A[0][1] *= s;
     A[0][2] *= s;
@@ -128,7 +105,7 @@ void mat3_scale(matrix3 A, scalar s) {
 /*
  *
  */
-scalar mat3_double_contraction_symmetric(matrix3 A) {
+scalar mat3_double_contraction_symmetric(matrix3 &A) {
     return A[0][0] * A[0][0] + A[1][1] * A[1][1] + A[2][2] * A[2][2]
             + 2 * (A[0][1] * A[0][1] + A[0][2] * A[0][2] + A[1][2] * A[1][2]);
 }
@@ -136,7 +113,7 @@ scalar mat3_double_contraction_symmetric(matrix3 A) {
 /*
  *
  */
-scalar mat3_double_contraction(matrix3 A) {
+scalar mat3_double_contraction(matrix3 &A) {
     return A[0][0] * A[0][0] + A[1][1] * A[1][1] + A[2][2] * A[2][2]
             + A[0][1] * A[0][1] + A[1][0] * A[1][0] + A[0][2] * A[0][2]
             + A[2][0] * A[2][0] + A[1][2] * A[1][2] + A[2][1] * A[2][1];
@@ -145,7 +122,7 @@ scalar mat3_double_contraction(matrix3 A) {
 /*
  *
  */
-void mat3_invert(matrix3 m, matrix3 m_inv, scalar *det_m) {
+void mat3_invert(matrix3 &m, matrix3 &m_inv, scalar *det_m) {
     scalar det;
 
     // Construct the inverse matrix
@@ -176,56 +153,16 @@ void mat3_invert(matrix3 m, matrix3 m_inv, scalar *det_m) {
     m_inv[2][2] *= det;
 }
 
-/*
- *
- */
-void mat12_set_zero(matrix12 A) {
-    int i, j;
-    for (i = 0; i < 12; i++)
-        for (j = 0; j < 12; j++)
-            A[i][j] = 0;
-}
+
 
 /*
  *
  */
-void mat3_set_zero(matrix3 A) {
-    int i, j;
-    for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
-            A[i][j] = 0;
-}
-
-/*
- *
- */
-void mat3_set_identity(matrix3 A) {
-
-    mat3_set_zero(A);
+void mat3_set_identity(matrix3 &A) {
+    initialise(A);
     int i;
     for (i = 0; i < 3; i++)
         A[i][i] = 1;
-}
-
-/*
- *
- */
-void mat4_set_zero(matrix4 A) {
-    int i, j;
-    for (i = 0; i < 4; i++)
-        for (j = 0; j < 4; j++)
-            A[i][j] = 0;
-}
-
-/*
- *
- */
-void arr3_set_zero(arr3 &v) {
-   
-    v[0] = 0;
-    v[1] = 0;
-    v[2] = 0;
-
 }
 
 /*
@@ -247,12 +184,12 @@ void vec3_scale2(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar scale) {
 /*
  *
  */
-void vec3_add_to_scaled(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a, int vec_size) {
+void vec3_add_to_scaled(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a) {
     int i;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
-#pragma omp parallel for default(none) private(i) shared(v1, v2, a, vec_size)
+#pragma omp parallel for default(none) private(i) shared(v1, v2, a)
 #endif
-    for (i = 0; i < vec_size; i++) {
+    for (i = 0; i < v1.size(); i++) {
         v1[i][0] += a * v2[i][0];
         v1[i][1] += a * v2[i][1];
         v1[i][2] += a * v2[i][2];
@@ -262,12 +199,12 @@ void vec3_add_to_scaled(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a, 
 /*
  *
  */
-void vec3_scale_and_add(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a, int vec_size) {
+void vec3_scale_and_add(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a) {
     int i;
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
-#pragma omp parallel for default(none) private(i) shared(v1, v2, a, vec_size)
+#pragma omp parallel for default(none) private(i) shared(v1, v2, a)
 #endif
-    for (i = 0; i < vec_size; i++) {
+    for (i = 0; i < v1.size(); i++) {
         v1[i][0] = a * v1[i][0] + v2[i][0];
         v1[i][1] = a * v1[i][1] + v2[i][1];
         v1[i][2] = a * v1[i][2] + v2[i][2];
@@ -277,16 +214,7 @@ void vec3_scale_and_add(std::vector<arr3> &v1, std::vector<arr3> &v2, scalar a, 
 /*
  *
  */
-void vec12_set_zero(vector12 v) {
-    int i;
-    for (i = 0; i < 12; i++)
-        v[i] = 0;
-}
-
-/*
- *
- */
-void print_matrix3(matrix3 m) {
+void print_matrix3(matrix3 &m) {
     int i;
     for (i = 0; i < 3; i++)
         printf("%e %e %e\n", m[i][0], m[i][1], m[i][2]);
@@ -295,7 +223,7 @@ void print_matrix3(matrix3 m) {
 /*
  *
  */
-void print_matrix4(matrix4 m) {
+void print_matrix4(matrix4 &m) {
     int i;
     for (i = 0; i < 4; i++)
         printf("%e %e %e %e\n", m[i][0], m[i][1], m[i][2], m[i][3]);
@@ -304,7 +232,7 @@ void print_matrix4(matrix4 m) {
 /*
  *
  */
-void print_matrix12(matrix12 m) {
+void print_matrix12(matrix12 &m) {
     int i, j;
     for (i = 0; i < 12; i++) {
         for (j = 0; j < 12; j++)
@@ -316,7 +244,7 @@ void print_matrix12(matrix12 m) {
 /*
  * 
  */
-void print_vector12(vector12 v) {
+void print_vector12(vector12 &v) {
     int i;
     for (i = 0; i < 12; i++)
         printf("%e\n", v[i]);

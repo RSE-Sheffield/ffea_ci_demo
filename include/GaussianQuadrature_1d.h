@@ -36,7 +36,7 @@ typedef struct {
 } gauss_point_1d;
 
 
-static gauss_point_1d gq_line[] = {
+static const gauss_point_1d gq_line[] = {
     /* 1 point - precision 1 */
     {2.0, 0.0},
 
@@ -72,7 +72,7 @@ static gauss_point_1d gq_line[] = {
 
 };
 
-static int gq_precision_index[] = {
+constexpr int gq_precision_index[] = {
     0, // Ignore this line (no precision 0)
     0, // Precision 1: Starts at index 0, 1 point
     1, // Precision 2: Starts at index 1, 2 point
@@ -84,9 +84,10 @@ static int gq_precision_index[] = {
 
 class GaussianQuadrature_1d {
 public:
-
-    virtual ~GaussianQuadrature_1d() {
-    }
+    /**
+     * Virtual destructor is required for correct inheritance behaviour
+     */
+    virtual ~GaussianQuadrature_1d() = default;
 
     /* Integrates function f(x) in the limits a to b, at the given precision */
     scalar integrate_function_1d(scalar a, scalar b, int precision);

@@ -32,7 +32,7 @@
     /**Calculates LJSteric forces modified with periodic boundary correction in distance calculation*/
 void LJSteric_solver::do_interaction(Face *f1, Face *f2, scalar *blob_corr){
     bool lj = true;
-    bool intersection = false; 
+    bool intersection; 
     if (!blob_corr) {
        intersection = f1->checkTetraIntersection(f2);
     } else {
@@ -41,13 +41,11 @@ void LJSteric_solver::do_interaction(Face *f1, Face *f2, scalar *blob_corr){
     }
 
     if (intersection) {
-      if (do_steric_interaction(f1, f2, blob_corr)) lj = false; 
+      if (do_steric_interaction(f1, f2, blob_corr))
+          lj = false; 
     } 
 
-    if (lj) {;
+    if (lj) {
         do_lj_interaction(f1, f2, blob_corr);
     }
-
-    return;
-
 }

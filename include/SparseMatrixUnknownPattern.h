@@ -34,11 +34,8 @@ using namespace std;
 
 class SparseMatrixUnknownPattern {
 public:
-    SparseMatrixUnknownPattern();
 
-    ~SparseMatrixUnknownPattern();
-
-    void init(int num_rows, int suggested_initial_size_for_row_vectors);
+    void init(int _num_rows, int suggested_initial_size_for_row_vectors);
 
     void add_off_diagonal_element(int row_index, int column_index, scalar val);
 
@@ -54,7 +51,7 @@ public:
     void print();
 
 private:
-    int num_rows;
+    int num_rows = 0;
     vector<vector<sparse_entry>> row;
     vector<scalar> diagonal;
 };

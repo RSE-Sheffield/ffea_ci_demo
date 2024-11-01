@@ -43,7 +43,7 @@ public:
 
     /** The first 3 pointers are to those surface nodes that define this face,
       * while the last one belongs to the opposite node of the linear tetrahedron **/
-    mesh_node *n[4];
+    std::array<mesh_node*, 4> n;
 
     /** Index of this face */
     int index;
@@ -69,7 +69,7 @@ public:
     /** Stores the current force applied to this face.
       * The first 3 "vectors" are to those surface nodes that define this face,
       * while the last one belongs to the opposite node of the linear tetrahedron **/
-    arr3 force[4];
+    std::array<arr3, 4> force;
 
 
     /** Stores the natural (shape function) coords of the centroid of this face in the parent element **/
@@ -89,16 +89,16 @@ public:
       * Uses the "Fast Tetrahedron-Tetrahedron Overlap Algorithm".
       * It calls some private functions.
       **/
-    bool checkTetraIntersection(Face *f2);
-    bool checkTetraIntersection(Face *f2, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    bool checkTetraIntersection(const Face *f2);
+    bool checkTetraIntersection(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     /** Get the volume that the enclose the intersection
       *   of the tetrahedron formed by this face an the opposite
       *   linear node with the corresponding tetrahedron in f2.
       * It calls volumeIntersection, at volumeIntersection.h
       **/
-    scalar getTetraIntersectionVolume(Face *f2);
-    scalar getTetraIntersectionVolume(Face *f2, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    scalar getTetraIntersectionVolume(const Face *f2);
+    scalar getTetraIntersectionVolume(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     /** Check whether the tetrahedron formed by this face an the opposite
       *   linear node does intersect with the corresponding tetrahedron in f2.
@@ -106,8 +106,8 @@ public:
       * Uses the "Fast Tetrahedron-Tetrahedron Overlap Algorithm" for checking if
       *  interaction occurs.
       **/
-    scalar checkTetraIntersectionAndGetVolume(Face *f2);
-    scalar checkTetraIntersectionAndGetVolume(Face *f2,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    scalar checkTetraIntersectionAndGetVolume(const Face *f2);
+    scalar checkTetraIntersectionAndGetVolume(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
 
     /** Get the volume and area that the enclose the intersection
@@ -115,8 +115,8 @@ public:
       *   linear node with the corresponding tetrahedron in f2.
       * It calls volumeIntersection, at volumeIntersection.h
       **/
-    void getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar &area);
-    void getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar &area, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    void getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &area);
+    void getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &area, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
 
      /** Get the volume that enclose the intersection
@@ -128,17 +128,17 @@ public:
       * It calls 4 times volumeIntersection.
       * This version works well for the double loop i<j. 
       **/
-    bool getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, geoscalar dr, grr3 (&dVdr), geoscalar &vol, grr4 (&phi1), grr4 (&phi2));
-    bool getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, geoscalar dr, grr3 (&dVdr), geoscalar &vol, grr4 (&phi1), grr4 (&phi2), scalar *blob_corr, int f1_daddy_blob_index, int f2_daddy_blob_index);
+    bool getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2);
+    bool getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2, const scalar *blob_corr, int f1_daddy_blob_index, int f2_daddy_blob_index);
 
 
     Blob *daddy_blob;
 
-    void init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *oposite, SecondOrderFunctions::stu centroid_stu, Blob *daddy_blob, const SimulationParams &params);
+    void init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *oposite, SecondOrderFunctions::stu &_centroid_stu, Blob *daddy_blob, const SimulationParams &params);
 
     void init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, Blob *daddy_blob, const SimulationParams &params);
 
-    void set_ssint_interaction_type(int ssint_interaction_type);
+    void set_ssint_interaction_type(int _ssint_interaction_type);
 
     void build_opposite_node();
 
@@ -152,7 +152,7 @@ public:
 
     /** Calculate the point p on this triangle given the barycentric coordinates b1, b2, b3. Altered to act periodically around box boundaries. **/
     void barycentric_calc_point(scalar b1, scalar b2, scalar b3, arr3 &p);
-    void barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    void barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     /** Returns the average electrostatic potential of this face **/
     scalar average_phi();
@@ -167,16 +167,17 @@ public:
      */
     void add_force_to_node_atomic(int i, arr3 &f);
 
-    void zero_force();
-
     void set_ssint_xz_interaction_flag(bool state);
 
-    template <class brr3> void vec3Vec3SubsToArr3Mod(Face *f2, brr3 (&w), scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    template <class brr3>
+    void vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     bool is_ssint_active();
     bool is_kinetic_active();
 
-    scalar length_of_longest_edge(); 
+    scalar length_of_longest_edge();
+
+    void zero_force() { initialise(force); }
 
 private:
     int stuff;

@@ -40,12 +40,6 @@
 
 class SparseSubstitutionSolver : public Solver {
 public:
-    /** Constructor */
-    SparseSubstitutionSolver();
-
-    /** Destructor */
-    ~SparseSubstitutionSolver();
-
     /** Builds the lower triangular Cholesky decomposed mass matrix */
     void init(std::vector<mesh_node >&node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) override;
 
@@ -65,7 +59,7 @@ public:
 private:
 
     /** Number of rows in this cholesky variable band matrix */
-    int num_rows;
+    int num_rows = 0;
 
     //@{
     /**
@@ -76,9 +70,6 @@ private:
      */
     std::vector<int> L_key, U_key;
     //@}
-
-    /** Stores the number of entries stored in the upper triangle */
-    int total_entries_in_U;
 
     /** Stores the inverse of the diagonal elements (need for LU solving) */
     std::vector<scalar> inverse_diag;

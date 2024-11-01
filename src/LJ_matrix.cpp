@@ -22,27 +22,8 @@
 //
 
 #include "LJ_matrix.h"
-LJ_pair::LJ_pair() {
-    Emin = 0;
-    Rmin = 0;
-}
 
-
-LJ_pair::~LJ_pair() {
-    Emin = 0;
-    Rmin = 0;
-}
-
-SSINT_matrix::SSINT_matrix() {
-    num_ssint_face_types = 0;
-}
-
-SSINT_matrix::~SSINT_matrix() {
-    params.clear();
-    num_ssint_face_types = 0;
-}
-
-void SSINT_matrix::init(string ssint_params_fname, string ssint_type, int calc_ssint, scalar ssint_cutoff) {
+void SSINT_matrix::init(const string &ssint_params_fname, const string &ssint_type, int calc_ssint, scalar ssint_cutoff) {
     // In that case we do not need an input parameter file,
     //      but just to initialise a number of values
     if (calc_ssint == 0) {
@@ -66,10 +47,9 @@ void SSINT_matrix::init_steric() {
 }
 
 
-void SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scalar ssint_cutoff) {
-
-    int count, MAX_NUM_VARS = 3;
-    string line, aset;
+void SSINT_matrix::init_ssint(const string &ssint_params_fname, const string &ssint_type, scalar ssint_cutoff) {
+    const int MAX_NUM_VARS = 3;
+    string line;
     vector<string> head(MAX_NUM_VARS);
     vector<string> bufvec;
     vector<string> bufvec2;
@@ -112,7 +92,6 @@ void SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scal
     }
 
     // Fill the matrix (with an as yet unknown number of parameters)
-    scalar Emin = 0.0, Rmin = 0.0, k0 = 0.0;
     for (int i = 0; i < num_ssint_face_types; i++)
     {
         // Use boost to get something we can deal with
@@ -122,7 +101,7 @@ void SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scal
         for (int j = 0; j < num_ssint_face_types; j++)
         {
             // Strip it to a comma delimited set
-            aset = bufvec.at(j);
+            string aset = bufvec.at(j);
             boost::trim(aset);
             aset = boost::erase_first_copy(aset, "(");
             boost::split(bufvec2, aset, boost::is_any_of(","));
@@ -133,7 +112,7 @@ void SSINT_matrix::init_ssint(string ssint_params_fname, string ssint_type, scal
             if (bufvec2.size() < 2)
                 throw FFEAException("For SSINT_params set %d %d, currently must have at least 2 params (Emin, Rmin). You specified %zu.", i, j, bufvec2.size());
 
-            for(count = 0; count < bufvec2.size(); count++)
+            for(int count = 0; count < bufvec2.size(); count++)
                 params[LJI(i, j)][head[count]] = atof(bufvec2.at(count).c_str());
 
             if (params[LJI(i, j)]["Emin"] <= 0)

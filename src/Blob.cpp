@@ -23,68 +23,6 @@
 
 #include "Blob.h"
 
-Blob::Blob() {
-
-    /* Initialise everything to zero */
-    blob_index = 0;
-    conformation_index = 0;
-    previous_conformation_index = 0;
-    state_index = 0;
-    previous_state_index = 0;
-    num_l_ctf = 0;
-    num_r_ctf = 0;
-    num_sltotal_ctf = 0;
-    num_slsets_ctf = 0;
-    num_surface_nodes = 0;
-    num_interior_nodes = 0;
-    num_surface_elements = 0;
-    num_interior_elements = 0;
-    ctf_l_nodes = {};
-    ctf_r_nodes = {};
-    ctf_sl_faces = {};
-    ctf_slsurf_ndx = {};
-    ctf_sl_faces = {};
-    ctf_sl_surfsize = {};
-    ctf_l_forces = {};
-    ctf_r_forces = {};
-    ctf_r_axis = {};
-    ctf_r_type = {};
-    ctf_sl_forces = {};
-    mass = 0;
-    blob_state = FFEA_BLOB_IS_STATIC;
-    node = {};
-    node_position = {};
-    elem = {};
-    surface = {};
-    binding_site = {};
-    solver = nullptr;
-    linear_solver = 0;
-    mass_in_blob = false;
-    ssint_on_blob = false;
-    springs_on_blob = false;
-    beads_on_blob = false;
-    force = {};
-    poisson_solver.reset();
-    phi_Omega = {};
-    phi_Gamma = {};
-    q = {};
-    // nodal_q = {};
-    poisson_rhs = {};
-    pinned_nodes_list = {};
-    bsite_pinned_nodes_list = {};
-
-    num_contributing_faces = {};
-
-    pbc_count[0] = 0;
-    pbc_count[1] = 0;
-    pbc_count[2] = 0;
-
-    toBePrinted_nodes = {};
-
-    poisson_surface_matrix = nullptr;
-    poisson_interior_matrix = nullptr;
-}
-
 Blob::~Blob() {
     /* Release the node, element and surface arrays */
     node.clear();
@@ -492,13 +430,12 @@ void Blob::init(){
 }
 
 bool Blob::check_inversion() {
-	int n;
 	matrix3 J;
 
 	vector<int> invEls;
 	invEls.clear();
 
-    for (n = 0; n < elem.size(); n++) {
+    for (int n = 0; n < elem.size(); n++) {
 
         // calculate jacobian for this element
         elem[n].calculate_jacobian(J);
@@ -512,12 +449,12 @@ bool Blob::check_inversion() {
 	}
 
 	// Are we screwed?
-	if(invEls.size() != 0) {
+	if(invEls.size()) {
 		printf("\n");
 		FFEA_error_text();
 		printf("%zu inverted elements: ", invEls.size());
-		for(n = 0; n < invEls.size(); ++n) {
-	                printf("%d ", invEls.at(n));
+		for(int n = 0; n < invEls.size(); ++n) {
+	        printf("%d ", invEls.at(n));
 		}
 		printf("\n");
 		return true;
@@ -535,7 +472,8 @@ void Blob::update_internal_forces() {
         return;
     }
 
-    if (params.calc_ctforces) apply_ctforces();
+    if (params.calc_ctforces)
+        apply_ctforces();
 
     /* some "work" variables */
     matrix3 J; // Holds the Jacobian calculated for the *current* element being processed
@@ -577,7 +515,7 @@ void Blob::update_internal_forces() {
             elem[n].create_viscosity_matrix();
 
             // Now build the stress tensor from the shear elastic, bulk elastic and fluctuating stress contributions
-            mat3_set_zero(stress);
+            initialise(stress);
             elem[n].add_shear_elastic_stress(J, stress);
             elem[n].add_bulk_elastic_stress(stress);
 
@@ -592,7 +530,7 @@ void Blob::update_internal_forces() {
                 elem[n].get_element_velocity_vector(du);
                 mat12_apply(elem[n].viscosity_matrix, du);
             } else {
-                vec12_set_zero(du);
+                initialise(du);
             }
 
             elem[n].apply_stress_tensor(stress, du);
@@ -1213,9 +1151,9 @@ void Blob::make_measurements() {
     senergy = 0.0;
 
     // OpenMP can't reduce members of classes :(
-    //arr3_set_zero(L);
-    //arr3_set_zero(CoG);
-    arr3_set_zero(CoM);
+    //initialise(L);
+    //initialise(CoG);
+    initialise(CoM);
 
 #ifdef FFEA_PARALLEL_WITHIN_BLOB
     #pragma omp parallel for default(none) reduction(+:kenergy, senergy) private(n, vec, temp1, temp2, temp3)
@@ -1283,7 +1221,7 @@ void Blob::make_measurements() {
         /* Calculate angular momentum */
         // mass matrix
         const matrix4 MM = {
-            {.1, .05, .05, .05},
+            std::array{.1, .05, .05, .05},
             {.05, .1, .05, .05},
             {.05, .05, .1, .05},
             {.05, .05, .05, .1}

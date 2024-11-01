@@ -67,9 +67,9 @@ World::World()
     ssintenergy = 0.0;
     preCompenergy = 0.0;
 
-    arr3_set_zero(L);
-    arr3_set_zero(CoM);
-    arr3_set_zero(CoG);
+    L = {};
+    CoM = {};
+    CoG = {};
     rmsd = 0.0;
 }
 
@@ -150,9 +150,9 @@ World::~World()
     ssintenergy = 0.0;
     preCompenergy = 0.0;
 
-    arr3_set_zero(L);
-    arr3_set_zero(CoM);
-    arr3_set_zero(CoG);
+    initialise(L);
+    initialise(CoM);
+    initialise(CoG);
     rmsd = 0.0;
 }
 
@@ -4841,7 +4841,6 @@ void World::print_checkpoints()
 
 void World::make_measurements()
 {
-
     int i, j, total_num_nodes = 0;
 
     // Set stuff to zero
@@ -4851,7 +4850,7 @@ void World::make_measurements()
     ssintenergy = 0.0;
     preCompenergy = 0.0;
     rmsd = 0.0;
-    arr3_set_zero(CoG);
+    initialise(CoG);
 
     arr3 bCoG;
 

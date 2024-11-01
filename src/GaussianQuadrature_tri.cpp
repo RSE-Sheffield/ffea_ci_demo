@@ -24,7 +24,7 @@
 #include "GaussianQuadrature_tri.h"
 
 /* */
-scalar GaussianQuadrature_tri::integrate_point_to_face(scalar(*f)(arr3&, arr3&), const arr3 &p, Face *face, int precision) {
+scalar GaussianQuadrature_tri::integrate_point_to_face(gq_func* /*f*/, const arr3 &p, Face *face, int precision) {
     arr3 q;
     scalar result = 0;
     int j = gq_precision[precision].index;
@@ -37,7 +37,7 @@ scalar GaussianQuadrature_tri::integrate_point_to_face(scalar(*f)(arr3&, arr3&),
 }
 
 /* */
-scalar GaussianQuadrature_tri::integrate_face_to_face(scalar(*f)(arr3&, arr3&), Face *f1, Face *f2, int precision) {
+scalar GaussianQuadrature_tri::integrate_face_to_face(gq_func* f, Face *f1, Face *f2, int precision) {
     arr3 q;
     scalar result = 0;
     int j = gq_precision[precision].index;

@@ -97,8 +97,6 @@ public:
     int es_N_y;             ///< Y dimension of the 3D lookup grid (in number of cells)
     int es_N_z;             ///< Z dimension of the 3D lookup grid (in number of cells)
     int move_into_box;      ///< If box is set, do we move the world to it's center at the start of a simulation? Default is yes!
-    int restrict_motion[3]; ///< [x,y,z] array defining whether motion in the given direction should be nullified
-    int num_dimensions;     /// Number of active dimensions after restricted_motion is applied
     scalar es_h;            ///< Dimension of each cell in the lookup grid (in multiples of inverse kappa)
 
     scalar kappa; ///< Inverse Debye Screening length

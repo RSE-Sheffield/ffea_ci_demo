@@ -23,87 +23,64 @@
 
 #include "Face.h"
 
-Face::Face() {
-    n[0] = nullptr;
-    n[1] = nullptr;
-    n[2] = nullptr;
-    n[3] = nullptr;
-    e = nullptr;
-    ssint_interaction_type = -1;
-    area_0 = 0;
-    zero_force();
-    num_blobs = 0;
-    ssint_xz_interaction_flag = false;
-    kinetically_active = false;
-    daddy_blob = nullptr;
-    dealloc_n3 = false;
-}
+Face::Face()
+    : n({nullptr, nullptr, nullptr, nullptr})
+    , index(0), e(nullptr)
+    , ssint_interaction_type(-1)
+    , area_0(0)
+    , area(0)
+    , normal()
+    , centroid()
+    , force({})
+    , centroid_stu()
+    , ssint_xz_interaction_flag(false)
+    , kinetically_active(false)
+    , num_blobs(0)
+    , daddy_blob(nullptr)
+    , stuff(0)
+    , dealloc_n3(false) { }
 
 Face::~Face() {
-    n[0] = nullptr;
-    n[1] = nullptr;
-    n[2] = nullptr;
     if (dealloc_n3) delete n[3];
-    dealloc_n3 = false;
-    n[3] = nullptr;
-    e = nullptr;
-    ssint_interaction_type = -1;
-    area_0 = 0;
-    zero_force();
-    num_blobs = 0;
-    ssint_xz_interaction_flag = false;
-    kinetically_active = false;
-    daddy_blob = nullptr;
 }
 
-void Face::init(int index, tetra_element_linear *e, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, SecondOrderFunctions::stu centroid_stu, Blob *daddy_blob, const SimulationParams &params) {
-    this->index = index;
-    this->e = e;
-    n[0] = n0;
-    n[1] = n1;
-    n[2] = n2;
-    n[3] = opposite;
+void Face::init(int _index, tetra_element_linear *_e, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, SecondOrderFunctions::stu &_centroid_stu, Blob *_daddy_blob, const SimulationParams &params) {
+    n = { n0, n1, n2, opposite };
+    index =_index;
+    e = _e;
+    force = {};
+    num_blobs = params.num_blobs;
+    daddy_blob = _daddy_blob;
 
     calc_area_normal_centroid();
     area_0 = area;
 
-    this->centroid_stu.s = centroid_stu.s;
-    this->centroid_stu.t = centroid_stu.t;
-    this->centroid_stu.u = centroid_stu.u;
-
-    this->num_blobs = params.num_blobs;
-
-    this->daddy_blob = daddy_blob;
+    this->centroid_stu.s = _centroid_stu.s;
+    this->centroid_stu.t = _centroid_stu.t;
+    this->centroid_stu.u = _centroid_stu.u;
 }
 
-void Face::init(int index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, Blob *daddy_blob, const SimulationParams &params) {
-    this->index = index;
-    this->e = nullptr;
-    n[0] = n0;
-    n[1] = n1;
-    n[2] = n2;
-    n[3] = opposite;
+void Face::init(int _index, mesh_node *n0, mesh_node *n1, mesh_node *n2, mesh_node *opposite, Blob *_daddy_blob, const SimulationParams &params) {
+    n = { n0, n1, n2, opposite };
+    index = _index;
+    e = nullptr;
+    force = {};
+    num_blobs = params.num_blobs;
+    daddy_blob = _daddy_blob;
 
     calc_area_normal_centroid();
     area_0 = area;
 
     this->centroid_stu.s = 0;
     this->centroid_stu.t = 0;
-    this->centroid_stu.u = 0;
-
-    this->num_blobs = params.num_blobs;
-
-    zero_force();
-
-    this->daddy_blob = daddy_blob;
+    this->centroid_stu.u = 0; 
 }
 
-void Face::set_ssint_interaction_type(int ssint_interaction_type) {
-    this->ssint_interaction_type = ssint_interaction_type;
+void Face::set_ssint_interaction_type(int _ssint_interaction_type) {
+    this->ssint_interaction_type = _ssint_interaction_type;
 }
 
 void Face::build_opposite_node() {
-
     // If opposite == nullptr and VdW_type == steric, we can define a node specifically for this face, to make an 'element'
     // It will contain position data (maybe add some error checks in future)
     //   and same index as node 0, n[0]. It will be harmless, because this index
@@ -116,7 +93,6 @@ void Face::build_opposite_node() {
         n[3]->index = n[0]->index;
 
         // Calculate where to stick it
-        scalar length;
         arr3 in;
 
         // Get inward normal
@@ -126,7 +102,7 @@ void Face::build_opposite_node() {
         in[2] = -1 * normal[2];
 
         // Now get a lengthscale
-        length = sqrt(area);
+        scalar length = sqrt(area);
 
         // Now place new node this far above the centroid
         n[3]->pos_0[0] = centroid[0] + length * in[0];
@@ -155,7 +131,7 @@ void Face::calc_area_normal_centroid() {
     normal[1] = a[2] * b[0] - a[0] * b[2];
     normal[2] = a[0] * b[1] - a[1] * b[0];
 
-    scalar normal_mag = sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+    const scalar normal_mag = magnitude(normal);
 
     area = .5 * normal_mag;
 
@@ -179,13 +155,11 @@ arr3 &Face::get_centroid() {
 }
 
 void Face::print_centroid() {
-
-    arr3 &c = get_centroid();
+    const arr3 &c = get_centroid();
     fprintf(stderr, "Centroid: %f %f %f\n", c[0], c[1], c[2]);
 }
 
 void Face::print_nodes() {
-
     for(int i = 0; i < 4; ++i) {
         fprintf(stderr, "Node %d: %f %f %f\n", i, n[i]->pos[0], n[i]->pos[1], n[i]->pos[2]);
     }
@@ -193,7 +167,6 @@ void Face::print_nodes() {
 }
 
 scalar Face::get_area() {
-
     arr3 temp;
 
     // (1/2) * |a x b|
@@ -207,11 +180,10 @@ scalar Face::get_area() {
     temp[1] = a[2] * b[0] - a[0] * b[2];
     temp[2] = a[0] * b[1] - a[1] * b[0];
 
-    scalar normal_mag = sqrt(temp[0] * temp[0] + temp[1] * temp[1] + temp[2] * temp[2]);
+    const scalar normal_mag = magnitude(temp);
 
     area = .5 * normal_mag;
     return area;
-
 }
 
 /* Calculate the point p on this triangle given the barycentric coordinates b1, b2, b3 */
@@ -220,7 +192,7 @@ void Face::barycentric_calc_point(scalar b1, scalar b2, scalar b3, arr3 &p) {
         p[i] = b1 * n[0]->pos[i] + b2 * n[1]->pos[i] + b3 * n[2]->pos[i];
 }
 
-void Face::barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+void Face::barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     for (int i = 0; i < 3; ++i)
         p[i] = b1 * (n[0]->pos[i]-blob_corr[f2_daddy_blob_index*(this->num_blobs)*3 + f1_daddy_blob_index*3])  + b2 * (n[1]->pos[i]-blob_corr[f2_daddy_blob_index*(this->num_blobs)*3 + f1_daddy_blob_index*3]) + b3 * (n[2]->pos[i]-blob_corr[f2_daddy_blob_index*(this->num_blobs)*3 + f1_daddy_blob_index*3+i]);
     //printf("blob_corr element for blob %d to blob %d is %f \n ",f1_daddy_blob_index,f2_daddy_blob_index,blob_corr[f1_daddy_blob_index*(this->num_blobs)*3 + f2_daddy_blob_index*3]);
@@ -273,15 +245,6 @@ void Face::add_force_to_node_atomic(int i, arr3 &f) {
         force[i][j] += f[j];
 }
 
-void Face::zero_force() {
-    for (int i = 0; i < 4; i++) {
-        force[i][0] = 0;
-        force[i][1] = 0;
-        force[i][2] = 0;
-    }
-
-}
-
 void Face::set_ssint_xz_interaction_flag(bool state) {
     ssint_xz_interaction_flag = state;
 }
@@ -299,14 +262,14 @@ bool Face::is_kinetic_active() {
     return kinetically_active;
 }
 
-bool Face::checkTetraIntersection(Face *f2) {
+bool Face::checkTetraIntersection(const Face *f2) {
 
     return (tet_a_tetII(    n[0]->pos,     n[1]->pos,     n[2]->pos,     n[3]->pos,
                             f2->n[0]->pos, f2->n[1]->pos, f2->n[2]->pos, f2->n[3]->pos));
 
 }
 
-scalar Face::getTetraIntersectionVolume(Face *f2) {
+scalar Face::getTetraIntersectionVolume(const Face *f2) {
 
     grr3 cm;
     return volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos,
@@ -315,7 +278,7 @@ scalar Face::getTetraIntersectionVolume(Face *f2) {
 
 }
 
-scalar Face::checkTetraIntersectionAndGetVolume(Face *f2) {
+scalar Face::checkTetraIntersectionAndGetVolume(const Face *f2) {
 
     arr3 cm;
     if (!tet_a_tetII(    n[0]->pos,     n[1]->pos,     n[2]->pos,     n[3]->pos,
@@ -329,7 +292,7 @@ scalar Face::checkTetraIntersectionAndGetVolume(Face *f2) {
 
 }
 
-void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar &area) {
+void Face::getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &area) {
     std::array<grr3, 4> tetA, tetB;
 
     for (int i=0; i<4; i++) {
@@ -346,7 +309,7 @@ void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar
 
 
 
-bool Face::checkTetraIntersection(Face *f2,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+bool Face::checkTetraIntersection(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     // V1 = n
     // V2 = f2->n
     std::array<arr3, 4> tetA, tetB;
@@ -368,7 +331,7 @@ bool Face::checkTetraIntersection(Face *f2,scalar *blob_corr,int f1_daddy_blob_i
 }
 
 
-bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2) {
+bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2) {
 
     std::array<grr3, 4> tetA, tetB;
     grr3 ap1, ap2, cm;
@@ -412,7 +375,7 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, ge
 }
 
 
-bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     std::array<grr3, 4> tetB, tetC, tetD;
     grr3 ap1, ap2, cm;
     geoscalar vol_m, vol_M;
@@ -453,12 +416,10 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(Face *f2, ge
     }
 
     return true;
-
 }
 
 
-scalar Face::getTetraIntersectionVolume(Face *f2, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
-
+scalar Face::getTetraIntersectionVolume(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     grr3 cm;
     std::array<grr3, 4> tetB;
     double assx=0, assy=0, assz=0;
@@ -468,11 +429,9 @@ scalar Face::getTetraIntersectionVolume(Face *f2, scalar *blob_corr,int f1_daddy
         }
     }
     return volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
-
-
 }
 
-scalar Face::checkTetraIntersectionAndGetVolume(Face *f2, scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+scalar Face::checkTetraIntersectionAndGetVolume(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     arr3 cm;
     std::array<arr3, 4> tetB;
 
@@ -488,9 +447,8 @@ scalar Face::checkTetraIntersectionAndGetVolume(Face *f2, scalar *blob_corr,int 
             n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
 }
 
-void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar &area,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+void Face::getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &_area, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     std::array<grr3, 4> tetA, tetB;
-    double assx=0, assy=0, assz=0;
     for (int i=0; i<4; i++) {
         tetA[i][0] = n[i]->pos[0];
         tetA[i][1] = n[i]->pos[1];
@@ -501,7 +459,7 @@ void Face::getTetraIntersectionVolumeAndArea(Face *f2, geoscalar &vol, geoscalar
         tetB[i][1] = f2->n[i]->pos[1]-blob_corr[f1_daddy_blob_index*(this->num_blobs)*3 + f2_daddy_blob_index*3+1];
         tetB[i][2] = f2->n[i]->pos[2]-blob_corr[f1_daddy_blob_index*(this->num_blobs)*3 + f2_daddy_blob_index*3+2];
     }
-    volumeAndAreaIntersection(tetA, tetB, vol, area);
+    volumeAndAreaIntersection(tetA, tetB, vol, _area);
     //printf("Face %d and Face %d volume is %f area is %f\n",f2->index,this->index,vol,area);
 }
 
@@ -524,7 +482,7 @@ scalar Face::length_of_longest_edge() {
 }
 
 template <class brr3>
-void Face::vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+void Face::vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     //this->get_centroid();
     //f2->get_centroid();
     for(int i =0; i <3; ++i)
@@ -540,11 +498,11 @@ void Face::vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w,scalar *blob_corr,int f1_dadd
 //////////////////////////////////////////////////
 template void Face::add_force_to_node<arr3>(int i, arr3 &f);
 // template void Face::add_bb_vdw_force_to_record<arr3>(arr3 &f, int other_blob_index); // DEPRECATED
-template void Face::vec3Vec3SubsToArr3Mod<arr3>(Face *f2, arr3 &w,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+template void Face::vec3Vec3SubsToArr3Mod<arr3>(Face *f2, arr3 &w, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
 
 #ifndef USE_DOUBLE
 template void Face::add_force_to_node<grr3>(int i, grr3 &f);
 // template void Face::add_bb_vdw_force_to_record<grr3>(grr3 &f, int other_blob_index); // DEPRECATED
-template void Face::vec3Vec3SubsToArr3Mod<grr3>(Face *f2, grr3 &w,scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+template void Face::vec3Vec3SubsToArr3Mod<grr3>(Face *f2, grr3 &w, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 #endif

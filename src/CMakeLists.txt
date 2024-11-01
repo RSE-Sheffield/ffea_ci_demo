@@ -39,7 +39,6 @@ set(FFEA_LIB_INCLUDE
     ${PROJECT_SOURCE_DIR}/include/MassLumpedSolver.h
     ${PROJECT_SOURCE_DIR}/include/MassMatrixLinear.h
     ${PROJECT_SOURCE_DIR}/include/MassMatrixQuadratic.h
-    ${PROJECT_SOURCE_DIR}/include/MatrixFixedSparsityPattern.h
     ${PROJECT_SOURCE_DIR}/include/LJ_matrix.h
     ${PROJECT_SOURCE_DIR}/include/BindingSite.h
     ${PROJECT_SOURCE_DIR}/include/mat_vec_fns_II.h
@@ -79,7 +78,6 @@ set(UNKNOWN_INCLUDE
     ${PROJECT_SOURCE_DIR}/include/BlobLite.h
     ${PROJECT_SOURCE_DIR}/include/ConnectivityTypes.h
     ${PROJECT_SOURCE_DIR}/include/LinkedListCube.h
-    ${PROJECT_SOURCE_DIR}/include/NodeMap.h
     ${PROJECT_SOURCE_DIR}/include/SecondOrderFunctions.h
     ${PROJECT_SOURCE_DIR}/include/Solver.h
     ${PROJECT_SOURCE_DIR}/include/dimensions.h
@@ -102,7 +100,6 @@ set(FFEA_LIB_SRC
     ${PROJECT_SOURCE_DIR}/src/MassLumpedSolver.cpp
     ${PROJECT_SOURCE_DIR}/src/MassMatrixLinear.cpp
     ${PROJECT_SOURCE_DIR}/src/MassMatrixQuadratic.cpp
-    ${PROJECT_SOURCE_DIR}/src/MatrixFixedSparsityPattern.cpp
     ${PROJECT_SOURCE_DIR}/src/LJ_matrix.cpp
     ${PROJECT_SOURCE_DIR}/src/BindingSite.cpp
     ${PROJECT_SOURCE_DIR}/src/NearestNeighbourLinkedListCube.cpp
@@ -110,7 +107,6 @@ set(FFEA_LIB_SRC
     ${PROJECT_SOURCE_DIR}/src/SparseMatrixTypes.cpp
     ${PROJECT_SOURCE_DIR}/src/SparseMatrixUnknownPattern.cpp
     ${PROJECT_SOURCE_DIR}/src/SparsityPattern.cpp
-    ${PROJECT_SOURCE_DIR}/src/Spring.cpp
     ${PROJECT_SOURCE_DIR}/src/VdW_solver.cpp
     ${PROJECT_SOURCE_DIR}/src/Steric_solver.cpp
     ${PROJECT_SOURCE_DIR}/src/LJSteric_solver.cpp

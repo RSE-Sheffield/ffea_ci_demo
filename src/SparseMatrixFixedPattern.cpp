@@ -43,11 +43,11 @@ SparseMatrixFixedPattern::~SparseMatrixFixedPattern() {
     num_nonzero_elements = 0;
 }
 
-void SparseMatrixFixedPattern::init(int num_rows, int num_nonzero_elements, std::vector<sparse_entry> &&entry, std::vector<int> &&key, std::vector<sparse_entry_sources> source_list) {
+void SparseMatrixFixedPattern::init(int num_rows, int num_nonzero_elements, std::vector<sparse_entry> &&_entry, std::vector<int> &&_key, std::vector<sparse_entry_sources> source_list) {
     this->num_rows = num_rows;
     this->num_nonzero_elements = num_nonzero_elements;
-    this->entry = entry;
-    this->key = key;
+    this->entry = _entry;
+    this->key = _key;
     this->source_list = source_list;
 
     // Work out which elements are on the diagonal
@@ -67,10 +67,10 @@ void SparseMatrixFixedPattern::init(int num_rows, int num_nonzero_elements, std:
 }
 
 // Initialise matrix without a source list (doesn't need rebuilding)
-void SparseMatrixFixedPattern::init(int num_rows, const std::vector<scalar> &entries, std::vector<int> &&key, const std::vector<int> &col_indices) {
+void SparseMatrixFixedPattern::init(int num_rows, const std::vector<scalar> &entries, std::vector<int> &&_key, const std::vector<int> &col_indices) {
     this->num_rows = num_rows;
     this->num_nonzero_elements = entries.size();
-    this->key = key;
+    this->key = _key;
     try {
         this->entry = std::vector<sparse_entry>(entries.size());
     } catch(std::bad_alloc &) {

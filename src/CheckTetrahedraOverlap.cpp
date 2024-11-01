@@ -42,10 +42,9 @@
 
 #include "CheckTetrahedraOverlap.h"
 
+#include "mat_vec_fns_II.h"
+
 // ----------- 3D algebraic operators -------------
-
-
-#define DOT(a,b) (a[0]*b[0]+a[1]*b[1]+a[2]*b[2])
 
 #define VECT(res,a,b) {				\
     res[0] = a[1]*b[2]-b[1]*a[2];		\
@@ -118,10 +117,10 @@ inline bool FaceA_1(  scalar * Coord,  int & maskEdges, checkVars vars)
   
   maskEdges = 000;
   
-  if (( Coord[0] = DOT(vars.P_V1[0] , vars.n)) > 0.0) maskEdges = 001;				
-  if (( Coord[1] = DOT(vars.P_V1[1] , vars.n)) > 0.0) maskEdges |= 002;	
-  if (( Coord[2] = DOT(vars.P_V1[2] , vars.n)) > 0.0) maskEdges |= 004;	
-  if (( Coord[3] = DOT(vars.P_V1[3] , vars.n)) > 0.0) maskEdges |= 010;	
+  if (( Coord[0] = dot(vars.P_V1[0] , vars.n)) > 0.0) maskEdges = 001;				
+  if (( Coord[1] = dot(vars.P_V1[1] , vars.n)) > 0.0) maskEdges |= 002;
+  if (( Coord[2] = dot(vars.P_V1[2] , vars.n)) > 0.0) maskEdges |= 004;
+  if (( Coord[3] = dot(vars.P_V1[3] , vars.n)) > 0.0) maskEdges |= 010;
   
   
   return (maskEdges == 017);	// if true it means that all of the vertices are out the halfspace
@@ -133,7 +132,7 @@ inline bool FaceA_1(  scalar * Coord,  int & maskEdges, checkVars vars)
 
 // hence they do not need to be stored
 
-inline bool FaceA_2(scalar * Coord,int & maskEdges, checkVars vars, arr3 &V2_0, arr3 &V2_1, arr3 &V2_2, arr3 &V2_3, arr3 &V1_1)
+inline bool FaceA_2(scalar * Coord, int & maskEdges, checkVars vars, const arr3 &V2_0, const arr3 &V2_1, const arr3 &V2_2, const arr3 &V2_3, const arr3 &V1_1)
 {
   maskEdges = 000;
   // scalar * v_ref = V1_1;
@@ -152,15 +151,14 @@ inline bool FaceA_2(scalar * Coord,int & maskEdges, checkVars vars, arr3 &V2_0, 
 // FaceB --------------------------------------------------------------
 
 inline bool FaceB_1(checkVars vars)
-{
-  
-  return  ((DOT(vars.P_V2[0] , vars.n) > 0.0) &&				
-	   (DOT(vars.P_V2[1] , vars.n) > 0.0) &&	
-	   (DOT(vars.P_V2[2] , vars.n) > 0.0) &&	
-	   (DOT(vars.P_V2[3] , vars.n) > 0.0));
+{  
+  return  ((dot(vars.P_V2[0] , vars.n) > 0.0) &&				
+	   (dot(vars.P_V2[1] , vars.n) > 0.0) &&
+	   (dot(vars.P_V2[2] , vars.n) > 0.0) &&
+	   (dot(vars.P_V2[3] , vars.n) > 0.0));
 }
 
-inline bool FaceB_2(checkVars vars, arr3 &V1_0, arr3 &V1_1, arr3 &V1_2, arr3 &V1_3, arr3 &V2_1)
+inline bool FaceB_2(checkVars vars, const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr3 &V1_3, const arr3 &V2_1)
 {
   // scalar * v_ref = V2_1;
   return	(( SUB_DOT(V1_0,V2_1 , vars.n) > 0.0)  &&
@@ -172,7 +170,7 @@ inline bool FaceB_2(checkVars vars, arr3 &V1_0, arr3 &V1_1, arr3 &V1_2, arr3 &V1
 
 // EdgeA -------------------------------------------------------
 
-inline bool EdgeA(const int & f0 , const int & f1, checkVars vars)
+inline bool EdgeA(const int &f0 , const int &f1, checkVars vars)
 {
   
   scalar * coord_f0 = &vars.Coord_1[f0][0];
@@ -251,8 +249,8 @@ inline bool EdgeA(const int & f0 , const int & f1, checkVars vars)
 }
 
 // main function
-bool tet_a_tetII(arr3 &V1_0, arr3 &V1_1, arr3 &V1_2, arr3 &V1_3,
-                 arr3 &V2_0, arr3 &V2_1, arr3 &V2_2, arr3 &V2_3) {
+bool tet_a_tetII(const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr3 &V1_3,
+	            const arr3 &V2_0, const arr3 &V2_1, const arr3 &V2_2, const arr3 &V2_3) {
   
   // First, we must define the variable object for this call (to ensure thread safety)
   checkVars vars;
@@ -333,8 +331,7 @@ bool tet_a_tetII(arr3 &V1_0, arr3 &V1_1, arr3 &V1_2, arr3 &V1_3,
   
   if(FaceB_2(vars, V1_0, V1_1, V1_2, V1_3, V2_1)) return false;
 
-  return true;	
-
+  return true;
 }
 
 #undef DOT

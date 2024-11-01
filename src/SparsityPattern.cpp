@@ -23,35 +23,18 @@
 
 #include "SparsityPattern.h"
 
-SparsityPattern::SparsityPattern() {
-    row = {};
-    num_nonzero_elements = 0;
-}
-
-SparsityPattern::~SparsityPattern() {
-    list<sparse_contribution_location*>::iterator it;
-    for(int i = 0; i < row.size(); ++i) {
-        for (it = row[i].begin(); it != row[i].end(); ++it) {
-	    delete (*it);
-	}	
-    }
-    row.clear();
-    num_nonzero_elements = 0;
-}
-
 void SparsityPattern::init(int num_rows) {
     try {
-        row = std::vector<list<sparse_contribution_location*>>(num_rows);
-    } catch (std::bad_alloc) {
+        row = std::vector<list<std::unique_ptr<sparse_contribution_location>>>(num_rows);
+    } catch (std::bad_alloc&) {
         throw FFEAException("Could not allocate memory for 'row' array in SparsityPattern.");
     }
 }
 
 /* * */
 void SparsityPattern::register_contribution(int i, int j, scalar *contrib_memory_loc) {
-    list<sparse_contribution_location*>::iterator it;
-    for (it = row[i].begin(); it != row[i].end(); ++it) {
-
+    auto it = row[i].begin();
+    for (; it != row[i].end(); ++it) {
         // If element already has sources, add the source to the list
         if ((*it)->column_index == j) {
             (*it)->source_list.push_back(contrib_memory_loc);
@@ -66,16 +49,14 @@ void SparsityPattern::register_contribution(int i, int j, scalar *contrib_memory
     }
 
     num_nonzero_elements++;
-    sparse_contribution_location *scl = new(std::nothrow) sparse_contribution_location();
-    if (!scl) throw FFEAException("Failed to allocate memory for 'scl' in SparsityPattern::register_contribution.");
+    std::unique_ptr<sparse_contribution_location> scl = std::make_unique<sparse_contribution_location>();
     scl->column_index = j;
     scl->source_list.push_back(contrib_memory_loc);
-    row[i].insert(it, scl);
+    row[i].insert(it, std::move(scl));
 }
 
 bool SparsityPattern::check_for_contribution(int i, int j) {
-    list<sparse_contribution_location*>::iterator it;
-    for (it = row[i].begin(); it != row[i].end(); ++it) {
+    for (auto it = row[i].begin(); it != row[i].end(); ++it) {
         // If element already has sources, add the source to the list
         if ((*it)->column_index == j) {
             return true;
@@ -131,8 +112,8 @@ std::shared_ptr<SparseMatrixFixedPattern> SparsityPattern::create_sparse_matrix(
 void SparsityPattern::print() {
     for (int i = 0; i < row.size(); i++) {
         printf("= ");
-        for (list<sparse_contribution_location*>::iterator it = row[i].begin(); it != row[i].end(); ++it) {
-            printf("[%d %d] ", (*it)->column_index, (int) ((*it)->source_list.size()));
+        for (auto it = row[i].begin(); it != row[i].end(); ++it) {
+            printf("[%d %d] ", (*it)->column_index, static_cast<int>((*it)->source_list.size()));
         }
         printf("\n");
     }

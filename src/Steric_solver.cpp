@@ -26,19 +26,13 @@
 
 /** do_volumeExclusion calculates the force (and not the energy, yet) of two tetrahedra */
 void Steric_solver::do_interaction(Face *f1, Face *f2, scalar *blob_corr){
-
     if (!blob_corr) {
-       if (! f1->checkTetraIntersection(f2)) return;
+       if (! f1->checkTetraIntersection(f2))
+           return;
     } else {
        if (! f1->checkTetraIntersection(f2,
-            blob_corr,f1->daddy_blob->blob_index, f2->daddy_blob->blob_index)) return;
+            blob_corr,f1->daddy_blob->blob_index, f2->daddy_blob->blob_index))
+           return;
     } 
     do_steric_interaction(f1, f2, blob_corr); 
-    return; 
-
 }
-
-
-
-
-

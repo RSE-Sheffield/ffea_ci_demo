@@ -99,7 +99,7 @@ public:
      * Initialises all variables and pointers to 0 (or nullptr). Does not perform any memory allocation. Actual Blob initialisation
      * is carried out by the init() method.
      */
-    Blob();
+    Blob() = default;
 
     /**
      * Blob destructor:
@@ -441,9 +441,9 @@ public:
     void get_min_max(arr3 &blob_min, arr3 &blob_max);
 
     /* Blob, conformation and state indices */
-    int blob_index;
-    int conformation_index, previous_conformation_index;
-    int state_index, previous_state_index;
+    int blob_index = 0;
+    int conformation_index = 0, previous_conformation_index = 0;
+    int state_index = 0, previous_state_index = 0;
 
     /*
      *
@@ -468,27 +468,27 @@ public:
     scalar get_kinetic_energy();
     scalar get_strain_energy();
 
-    int pbc_count[3]{};
+    std::array<int, 3> pbc_count = {};
 
 private:
 
     /** Total number of surface elements in Blob */
-    int num_surface_elements;
+    int num_surface_elements = 0;
 
     /** Total number of interior elements in Blob */
-    int num_interior_elements;
+    int num_interior_elements = 0;
 
     /** Total number of nodes on Blob surface */
-    int num_surface_nodes;
+    int num_surface_nodes = 0;
 
     /** Total number of nodes on Blob interior */
-    int num_interior_nodes;
+    int num_interior_nodes = 0;
 
     /** Number of ctforces to be applied to this Blob */
-    int num_l_ctf;
-    int num_r_ctf;
-    int num_sltotal_ctf;
-    int num_slsets_ctf; ///< number of surface sets, corresponding to the length of the ctf_sl_forces, num_slsurf_ctf array
+    int num_l_ctf = 0;
+    int num_r_ctf = 0;
+    int num_sltotal_ctf = 0;
+    int num_slsets_ctf = 0; ///< number of surface sets, corresponding to the length of the ctf_sl_forces, num_slsurf_ctf array
 
     /** Number of faces in every surface set: */
     std::vector<int> ctf_slsurf_ndx;
@@ -497,68 +497,68 @@ private:
     int blob_state;
 
     /** Total mass of Blob */
-    scalar mass;
+    scalar mass = 0;
 
     /** Total ssint energy between blobs */
-    //scalar ssint_bb_energy{};
+    //scalar ssint_bb_energy = 0;
 
     /** Array of nodes */
-    std::vector<mesh_node> node;
+    std::vector<mesh_node> node = {};
 
     /** Array of node positions only */
-    std::vector<arr3 *> node_position;
+    std::vector<arr3 *> node_position = {};
 
     /** Array of elements */
-    std::vector<tetra_element_linear> elem;
+    std::vector<tetra_element_linear> elem = {};
 
     /** Array of surface faces */
-    std::vector<Face> surface;
+    std::vector<Face> surface = {};
 
     /** List of fixed ('pinned') nodes */
-    std::vector<int> pinned_nodes_list;
+    std::vector<int> pinned_nodes_list = {};
 
     /** Additional pinned node list for binding processes */
-    set<int> bsite_pinned_nodes_list;
+    set<int> bsite_pinned_nodes_list = {};
 
     // Interacting beads within this blob, not tracked beyond PreComp_solver
     /** Array with bead positions xyzxyzxyz.... [precomp]
       *   will be nullptr after info is loaded into PreComp_solver */
-    std::vector<arr3> bead_position;
+    std::vector<arr3> bead_position = {};
 
     /** 2D vector with the set of nodes where every bead should be assigned to.
       *   It will be removed after PreComp_solver is initialised [precomp] */
-    std::vector<std::vector<int>> bead_assignment;
+    std::vector<std::vector<int>> bead_assignment = {};
 
     /** Array with bead types [precomp]
       *   will be empty after info is loaded into PreComp_solver */
-    std::vector<int> bead_type;
+    std::vector<int> bead_type = {};
 
     /** Array with the nodes having linear ctforces assigned */
-    std::vector<int> ctf_l_nodes;
+    std::vector<int> ctf_l_nodes = {};
     /** Array with the nodes having rotational ctforces assigned */
-    std::vector<int> ctf_r_nodes;
+    std::vector<int> ctf_r_nodes = {};
     /** Array with the faces having linear ctforces assigned */
-    std::vector<int> ctf_sl_faces;
+    std::vector<int> ctf_sl_faces = {};
     /** array with the number of faces in every surface set. */
-    std::vector<int> ctf_sl_surfsize;
+    std::vector<int> ctf_sl_surfsize = {};
 
     /** Array with the linear ctforces: FxFyFzFxFyFz...,
       * being Fx, Fy, Fz the components of the force */
-    std::vector<scalar> ctf_l_forces;
+    std::vector<scalar> ctf_l_forces = {};
     /** Array with the magnitude of the rotational ctforces: FFF..., */
-    std::vector<scalar> ctf_r_forces;
+    std::vector<scalar> ctf_r_forces = {};
     /** Array with the rotational axis (given with point + unit vector)
       *  for ctforces: XYZxyzXYZxyzFxFyFz...,
       *  or BlobConfNodeBlobConfNode,BlobConfNodeBlobConfNode,...
       *  if using two nodes to define the axis.  */
-    std::vector<scalar> ctf_r_axis;
+    std::vector<scalar> ctf_r_axis = {};
     /** Array with the type of rotation force, 2 chars per node:
       *  where the first one can be n or p, depending of the axis defined by nodes or points
       *   and the second one can be f or t, depending on applying ctforce or cttorque.*/
-    std::vector<char> ctf_r_type;
+    std::vector<char> ctf_r_type = {};
     /** Array with the linear surface ctforces: FxFyFzFxFyFz...,
       * being Fx, Fy, Fz the components of the force */
-    std::vector<scalar> ctf_sl_forces;
+    std::vector<scalar> ctf_sl_forces = {};
 
     /** Strings of all the files that contain input data: */
     string s_node_filename, s_topology_filename, s_surface_filename, 
@@ -567,86 +567,88 @@ private:
 
 
     /** Scale of the input coordinates to m: */
-    scalar scale{};
+    scalar scale = 0.0;
 
     /** Compression stuff: */
-    scalar calc_compress{}, compress{}; 
+    scalar calc_compress = 0.0;
+    scalar compress = 0.0;
 
     /** Class containing simulation parameters, such as the time step, dt */
-    SimulationParams params;
-    PreComp_params pc_params;
+    SimulationParams params = {};
+    PreComp_params pc_params = {};
 
     /** A pointer to the same binding matrix configured in World */ 
-    BindingSite_matrix *binding_matrix{};
+    BindingSite_matrix *binding_matrix = nullptr;
 
     /** pointer to the ssint forcefield parameters (for some energy calcs) */
-    SSINT_matrix *ssint_matrix{};
+    SSINT_matrix *ssint_matrix = nullptr;
 
     /** A pointer to whatever Solver is being used for this Blob (eg SparseSubstitutionSolver
      * or ConjugateGradientSolver). The Solver solves the equation Mx = f where M is the
      * mass matrix of this Blob and f is the force vector.
      */
-    std::unique_ptr<Solver> solver;
+    std::unique_ptr<Solver> solver = nullptr;
 
     /** Remember what type of solver we are using */
-    int linear_solver;
+    int linear_solver = 0;
 
     /** And whether or not there is mass in this system */
-    bool mass_in_blob;
+    bool mass_in_blob = false;
 
     /** Are there springs on this blob? */
-    bool springs_on_blob;
+    bool springs_on_blob = false;
 
     /** Are there ssint on this blob? */
-    bool ssint_on_blob;
+    bool ssint_on_blob = false;
 
     /** Are the preComp beads on this blob? */
-    bool beads_on_blob;
+    bool beads_on_blob = false;
 
     /** The Blob force vector (an array of the force on every node) */
-    std::vector<arr3> force;
+    std::vector<arr3> force = {};
 
     /** The array of random number generators (needed for parallel runs) */
-    std::shared_ptr<std::vector<RngStream>> rng;
+    std::shared_ptr<std::vector<RngStream>> rng = nullptr;
 
     //@{
     /** Energies */
-    scalar kineticenergy{}, strainenergy{};
+    scalar kineticenergy = 0;
+    scalar strainenergy = 0;
     //@}
 
     /** Momenta */
-    arr3 L;
+    arr3 L = {};
 
     //@{
     /** Geometries */
-    arr3 CoM, CoG, CoM_0, CoG_0;
-    scalar rmsd{};
+    arr3 CoM = {}, CoG = {}, CoM_0 = {}, CoG_0 = {};
+    scalar rmsd = 0;
     //@}
 
-    std::unique_ptr<CG_solver> poisson_solver;
-    std::shared_ptr<SparseMatrixFixedPattern> poisson_surface_matrix;
-    std::shared_ptr<SparseMatrixFixedPattern> poisson_interior_matrix;
-    std::vector<scalar> phi_Omega;
-    std::vector<scalar> phi_Gamma;
-    std::vector<scalar> q;
+    std::unique_ptr<CG_solver> poisson_solver = nullptr;
+    std::shared_ptr<SparseMatrixFixedPattern> poisson_surface_matrix = nullptr;
+    std::shared_ptr<SparseMatrixFixedPattern> poisson_interior_matrix = nullptr;
+    std::vector<scalar> phi_Omega = {};
+    std::vector<scalar> phi_Gamma = {};
+    std::vector<scalar> q = {};
     //std::vector<scalar> nodal_q;
-    std::vector<scalar> poisson_rhs;
+    std::vector<scalar> poisson_rhs = {};
 
-    std::vector<int> num_contributing_faces;
+    std::vector<int> num_contributing_faces = {};
 
-    connectivity_entry *element_connectivity_table{};
+    connectivity_entry* element_connectivity_table = nullptr;
 
     /*
      * Mass Matrix
      * @see build_mass_matrix()
      */
-    std::shared_ptr<SparseMatrixFixedPattern> M;
+    std::shared_ptr<SparseMatrixFixedPattern> M = nullptr;
 
-    std::vector<BindingSite> binding_site;
+    std::vector<BindingSite> binding_site = {};
     
     /*
      */
-    std::vector<scalar> toBePrinted_nodes; 
+    std::vector<scalar> toBePrinted_nodes = {};
 
     /**
      * Opens and reads the given 'ffea node file', extracting all the nodes for this Blob.

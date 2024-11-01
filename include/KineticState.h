@@ -41,7 +41,7 @@ class KineticState {
 		
 		KineticState();
 
-		~KineticState();
+		~KineticState() = default;
 
 		void init();
 		void init(int conf_index, int from, int to);

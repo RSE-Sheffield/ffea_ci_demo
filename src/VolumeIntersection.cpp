@@ -30,7 +30,7 @@ using std::cout;
 using std::endl; 
 
 template <typename T>
-bool exists(std::array<T,3> &p, int ips, std::array<std::array<T,3>, 56>& W){
+bool exists(const std::array<T,3> &p, int ips, const std::array<std::array<T,3>, 56>& W){
 
   for (int i=0; i<ips; i++){ 
     if (distance(p, W[i]) < ffea_const::threeErr) {
@@ -94,7 +94,7 @@ void maxVolumeAndArea(int ips, std::array<std::array<T, 3>, 56> &W, T &volume, T
 
 /**  CM for the first ips points stored in std::array<T,3> W[56] */ 
 template <typename T>
-void findCM(int ips, std::array<std::array<T, 3>, 56> &W, std::array<T,3> &cm){
+void findCM(int ips, const std::array<std::array<T, 3>, 56> &W, std::array<T,3> &cm){
   initialise(cm); 
   for (int i=0; i<ips; i++){
     add(cm, W[i], cm); 
@@ -111,7 +111,7 @@ void findCM(int ips, std::array<std::array<T, 3>, 56> &W, std::array<T,3> &cm){
  * the code assumes that tetA has its vertices in the right order. 
  */
 template <typename T>
-void getBAndN_Order(std::array<std::array<T, 3>, 4> &tetA, int n0, int n1, int n2, std::array<T,3> &t, std::array<T,3> &b, std::array<T,3> &n){
+void getBAndN_Order(const std::array<std::array<T, 3>, 4> &tetA, int n0, int n1, int n2, const std::array<T,3> &t, std::array<T,3> &b, std::array<T,3> &n){
 
   // std::array<T,3>  t_j; 
   if ((n0 == 0) || (n1 == 0) || (n2 ==0)) {
@@ -145,7 +145,7 @@ void getBAndN_Order(std::array<std::array<T, 3>, 4> &tetA, int n0, int n1, int n
  *     n: the normal to t, on the face 
  */
 template <typename T>
-void getBAndN(std::array<std::array<T,3>, 4> &tetA, int n0, int n1, int n2, std::array<T,3> &t, std::array<T,3> &b, std::array<T,3> &n){
+void getBAndN(const std::array<std::array<T,3>, 4> &tetA, int n0, int n1, int n2, const std::array<T,3> &t, std::array<T,3> &b, std::array<T,3> &n){
   
    // pl1 and pl2 are the unit vectors (tetA[n1] - tetA[n0]) and (tetA[n2] - tetA[n0]), 
    //   but t == pl1, so: 
@@ -178,7 +178,7 @@ void getBAndN(std::array<std::array<T,3>, 4> &tetA, int n0, int n1, int n2, std:
  *     n: the normal to t, on the face 
  */
 template <typename T>
-void getBAndN(std::array<T,3> &f0, std::array<T,3> &f1, std::array<T,3> &f2, std::array<T,3> &p3, std::array<T,3> &t, std::array<T,3> &b, std::array<T,3> &n){
+void getBAndN(const std::array<T,3> &f0, const std::array<T,3> &f1, const std::array<T,3> &f2, const std::array<T,3> &p3, const std::array<T,3> &t, std::array<T,3> &b, std::array<T,3> &n){
   
    // pl1 and pl2 are the unit vectors (tetA[n1] - tetA[n0]) and (tetA[n2] - tetA[n0]), 
    //   but t == pl1, so: 
@@ -202,7 +202,8 @@ void getBAndN(std::array<T,3> &f0, std::array<T,3> &f1, std::array<T,3> &f2, std
   //    tetA[n2] and n lay on the same side 
   //       of the line given by t = unit(tetA[n1] - tetA[n0])
   add(f0, n, aux);
-  if (!sameSideLine(aux, f2, f1, f0)) resize(ffea_const::mOne, n);
+  if (!sameSideLine(aux, f2, f1, f0))
+      resize(ffea_const::mOne, n);
 
 }
 
@@ -211,7 +212,7 @@ void getBAndN(std::array<T,3> &f0, std::array<T,3> &f1, std::array<T,3> &f2, std
  *    intersectant thetrahedra. 
  */
 template <typename T>
-T volumeForNode(std::array<std::array<T,3>, 4> &tetA, int node) {
+T volumeForNode(const std::array<std::array<T,3>, 4> &tetA, int node) {
   T volume = 0.0;
 
   // do the loop: 
@@ -258,7 +259,7 @@ T volumeForNode(std::array<std::array<T,3>, 4> &tetA, int node) {
 }
 
 template <typename T>
-T volumeForNode(std::array<T,3> &tet0, std::array<T,3> &tet1, std::array<T,3> &tet2, std::array<T,3> &tetN) {
+T volumeForNode(const std::array<T,3> &tet0, const std::array<T,3> &tet1, const std::array<T,3> &tet2, const std::array<T,3> &tetN) {
   T volume = 0.0;
   T pt; 
   std::array<T,3> t_i, n_j, b_j;
@@ -302,7 +303,7 @@ T volumeForNode(std::array<T,3> &tet0, std::array<T,3> &tet1, std::array<T,3> &t
  *    intersectant thetrahedra. 
  */
 template <typename T>
-void volumeAndAreaForNode(std::array<std::array<T,3>, 4> &tetA, int node, T &volume, T &area) {
+void volumeAndAreaForNode(const std::array<std::array<T,3>, 4> &tetA, int node, T &volume, T &area) {
   volume = 0.0;
   area = 0.0; 
 
@@ -332,7 +333,7 @@ void volumeAndAreaForNode(std::array<std::array<T,3>, 4> &tetA, int node, T &vol
  *    and the face given by the points tetB[f1]:tetB[f2]:tetB[f3]. 
  */ 
 template <typename T>
-T volumeForIntPoint(std::array<T,3> &ip, std::array<std::array<T,3>, 4> &tetA, int e1, int e2, std::array<std::array<T,3>, 4>& tetB, int f1, int f2, int f3){
+T volumeForIntPoint(const std::array<T,3> &ip, const std::array<std::array<T,3>, 4> &tetA, int e1, int e2, const std::array<std::array<T,3>, 4>& tetB, int f1, int f2, int f3){
 
    T volume = 0; 
    // ip has three faces:
@@ -545,7 +546,7 @@ T volumeForIntPoint(std::array<T,3> &ip, std::array<std::array<T,3>, 4> &tetA, i
  *    while knowing the rest of the tetrahedra points.
  */
 template <typename T>
-T volumeForIntPointII(std::array<T,3> &ip, std::array<T,3> &tetAe1, std::array<T,3> &tetAe2, std::array<T,3> &tetAe3, std::array<T,3> &tetAe4, std::array<T,3> &tetBf1, std::array<T,3> &tetBf2, std::array<T,3> &tetBf3, std::array<T,3> &tetBf4){ 
+T volumeForIntPointII(const std::array<T,3> &ip, const std::array<T,3> &tetAe1, const std::array<T,3> &tetAe2, const std::array<T,3> &tetAe3, const std::array<T,3> &tetAe4, const std::array<T,3> &tetBf1, const std::array<T,3> &tetBf2, const std::array<T,3> &tetBf3, const std::array<T,3> &tetBf4){
 
    T volume = 0; 
    // ip has three faces:
@@ -658,8 +659,7 @@ T volumeForIntPointII(std::array<T,3> &ip, std::array<T,3> &tetAe1, std::array<T
  *    and the face given by the points tetB[f1]:tetB[f2]:tetB[f3]. 
  */ 
 template <typename T>
-void volumeAndAreaForIntPoint(std::array<T,3> &ip, std::array<std::array<T,3>, 4> &tetA, int e1, int e2, std::array<std::array<T,3>, 4> &tetB, int f1, int f2, int f3, T &volume, T &area){
-
+void volumeAndAreaForIntPoint(const std::array<T,3> &ip, const std::array<std::array<T,3>, 4> &tetA, int e1, int e2, const std::array<std::array<T,3>, 4> &tetB, int f1, int f2, int f3, T &volume, T &area){
    volume = 0; 
    area = 0; 
    // ip has three faces:
@@ -776,7 +776,7 @@ void volumeAndAreaForIntPoint(std::array<T,3> &ip, std::array<std::array<T,3>, 4
 
 /** Return the volume intersection between two tetrahedra */ 
 template <typename T>
-T volumeIntersection(std::array<std::array<T,3>, 4> &tetA, std::array<std::array<T,3>, 4> &tetB, bool calcCM, std::array<T,3> &cm){
+T volumeIntersection(const std::array<std::array<T,3>, 4> &tetA, const std::array<std::array<T,3>, 4> &tetB, bool calcCM, std::array<T,3> &cm){
   T vol = 0.0; 
   std::array<std::array<T,3>, 56> W; 
 
@@ -903,7 +903,8 @@ T volumeIntersection(std::array<std::array<T,3>, 4> &tetA, std::array<std::array
     vol = w;
   }
 
-  if (calcCM) findCM(ips, W, cm);
+  if (calcCM)
+      findCM(ips, W, cm);
 
   return vol; 
  
@@ -911,7 +912,7 @@ T volumeIntersection(std::array<std::array<T,3>, 4> &tetA, std::array<std::array
 } 
 
 template <typename T>
-void contribVolForNode(T &vol, std::array<T,3> &n0, std::array<T,3> &n1, std::array<T,3> &n2, std::array<T,3> &n3, std::array<std::array<T,3>,56> &W, int &ips){
+void contribVolForNode(T &vol, const std::array<T,3> &n0, const std::array<T,3> &n1, const std::array<T,3> &n2, const std::array<T,3> &n3, std::array<std::array<T,3>,56> &W, int &ips){
     store(n0, W[ips]);
     ips += 1; 
     vol += volumeForNode(n1, n2, n3, n0);
@@ -919,7 +920,7 @@ void contribVolForNode(T &vol, std::array<T,3> &n0, std::array<T,3> &n1, std::ar
 
 
 template <typename T>
-void contribVolForIntPoint(T &vol, std::array<T,3> &ip, std::array<T,3> &tetAi, std::array<T,3> &tetAj, std::array<T,3> &tetAe3, std::array<T,3> &tetAe4, std::array<T,3> &tetB0, std::array<T,3> &tetB1, std::array<T,3> &tetB2, std::array<T,3> &tetB3, std::array<std::array<T,3>,56> &W, int &ips){
+void contribVolForIntPoint(T &vol, const std::array<T,3> &ip, const std::array<T,3> &tetAi, const std::array<T,3> &tetAj, const std::array<T,3> &tetAe3, const std::array<T,3> &tetAe4, const std::array<T,3> &tetB0, const std::array<T,3> &tetB1, const std::array<T,3> &tetB2, const std::array<T,3> &tetB3, std::array<std::array<T,3>,56> &W, int &ips){
     store(ip, W[ips]);
     ips +=1;
     vol += volumeForIntPointII(ip, tetAi, tetAj, tetAe3, tetAe4,
@@ -927,7 +928,7 @@ void contribVolForIntPoint(T &vol, std::array<T,3> &ip, std::array<T,3> &tetAi, 
 }
 
 template <typename T>
-void contribVolForIntersections(T &vol, std::array<T,3> &tetAi, std::array<T,3> &tetAj, std::array<T,3> &tetAe3, std::array<T,3> &tetAe4, std::array<T,3> &tetB0, std::array<T,3> &tetB1, std::array<T,3> &tetB2, std::array<T,3> &tetB3, std::array<std::array<T,3>,56> &W, int &ips) {
+void contribVolForIntersections(T &vol, const std::array<T,3> &tetAi, const std::array<T,3> &tetAj, const std::array<T,3> &tetAe3, const std::array<T,3> &tetAe4, const std::array<T,3> &tetB0, const std::array<T,3> &tetB1, const std::array<T,3> &tetB2, const std::array<T,3> &tetB3, std::array<std::array<T,3>,56> &W, int &ips) {
       std::array<T,3> ip; 
       if ( (intersectionPoint(ip, tetAi, tetAj, tetB0, tetB1, tetB2)) && (!exists(ip, ips, W)) ) 
          contribVolForIntPoint(vol, ip, tetAi, tetAj, tetAe3, tetAe4, 
@@ -948,7 +949,8 @@ void contribVolForIntersections(T &vol, std::array<T,3> &tetAi, std::array<T,3> 
 
 /** Return the volume intersection between two tetrahedra */ 
 template <typename T>
-T volumeIntersectionII(std::array<T,3> &tetA0, std::array<T,3> &tetA1, std::array<T,3> &tetA2, std::array<T,3> &tetA3, std::array<T,3> &tetB0, std::array<T,3> &tetB1, std::array<T,3> &tetB2, std::array<T,3> &tetB3, bool calcCM, std::array<T,3> &cm){
+T volumeIntersectionII(const std::array<T,3> &tetA0, const std::array<T,3> &tetA1, const std::array<T,3> &tetA2, const std::array<T,3> &tetA3,
+    const std::array<T,3> &tetB0, const std::array<T,3> &tetB1, const std::array<T,3> &tetB2, const std::array<T,3> &tetB3, bool calcCM, std::array<T,3> &cm){
 
   T vol = 0.0; 
   std::array<std::array<T,3>,56> W; 
@@ -1026,7 +1028,7 @@ T volumeIntersectionII(std::array<T,3> &tetA0, std::array<T,3> &tetA1, std::arra
 //  input: std::array<T,3> (&tetA)[4], std::array<T,3> (&tetB)[4])
 //  output: T vol and T area. 
 template <typename T>
-void volumeAndAreaIntersection(std::array<std::array<T,3>,4> &tetA, std::array<std::array<T,3>,4> &tetB, T &vol, T &area){
+void volumeAndAreaIntersection(const std::array<std::array<T,3>,4> &tetA, const std::array<std::array<T,3>,4> &tetB, T &vol, T &area){
 
 
   vol = 0.0; 
@@ -1191,46 +1193,46 @@ void volumeAndAreaIntersection(std::array<std::array<T,3>,4> &tetA, std::array<s
 
 // INSTANTIATE everything to arr3 and eventually to grr3: 
 
-template bool exists<scalar>(std::array<scalar, 3>& p, int ips, std::array<std::array<scalar, 3>, 56>& W);
+template bool exists<scalar>(const std::array<scalar, 3>& p, int ips, const std::array<std::array<scalar, 3>, 56>& W);
 template scalar maxVolume<scalar>(int ips, std::array<std::array<scalar, 3>, 56>& W);
 template void maxVolumeAndArea<scalar>(int ips, std::array<std::array<scalar, 3>, 56>& W, scalar& volume, scalar& area);
-template void findCM<scalar>(int ips, std::array<std::array<scalar, 3>, 56>& W, std::array<scalar, 3>& cm);
-template void getBAndN_Order<scalar>(std::array<std::array<scalar, 3>, 4>& tetA, int n0, int n1, int n2, std::array<scalar, 3>& t, std::array<scalar, 3>& b, std::array<scalar, 3>& n);
-template void getBAndN<scalar>(std::array<std::array<scalar, 3>, 4>& tetA, int n0, int n1, int n2, std::array<scalar, 3>& t, std::array<scalar, 3>& b, std::array<scalar, 3>& n);
-template void getBAndN<scalar>(std::array<scalar, 3>& f0, std::array<scalar, 3>& f1, std::array<scalar, 3>& f2, std::array<scalar, 3>& p3, std::array<scalar, 3>& t, std::array<scalar, 3>& b, std::array<scalar, 3>& n);
-template scalar volumeForNode<scalar>(std::array<std::array<scalar, 3>, 4>& tetA, int node);
-template scalar volumeForNode<scalar>(std::array<scalar, 3>& tet0, std::array<scalar, 3>& tet1, std::array<scalar, 3>& tet2, std::array<scalar, 3>& tetN);
-template void volumeAndAreaForNode<scalar>(std::array<std::array<scalar, 3>, 4>& tetA, int node, scalar& volume, scalar& area);
-template scalar volumeForIntPoint<scalar>(std::array<scalar, 3>& ip, std::array<std::array<scalar, 3>, 4>& tetA, int e1, int e2, std::array<std::array<scalar, 3>, 4>& tetB, int f1, int f2, int f3);
-template scalar volumeForIntPointII<scalar>(std::array<scalar, 3>& ip, std::array<scalar, 3>& tetAe1, std::array<scalar, 3>& tetAe2, std::array<scalar, 3>& tetAe3, std::array<scalar, 3>& tetAe4, std::array<scalar, 3>& tetBf1, std::array<scalar, 3>& tetBf2, std::array<scalar, 3>& tetBf3, std::array<scalar, 3>& tetBf4);
-template void volumeAndAreaForIntPoint<scalar>(std::array<scalar, 3>& ip, std::array<std::array<scalar, 3>, 4>& tetA, int e1, int e2, std::array<std::array<scalar, 3>, 4>& tetB, int f1, int f2, int f3, scalar& volume, scalar& area);
-template scalar volumeIntersection<scalar>(std::array<std::array<scalar, 3>, 4>& tetA, std::array<std::array<scalar, 3>, 4>& tetB, bool calcCM, std::array<scalar, 3>& cm);
-template scalar volumeIntersectionII<scalar>(std::array<scalar, 3>& tetA0, std::array<scalar, 3>& tetA1, std::array<scalar, 3>& tetA2, std::array<scalar, 3>& tetA3, std::array<scalar, 3>& tetB0, std::array<scalar, 3>& tetB1, std::array<scalar, 3>& tetB2, std::array<scalar, 3>& tetB3, bool calcCM, std::array<scalar, 3>& cm);
+template void findCM<scalar>(int ips, const std::array<std::array<scalar, 3>, 56>& W, std::array<scalar, 3>& cm);
+template void getBAndN_Order<scalar>(const  std::array<std::array<scalar, 3>, 4>& tetA, int n0, int n1, int n2, const std::array<scalar, 3>& t, std::array<scalar, 3>& b, std::array<scalar, 3>& n);
+template void getBAndN<scalar>(const std::array<std::array<scalar, 3>, 4>& tetA, int n0, int n1, int n2, const std::array<scalar, 3>& t, std::array<scalar, 3>& b, std::array<scalar, 3>& n);
+template void getBAndN<scalar>(const std::array<scalar, 3>& f0, const std::array<scalar, 3>& f1, const std::array<scalar, 3>& f2, const std::array<scalar, 3>& p3, const std::array<scalar, 3>& t, std::array<scalar, 3>& b, std::array<scalar, 3>& n);
+template scalar volumeForNode<scalar>(const std::array<std::array<scalar, 3>, 4>& tetA, int node);
+template scalar volumeForNode<scalar>(const std::array<scalar, 3>& tet0, const std::array<scalar, 3>& tet1, const std::array<scalar, 3>& tet2, const std::array<scalar, 3>& tetN);
+template void volumeAndAreaForNode<scalar>(const std::array<std::array<scalar, 3>, 4>& tetA, int node, scalar& volume, scalar& area);
+template scalar volumeForIntPoint<scalar>(const std::array<scalar, 3>& ip, const std::array<std::array<scalar, 3>, 4>& tetA, int e1, int e2, const std::array<std::array<scalar, 3>, 4>& tetB, int f1, int f2, int f3);
+template scalar volumeForIntPointII<scalar>(const std::array<scalar, 3>& ip, const std::array<scalar, 3>& tetAe1, const std::array<scalar, 3>& tetAe2, const std::array<scalar, 3>& tetAe3, const std::array<scalar, 3>& tetAe4, const std::array<scalar, 3>& tetBf1, const std::array<scalar, 3>& tetBf2, const std::array<scalar, 3>& tetBf3, const std::array<scalar, 3>& tetBf4);
+template void volumeAndAreaForIntPoint<scalar>(const std::array<scalar, 3>& ip, const std::array<std::array<scalar, 3>, 4>& tetA, int e1, int e2, const std::array<std::array<scalar, 3>, 4>& tetB, int f1, int f2, int f3, scalar& volume, scalar& area);
+template scalar volumeIntersection<scalar>(const std::array<std::array<scalar, 3>, 4>& tetA, const std::array<std::array<scalar, 3>, 4>& tetB, bool calcCM, std::array<scalar, 3>& cm);
+template scalar volumeIntersectionII<scalar>(const std::array<scalar, 3>& tetA0, const std::array<scalar, 3>& tetA1, const std::array<scalar, 3>& tetA2, const std::array<scalar, 3>& tetA3, const std::array<scalar, 3>& tetB0, const std::array<scalar, 3>& tetB1, const std::array<scalar, 3>& tetB2, const std::array<scalar, 3>& tetB3, bool calcCM, std::array<scalar, 3>& cm);
 
-template void volumeAndAreaIntersection<scalar>(std::array<std::array<scalar, 3>, 4>& tetA, std::array<std::array<scalar, 3>, 4>& tetB, scalar& vol, scalar& area);
-template void contribVolForNode<scalar>(scalar& vol, std::array<scalar, 3>& n0, std::array<scalar, 3>& n1, std::array<scalar, 3>& n2, std::array<scalar, 3>& n3, std::array<std::array<scalar, 3>, 56>& W, int& ips);
-template void contribVolForIntPoint<scalar>(scalar& vol, std::array<scalar, 3>& ip, std::array<scalar, 3>& tetAi, std::array<scalar, 3>& tetAj, std::array<scalar, 3>& tetAe3, std::array<scalar, 3>& tetAe4, std::array<scalar, 3>& tetB0, std::array<scalar, 3>& tetB1, std::array<scalar, 3>& tetB2, std::array<scalar, 3>& tetB3, std::array<std::array<scalar, 3>, 56>& W, int& ips);
-template void contribVolForIntersections<scalar>(scalar& vol, std::array<scalar, 3>& tetAi, std::array<scalar, 3>& tetAj, std::array<scalar, 3>& tetAe3, std::array<scalar, 3>& tetAe4, std::array<scalar, 3>& tetB0, std::array<scalar, 3>& tetB1, std::array<scalar, 3>& tetB2, std::array<scalar, 3>& tetB3, std::array<std::array<scalar, 3>, 56>& W, int& ips);
+template void volumeAndAreaIntersection<scalar>(const std::array<std::array<scalar, 3>, 4>& tetA, const std::array<std::array<scalar, 3>, 4>& tetB, scalar& vol, scalar& area);
+template void contribVolForNode<scalar>(scalar& vol, const std::array<scalar, 3>& n0, const std::array<scalar, 3>& n1, const std::array<scalar, 3>& n2, const std::array<scalar, 3>& n3, std::array<std::array<scalar, 3>, 56>& W, int& ips);
+template void contribVolForIntPoint<scalar>(scalar& vol, const std::array<scalar, 3>& ip, const std::array<scalar, 3>& tetAi, const std::array<scalar, 3>& tetAj, const std::array<scalar, 3>& tetAe3, const std::array<scalar, 3>& tetAe4, const std::array<scalar, 3>& tetB0, const std::array<scalar, 3>& tetB1, const std::array<scalar, 3>& tetB2, const std::array<scalar, 3>& tetB3, std::array<std::array<scalar, 3>, 56>& W, int& ips);
+template void contribVolForIntersections<scalar>(scalar& vol, const std::array<scalar, 3>& tetAi, const std::array<scalar, 3>& tetAj, const std::array<scalar, 3>& tetAe3, const std::array<scalar, 3>& tetAe4, const std::array<scalar, 3>& tetB0, const std::array<scalar, 3>& tetB1, const std::array<scalar, 3>& tetB2, const std::array<scalar, 3>& tetB3, std::array<std::array<scalar, 3>, 56>& W, int& ips);
 
 #ifndef USE_DOUBLE
-template bool exists<geoscalar>(std::array<geoscalar,3> &p, int ips, std::array<std::array<geoscalar,3>,56> &W);
+template bool exists<geoscalar>(const std::array<geoscalar,3> &p, int ips, const std::array<std::array<geoscalar,3>,56> &W);
 template geoscalar maxVolume<geoscalar>(int ips, std::array<std::array<geoscalar,3>,56> &W);
 template void maxVolumeAndArea<geoscalar>(int ips, std::array<std::array<geoscalar,3>,56> &W, geoscalar &volume, geoscalar &area);
-template void findCM<geoscalar>(int ips, std::array<std::array<geoscalar,3>,56> &W, std::array<geoscalar,3> &cm);
-template void getBAndN_Order<geoscalar>(std::array<std::array<geoscalar,3>,4> &tetA, int n0, int n1, int n2, std::array<geoscalar,3> &t, std::array<geoscalar,3> &b, std::array<geoscalar,3> &n);
-template void getBAndN<geoscalar>(std::array<std::array<geoscalar,3>,4> &tetA, int n0, int n1, int n2, std::array<geoscalar,3> &t, std::array<geoscalar,3> &b, std::array<geoscalar,3> &n);
-template void getBAndN<geoscalar, std::array<geoscalar,3>>(std::array<geoscalar,3> &f0, std::array<geoscalar,3> &f1, std::array<geoscalar,3> &f2, std::array<geoscalar,3> &p3, std::array<geoscalar,3> &t, std::array<geoscalar,3> &b, std::array<geoscalar,3> &n);
-template geoscalar volumeForNode<geoscalar>(std::array<std::array<geoscalar,3>,4> &tetA, int node);
-template geoscalar volumeForNode<geoscalar>(std::array<geoscalar,3> &tet0, std::array<geoscalar,3> &tet1, std::array<geoscalar,3> &tet2, std::array<geoscalar,3> &tetN);
-template void volumeAndAreaForNode<geoscalar>(std::array<std::array<geoscalar,3>,4> &tetA, int node, geoscalar &volume, geoscalar &area);
-template geoscalar volumeForIntPoint<geoscalar>(std::array<geoscalar,3> &ip, std::array<std::array<geoscalar,3>,4> &tetA, int e1, int e2, std::array<std::array<geoscalar,3>,4> &tetB, int f1, int f2, int f3);
-template geoscalar volumeForIntPointII<geoscalar>(std::array<geoscalar,3> &ip, std::array<geoscalar,3> &tetAe1, std::array<geoscalar,3> &tetAe2, std::array<geoscalar,3> &tetAe3, std::array<geoscalar,3> &tetAe4, std::array<geoscalar,3> &tetBf1, std::array<geoscalar,3> &tetBf2, std::array<geoscalar,3> &tetBf3, std::array<geoscalar,3> &tetBf4); 
-template void volumeAndAreaForIntPoint<geoscalar>(std::array<geoscalar,3> &ip, std::array<std::array<geoscalar,3>,4> &tetA, int e1, int e2, std::array<std::array<geoscalar,3>,4> &tetB, int f1, int f2, int f3, geoscalar &volume, geoscalar &area);
-template geoscalar volumeIntersection<geoscalar>(std::array<std::array<geoscalar,3>,4> &tetA, std::array<std::array<geoscalar,3>,4> &tetB, bool calcCM, std::array<geoscalar,3> &cm);
-template geoscalar volumeIntersectionII<geoscalar>(std::array<geoscalar,3> &tetA0, std::array<geoscalar,3> &tetA1, std::array<geoscalar,3> &tetA2, std::array<geoscalar,3> &tetA3, std::array<geoscalar,3> &tetB0, std::array<geoscalar,3> &tetB1, std::array<geoscalar,3> &tetB2, std::array<geoscalar,3> &tetB3, bool calcCM, std::array<geoscalar,3> &cm);
+template void findCM<geoscalar>(int ips, const std::array<std::array<geoscalar,3>,56> &W, std::array<geoscalar,3> &cm);
+template void getBAndN_Order<geoscalar>(const std::array<std::array<geoscalar,3>,4> &tetA, int n0, int n1, int n2, const std::array<geoscalar,3> &t, std::array<geoscalar,3> &b, std::array<geoscalar,3> &n);
+template void getBAndN<geoscalar>(const std::array<std::array<geoscalar,3>,4> &tetA, int n0, int n1, int n2, const std::array<geoscalar,3> &t, std::array<geoscalar,3> &b, std::array<geoscalar,3> &n);
+template void getBAndN<geoscalar, std::array<geoscalar,3>>(const std::array<geoscalar,3> &f0, const std::array<geoscalar,3> &f1, const std::array<geoscalar,3> &f2, const std::array<geoscalar,3> &p3, const std::array<geoscalar,3> &t, std::array<geoscalar,3> &b, std::array<geoscalar,3> &n);
+template geoscalar volumeForNode<geoscalar>(const std::array<std::array<geoscalar,3>,4> &tetA, int node);
+template geoscalar volumeForNode<geoscalar>(const std::array<geoscalar,3> &tet0, const std::array<geoscalar,3> &tet1, const std::array<geoscalar,3> &tet2, const std::array<geoscalar,3> &tetN);
+template void volumeAndAreaForNode<geoscalar>(const std::array<std::array<geoscalar,3>,4> &tetA, int node, geoscalar &volume, geoscalar &area);
+template geoscalar volumeForIntPoint<geoscalar>(const std::array<geoscalar,3> &ip, const std::array<std::array<geoscalar,3>,4> &tetA, int e1, int e2, const std::array<std::array<geoscalar,3>,4> &tetB, int f1, int f2, int f3);
+template geoscalar volumeForIntPointII<geoscalar>(const std::array<geoscalar,3> &ip, const std::array<geoscalar,3> &tetAe1, const std::array<geoscalar,3> &tetAe2, const std::array<geoscalar,3> &tetAe3, const std::array<geoscalar,3> &tetAe4, const std::array<geoscalar,3> &tetBf1, const std::array<geoscalar,3> &tetBf2, const std::array<geoscalar,3> &tetBf3, const std::array<geoscalar,3> &tetBf4);
+template void volumeAndAreaForIntPoint<geoscalar>(const std::array<geoscalar,3> &ip, const std::array<std::array<geoscalar,3>,4> &tetA, int e1, int e2, const std::array<std::array<geoscalar,3>,4> &tetB, int f1, int f2, int f3, geoscalar &volume, geoscalar &area);
+template geoscalar volumeIntersection<geoscalar>(const std::array<std::array<geoscalar,3>,4> &tetA, const std::array<std::array<geoscalar,3>,4> &tetB, bool calcCM, std::array<geoscalar,3> &cm);
+template geoscalar volumeIntersectionII<geoscalar>(const std::array<geoscalar,3> &tetA0, const std::array<geoscalar,3> &tetA1, const std::array<geoscalar,3> &tetA2, const std::array<geoscalar,3> &tetA3, const std::array<geoscalar,3> &tetB0, const std::array<geoscalar,3> &tetB1, const std::array<geoscalar,3> &tetB2, const std::array<geoscalar,3> &tetB3, bool calcCM, std::array<geoscalar,3> &cm);
 
-template void volumeAndAreaIntersection<geoscalar>(std::array<std::array<geoscalar,3>,4> &tetA, std::array<std::array<geoscalar,3>,4> &tetB, geoscalar &vol, geoscalar &area);
-template void contribVolForNode<geoscalar>(geoscalar &vol, std::array<geoscalar,3> &n0, std::array<geoscalar,3> &n1, std::array<geoscalar,3> &n2, std::array<geoscalar,3> &n3, std::array<std::array<geoscalar,3>,56> &W, int &ips);
-template void contribVolForIntPoint<geoscalar>(geoscalar &vol, std::array<geoscalar,3> &ip, std::array<geoscalar,3> &tetAi, std::array<geoscalar,3> &tetAj, std::array<geoscalar,3> &tetAe3, std::array<geoscalar,3> &tetAe4, std::array<geoscalar,3> &tetB0, std::array<geoscalar,3> &tetB1, std::array<geoscalar,3> &tetB2, std::array<geoscalar,3> &tetB3, std::array<std::array<geoscalar,3>,56> &W, int &ips);
-template void contribVolForIntersections<geoscalar>(geoscalar &vol, std::array<geoscalar,3> &tetAi, std::array<geoscalar,3> &tetAj, std::array<geoscalar,3> &tetAe3, std::array<geoscalar,3> &tetAe4, std::array<geoscalar,3> &tetB0, std::array<geoscalar,3> &tetB1, std::array<geoscalar,3> &tetB2, std::array<geoscalar,3> &tetB3, std::array<std::array<geoscalar,3>,56> &W, int &ips);
+template void volumeAndAreaIntersection<geoscalar>(const std::array<std::array<geoscalar,3>,4> &tetA, const std::array<std::array<geoscalar,3>,4> &tetB, geoscalar &vol, geoscalar &area);
+template void contribVolForNode<geoscalar>(geoscalar &vol, const std::array<geoscalar,3> &n0, const std::array<geoscalar,3> &n1, const std::array<geoscalar,3> &n2, const std::array<geoscalar,3> &n3, std::array<std::array<geoscalar,3>,56> &W, int &ips);
+template void contribVolForIntPoint<geoscalar>(geoscalar &vol, const std::array<geoscalar,3> &ip, const std::array<geoscalar,3> &tetAi, const std::array<geoscalar,3> &tetAj, const std::array<geoscalar,3> &tetAe3, const std::array<geoscalar,3> &tetAe4, const std::array<geoscalar,3> &tetB0, const std::array<geoscalar,3> &tetB1, const std::array<geoscalar,3> &tetB2, const std::array<geoscalar,3> &tetB3, std::array<std::array<geoscalar,3>,56> &W, int &ips);
+template void contribVolForIntersections<geoscalar>(geoscalar &vol, const std::array<geoscalar,3> &tetAi, const std::array<geoscalar,3> &tetAj, const std::array<geoscalar,3> &tetAe3, const std::array<geoscalar,3> &tetAe4, const std::array<geoscalar,3> &tetB0, const std::array<geoscalar,3> &tetB1, const std::array<geoscalar,3> &tetB2, const std::array<geoscalar,3> &tetB3, const std::array<std::array<geoscalar,3>,56> &W, int &ips);
 #endif 

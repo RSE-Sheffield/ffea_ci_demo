@@ -23,19 +23,9 @@
 
 #include "SparseMatrixUnknownPattern.h"
 
-SparseMatrixUnknownPattern::SparseMatrixUnknownPattern() {
-    num_rows = 0;
-}
+void SparseMatrixUnknownPattern::init(int _num_rows, int suggested_initial_size_for_row_vectors) {
 
-SparseMatrixUnknownPattern::~SparseMatrixUnknownPattern() {
-    num_rows = 0;
-    row.clear();
-    diagonal.clear();
-}
-
-void SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_for_row_vectors) {
-
-    this->num_rows = num_rows;
+    num_rows = _num_rows;
 
     // Allocate the array of row vectors
     try {
@@ -64,8 +54,7 @@ void SparseMatrixUnknownPattern::init(int num_rows, int suggested_initial_size_f
 }
 
 void SparseMatrixUnknownPattern::add_off_diagonal_element(int row_index, int column_index, scalar val) {
-    sparse_entry new_entry = {column_index, val};
-    row[row_index].push_back(new_entry);
+    row[row_index].push_back({ column_index, val });
 }
 
 void SparseMatrixUnknownPattern::set_diagonal_element(int row_index, scalar val) {

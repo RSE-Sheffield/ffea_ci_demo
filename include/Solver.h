@@ -26,17 +26,14 @@
 
 #include "tetra_element_linear.h"
 #include <set>
+#include <vector>
 
 class Solver {
 public:
-
-    /** Provide an empty constructor (to avoid linker problems) */
-    Solver() {
-    };
-
-    /** Make the destructor virtual (so that the destructor of derived classes will be called too) */
-    virtual ~Solver() {
-    };
+    /**
+     * Correct inheritance behaviour requires a virtual destructor
+     */
+    virtual ~Solver() = default;
 
     /**
      * Initialises the solver (by building whatever representation of the mass matrix it needs)

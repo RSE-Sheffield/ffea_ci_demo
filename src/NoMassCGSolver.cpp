@@ -168,8 +168,8 @@ void NoMassCGSolver::solve(std::vector<arr3> &x) {
         alpha = delta_new / pTq;
 
         // Update solution and residual
-        vec3_add_to_scaled(x, p, alpha, num_nodes);
-        vec3_add_to_scaled(r, q, -alpha, num_nodes);
+        vec3_add_to_scaled(x, p, alpha);
+        vec3_add_to_scaled(r, q, -alpha);
 
         // Once convergence is achieved, return
         if (residual2() < epsilon2) {
@@ -181,7 +181,7 @@ void NoMassCGSolver::solve(std::vector<arr3> &x) {
 	//cout << residual2() << " " << epsilon2 << endl;
         delta_old = delta_new;
         delta_new = parallel_apply_preconditioner();
-        vec3_scale_and_add(p, z, (delta_new / delta_old), num_nodes);
+        vec3_scale_and_add(p, z, (delta_new / delta_old));
     }
     // If desired convergence was not reached in the set number of iterations...
     throw FFEAException("Conjugate gradient solver: Could not converge after %d iterations.\n\tEither epsilon or max_iterations_cg are set too low, or something went wrong with the simulation.\n", i_max);

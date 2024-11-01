@@ -48,8 +48,6 @@ using namespace std;
 
 class PreComp_solver{
 public:
-  PreComp_solver();
-  ~PreComp_solver();
   void init(PreComp_params *pc_params, SimulationParams *params, Blob **blob_array);
   void solve(scalar *blob_corr=nullptr); ///< calculate the forces using a straightforward double loop.
   void solve_using_neighbours();  ///< calculate the forces using linkedlists.
@@ -70,7 +68,7 @@ public:
 
 private: 
   /** msgc and msg are helpful while developing */
-  int msgc;
+  int msgc = 0;
   int msg(string whatever); 
   int msg(int whatever); 
   
@@ -82,23 +80,51 @@ private:
 
   // stuff related to the LinkedLists:
   LinkedListCube<int> pcLookUp; ///< the linkedlist itself
-  scalar pcVoxelSize;    ///< the size of the voxels.
-  int pcVoxelsInBox[3];  ///< num of voxels per side.
-  static const int adjacent_cells[27][3]; 
+  scalar pcVoxelSize = 0;    ///< the size of the voxels.
+  int pcVoxelsInBox[3] = {};  ///< num of voxels per side.
+  static constexpr int adjacent_cells[27][3] = {
+        {-1, -1, -1},
+        {-1, -1, 0},
+        {-1, -1, +1},
+        {-1, 0, -1},
+        {-1, 0, 0},
+        {-1, 0, +1},
+        {-1, +1, -1},
+        {-1, +1, 0},
+        {-1, +1, +1},
+        {0, -1, -1},
+        {0, -1, 0},
+        {0, -1, +1},
+        {0, 0, -1},
+        {0, 0, 0},
+        {0, 0, +1},
+        {0, +1, -1},
+        {0, +1, 0},
+        {0, +1, +1},
+        {+1, -1, -1},
+        {+1, -1, 0},
+        {+1, -1, +1},
+        {+1, 0, -1},
+        {+1, 0, 0},
+        {+1, 0, +1},
+        {+1, +1, -1},
+        {+1, +1, 0},
+        {+1, +1, +1}
+  };
   
 
   /** delta x in tabulated potentials and forces"  */
-  scalar Dx; 
+  scalar Dx = 0; 
   /** x_range */ 
-  scalar x_range[2];
+  scalar x_range[2] = {};
   /** squared x_range */ 
-  scalar x_range2[2];
+  scalar x_range2[2] = {};
   /** number of pre-computed values per table */ 
-  int n_values; 
+  int n_values = 0; 
   /** total number of type interactions */
-  int nint; 
+  int nint = 0; 
   /** number of types of "beads */
-  int ntypes; 
+  int ntypes = 0; 
   /** pointer to array containing all the values for all the pair potentials. */
   std::vector<scalar> U;
   /** pointer to array containing all the values for all the pair forces. */
@@ -112,9 +138,9 @@ private:
   /** map b_unq_elems to beads */
   std::vector<int> map_e_to_b;
   /** number of beads */ 
-  int n_beads; 
+  int n_beads = 0;
   /** number of different elements */
-  int num_diff_elems; 
+  int num_diff_elems = 0; 
   /** relative position of the beads to the element they belong, xyzxyzxyz... */
   std::vector<scalar> b_rel_pos;
   /** absolute position of the beads */
@@ -127,15 +153,15 @@ private:
   std::vector<bool> isPairActive;
 
   /** variables stypes, b_elems_ndx, and b_blob_ndx will only be used if writing traj */ 
-  vector<string> stypes; ///< string types for the beads; sorry it is a c++ vector
+  std::vector<string> stypes; ///< string types for the beads; sorry it is a c++ vector
   std::vector<int> b_elems_ndx; ///< array with the corresponding element index.
   std::vector<int> b_blob_ndx; ///< array with the corresponding blob index.
   
 
   /** Variables to store the energy field data between each pair of blobs */
   std::vector<scalar> fieldenergy;
-  int num_blobs;
-  int num_threads;
+  int num_blobs = 0;
+  int num_threads = 0;
 
 };
 
