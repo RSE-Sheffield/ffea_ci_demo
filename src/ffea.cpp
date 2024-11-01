@@ -159,10 +159,7 @@ int main(int argc, char *argv[])
     }
 
     //The system of all proteins, electrostatics and water
-    World *world;
-
-    // Allocate the world
-    world = new World();
+    std::unique_ptr<World> world = std::make_unique<World>();
 
     // Initialise the world, loading all blobs, parameters, electrostatics, kinetics etc.
     cout << "Initialising the world:\n" << endl;
@@ -294,7 +291,7 @@ int main(int argc, char *argv[])
 
     /* Delete the world (oh no!) */
     cout << "Deleting world..." << endl;
-    //delete world;
+    world.reset();
 #ifdef USE_MPI
     st = MPI::Wtime();
     et = MPI::Wtime()-st;
