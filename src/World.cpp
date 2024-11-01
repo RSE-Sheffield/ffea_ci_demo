@@ -3885,14 +3885,14 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
     int coupling_counter = 0;
 
     bool ends_at_rod = true;
-    int blob_id;
-    int rod_id;
-    int rod_node_id;
-    int blob_element_id;
-    rod::int3 blob_node_ids;
+    int blob_id = 0;
+    int rod_id = 0;
+    int rod_node_id = 0;
+    int blob_element_id = 0;
+    rod::int3 blob_node_ids = {};
     int from_index;
     int to_index;
-    int order;
+    int order = 0;
     rod::float3 rotation;
     rod::float3 node_weighting;
 
