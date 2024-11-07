@@ -35,15 +35,15 @@ class checkVars {
 		~checkVars(); */ 
 		
 		// Member variables
-		arr3 e_v1[6];            ///< vector edge-oriented 
-		arr3 e_v2[6];            ///< vectors edge-oriented
-		int masks[4];  ///< for each face of the first tetrahedron stores the halfspace each vertex of the second tetrahedron belongs to
+		std::array<arr3, 6> e_v1;            ///< vector edge-oriented 
+		std::array<arr3, 6> e_v2;            ///< vectors edge-oriented
+		std::array<int, 4> masks;  ///< for each face of the first tetrahedron stores the halfspace each vertex of the second tetrahedron belongs to
 
-		arr3 P_V1[4]; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
-		arr3 P_V2[4]; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
+		std::array<arr3, 4> P_V1; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
+		std::array<arr3, 4> P_V2; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
 
-		arr4  Coord_1[4]; ///< vertices coordinates in the affine space
-		arr4  Coord_2[4]; ///< vertices coordinates in the affine space
+		std::array<arr4, 4>  Coord_1; ///< vertices coordinates in the affine space
+		std::array<arr4, 4>  Coord_2; ///< vertices coordinates in the affine space
 		arr3 n;	  ///< variable to store the normals
 };
 

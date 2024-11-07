@@ -125,12 +125,8 @@ void PoissonMatrixQuadratic::add_grad_dot_products(std::array<arr3, NUM_NODES_QU
     int c = 0;
     for (int i = 0; i < NUM_NODES_QUADRATIC_TET; i++) {
         for (int j = 0; j <= i; j++) {
-            K_alpha[c] += det_J * weight * grad_dot(grad_psi[i], grad_psi[j]);
+            K_alpha[c] += det_J * weight * dot(grad_psi[i], grad_psi[j]);
             c++;
         }
     }
-}
-
-scalar PoissonMatrixQuadratic::grad_dot(arr3 &grad_psi_i, arr3 &grad_psi_j) {
-    return grad_psi_i[0] * grad_psi_j[0] + grad_psi_i[1] * grad_psi_j[1] + grad_psi_i[2] * grad_psi_j[2];
 }

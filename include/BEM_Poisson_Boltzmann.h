@@ -81,7 +81,7 @@ private:
 
     void gauss_quadrature_4_point(std::array<arr3, 4> &gqp, arr3 &p, scalar &int_u, scalar &int_du, Face *f);
 
-    scalar self_term(arr3 &n0, arr3 &n1, arr3 &n2, int precision);
+    scalar self_term(const arr3 &n0, const arr3 &n1, const arr3 &n2, int precision);
 
     scalar f_1d(scalar r);
 

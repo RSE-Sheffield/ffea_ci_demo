@@ -101,7 +101,6 @@ namespace rod
     void print_vector(std::string vector_name, std::vector<float>::iterator start, std::vector<float>::iterator end);
     void print_vector(std::string vector_name, const std::vector<float> &vec, int start_ind, int end_ind);
     void print_vector(std::string vector_name, const std::vector<int> &vec, int start_ind, int end_ind);
-    std::vector<float> slice_vector(std::vector<float> vec, int start_index, int end_index);
     void normalize(const float3 &in, OUT float3 &out);
     void normalize(std::vector<float> in, OUT std::vector<float> out);
     void normalize_unsafe(const float3 &in, OUT float3 &out);
@@ -114,7 +113,6 @@ namespace rod
     void apply_rotation_matrix(arr3_view<float, float3> vec, const float9 &matrix, OUT float3 &rotated_vec);
     void apply_rotation_matrix_row(arr3_view<float, float3> vec, const float9 &matrix, OUT float3 &rotated_vec);
     void matmul_3x3_3x3(const float9 &a, const float9 &b, OUT float9 &out);
-    float dot_product_3x1(const float3 &a, const float3 &b);
 
     // These are utility functions specific to the math for the rods
     void get_p_i(const float3 &curr_r, const float3 &next_r, OUT float3 &p_i);

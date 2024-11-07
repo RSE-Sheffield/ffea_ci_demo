@@ -30,6 +30,7 @@
 #include "rod_interactions.h"
 
 #include "FFEA_return_codes.h"
+#include "mat_vec_fns_II.h"
 
 namespace rod
 {
@@ -129,16 +130,15 @@ bool InteractionData::elements_intersect() const {
 void finite_length_correction(float3 &c, const float3&r, const float3 &p)
 {
     float3 r_c = { 0 };
-    float dot = 0;
 
     vec3d(n) { r_c[n] = c[n] - r[n]; }
-    dot = dot_product_3x1(p, r_c);
+    float dotp = dot(p, r_c);
 
-    if (dot <= 0)
+    if (dotp <= 0)
     {
         vec3d(n) { c[n] = r[n]; }
     }
-    else if (dot >= rod::absolute(p) * rod::absolute(p))
+    else if (dotp >= rod::absolute(p) * rod::absolute(p))
     {
         vec3d(n) { c[n] = r[n] + p[n]; }
     }
@@ -146,7 +146,7 @@ void finite_length_correction(float3 &c, const float3&r, const float3 &p)
     // if (rod::dbg_print)
     // {
     //     std::cout << "finite_length_correction():\n";
-    //     printf("  p.(c - r) : %.3e\n", dot);
+    //     printf("  p.(c - r) : %.3e\n", dotp);
     // }
 }
 
@@ -154,16 +154,15 @@ void finite_length_correction(float3 &c, const float3&r, const float3 &p)
 void finite_length_correction(const float3 &c, const float3 &r, const float3 &p, OUT float3 &c_out)
 {
     float3 r_c = { 0 };
-    float dot = 0;
 
     vec3d(n) { r_c[n] = c[n] - r[n]; }
-    dot = dot_product_3x1(p, r_c);
+    float dotp = dot(p, r_c);
 
-    if (dot <= 0)
+    if (dotp <= 0)
     {
         vec3d(n) { c_out[n] = r[n]; }
     }
-    else if (dot >= rod::absolute(p) * rod::absolute(p))
+    else if (dotp >= rod::absolute(p) * rod::absolute(p))
     {
         vec3d(n) { c_out[n] = r[n] + p[n]; }
     }
@@ -175,7 +174,7 @@ void finite_length_correction(const float3 &c, const float3 &r, const float3 &p,
     // if (rod::dbg_print)
     // {
     //     std::cout << "finite_length_correction():\n";
-    //     printf("  p.(c - r) : %.3e\n", dot);
+    //     printf("  p.(c - r) : %.3e\n", dotp);
     // }
 }
 
@@ -270,12 +269,12 @@ void element_minimum_displacement(
         vec3d(n)
         {
             c_a[n] = r_a[n] +
-                dot_product_3x1(r_ab, n_b) / dot_product_3x1(l_a, n_b) * l_a[n];
+                dot(r_ab, n_b) / dot(l_a, n_b) * l_a[n];
         }
         vec3d(n)
         {
             c_b[n] = r_b[n] +
-                dot_product_3x1(r_ba, n_a) / dot_product_3x1(l_b, n_a) * l_b[n];
+                dot(r_ba, n_a) / dot(l_b, n_a) * l_b[n];
         }
     }
     // parallel elements

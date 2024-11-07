@@ -114,8 +114,6 @@ protected:
     void calc_gensoft_factors(scalar &mag_r, int index_k, int index_l, scalar &Emin, scalar &Rmin_2, scalar &Rmin_3, scalar &k0, 
                                  scalar &force_mag, scalar &e);
 
-    scalar dot_with_normal(const arr3 &p, const arr3 &q, const arr3 &n);
-
     scalar minimum_image(scalar delta, scalar size);
 
     int ssint_type = SSINT_TYPE_UNDEFINED;

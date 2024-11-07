@@ -66,9 +66,6 @@ private:
     void parallel_vector_add(std::vector<scalar> &v1, scalar a, const std::vector<scalar> &v2);
 
     scalar parallel_apply_preconditioner();
-
-    /** Returns the dot product of vectors a and b, of length N */
-    scalar dot(const std::vector<scalar> &a, const std::vector<scalar> &b);
 };
 
 #endif

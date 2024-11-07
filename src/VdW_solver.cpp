@@ -542,10 +542,6 @@ void VdW_solver::do_gensoft_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     } // end of critical
 }
 
-scalar VdW_solver::dot_with_normal(const arr3 &p, const arr3 &q, const arr3 &n) {
-    return (q[0] - p[0]) * n[0] + (q[1] - p[1]) * n[1] + (q[2] - p[2]) * n[2];
-}
-
 scalar VdW_solver::minimum_image(scalar delta, scalar size) {
     if (fabs(delta) > size * .5) {
         return size - delta;

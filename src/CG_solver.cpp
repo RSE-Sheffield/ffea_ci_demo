@@ -23,6 +23,8 @@
 
 #include "CG_solver.h"
 
+#include "mat_vec_fns_II.h"
+
 CG_solver::CG_solver() {
     N = 0;
     tol = 0;
@@ -181,13 +183,4 @@ scalar CG_solver::parallel_apply_preconditioner() {
     }
 
     return delta_new;
-}
-
-scalar CG_solver::dot(const std::vector<scalar> &a, const std::vector<scalar> &b) {
-    scalar result = 0;
-    for (int i = 0; i < N; i++) {
-        result += a[i] * b[i];
-    }
-
-    return result;
 }

@@ -239,11 +239,8 @@ int ffea_test::connection_test()
         new_attachment_material_axis);
     rod::print_array("Rotated node", new_attachment_node);
     rod::print_array("Rotated material axis", new_attachment_material_axis);
-    float dotprod =
-        new_attachment_material_axis[0] * attachment_material_axis[0] +
-        new_attachment_material_axis[1] * attachment_material_axis[1] +
-        new_attachment_material_axis[2] * attachment_material_axis[2];
-    float material_axis_rotation_angle = std::acos(dotprod);
+    const float dotprod = dot(new_attachment_material_axis, attachment_material_axis);
+    const float material_axis_rotation_angle = std::acos(dotprod);
     std::cout << "Angle between = " << material_axis_rotation_angle << "\n";
 
     if ((material_axis_rotation_angle > rotation_angle - 0.03) &&
@@ -960,9 +957,7 @@ int ffea_test::connection_propagation(
         rod::normalize(end_p, end_p);
         rod::normalize(end_m_pre, end_m_pre);
 
-        edgevec_dot_prod_pre = curr_sample_edge_vec[0] * end_m_pre[0] +
-                               curr_sample_edge_vec[1] * end_m_pre[1] +
-                               curr_sample_edge_vec[2] * end_m_pre[2];
+        edgevec_dot_prod_pre = dot(curr_sample_edge_vec, end_m_pre);
 
         rod::print_array("original m", end_m);
         rod::rodrigues_rotation(end_m_pre, end_p, M_PI * 0.5, end_m);
@@ -1121,9 +1116,7 @@ int ffea_test::connection_propagation(
         end_m_post[n] = current_rod->current_m[n];
     }
 
-    float edgevec_dot_prod_post = post_sample_edge_vec[0] * end_m_post[0] +
-                                  post_sample_edge_vec[1] * end_m_post[1] +
-                                  post_sample_edge_vec[2] * end_m_post[2];
+    const float edgevec_dot_prod_post = dot(post_sample_edge_vec, end_m_post);
     std::cout << "post dot prod: " << edgevec_dot_prod_post << "\n";
     std::cout << "pre dot prod: " << edgevec_dot_prod_pre << "\n";
 
@@ -1213,7 +1206,7 @@ int ffea_test::connection_propagation(
         }
     }
 
-    float dotprod_diff = edgevec_dot_prod_post - edgevec_dot_prod_pre;
+    const float dotprod_diff = edgevec_dot_prod_post - edgevec_dot_prod_pre;
 
     rod::dbg_print = true;
     std::cout << "\n";
@@ -1246,9 +1239,7 @@ int ffea_test::connection_propagation(
         current_rod->get_p(end_index, end_end_p, false);
         rod::normalize(att_node_end, att_node_end);
         rod::normalize(end_end_p, end_end_p);
-        float end_bend_dotprod = att_node_end[0] * end_end_p[0] +
-                                 att_node_end[1] * end_end_p[1] +
-                                 att_node_end[2] * end_end_p[2];
+        const float end_bend_dotprod = dot(att_node_end, end_end_p);
         if (end_bend_dotprod > 0.90)
         {
             std::cout << "bend is good. everything is good. lets all go out for some "

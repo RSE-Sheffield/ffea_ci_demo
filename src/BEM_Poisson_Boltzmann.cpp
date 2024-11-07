@@ -198,17 +198,14 @@ scalar BEM_Poisson_Boltzmann::grad_u_4pi(scalar r, scalar r2) {
  */
 
 void BEM_Poisson_Boltzmann::gauss_quadrature_4_point(std::array<arr3, 4> &gqp, arr3 &p, scalar &int_u, scalar &int_du, Face *f) {
-    scalar r_hat_dot_n[4], r2[4], r_mag[4];
+    std::array<scalar, 4> r_hat_dot_n, r2, r_mag;
     arr3 r;
-
-    int i;
-    for (i = 0; i < 4; i++) {
-        r[0] = gqp[i][0] - p[0];
-        r[1] = gqp[i][1] - p[1];
-        r[2] = gqp[i][2] - p[2];
-        r2[i] = r[0] * r[0] + r[1] * r[1] + r[2] * r[2];
+    
+    for (int i = 0; i < 4; i++) {
+        sub(gqp[i], p, r);
+        r2[i] = magnitude2(r);
         r_mag[i] = sqrt(r2[i]);
-        r_hat_dot_n[i] = (r[0] * f->normal[0] + r[1] * f->normal[1] + r[2] * f->normal[2]) / r_mag[i];
+        r_hat_dot_n[i] = dot(r, f->normal) / r_mag[i];
     }
 
     int_u = -f->area * (-.5625 * u_4pi(r_mag[0]) + 0.5208333333 * (u_4pi(r_mag[1]) + u_4pi(r_mag[2]) + u_4pi(r_mag[3])));
@@ -218,26 +215,24 @@ void BEM_Poisson_Boltzmann::gauss_quadrature_4_point(std::array<arr3, 4> &gqp, a
             grad_u_4pi(r_mag[3], r2[3]) * r_hat_dot_n[3]));
 }
 
-scalar BEM_Poisson_Boltzmann::self_term(arr3 &n0, arr3 &n1, arr3 &n2, int precision) {
+scalar BEM_Poisson_Boltzmann::self_term(const arr3 &n0, const arr3 &n1, const arr3 &n2, int precision) {
     // Calculate the triangle side vectors, r_01, r_02 and r_12
-    arr3 r_01, r_02, r_12; // r_12;
-    for (int i = 0; i < 3; ++i) {
-        r_01[i] = n1[i] - n0[i];
-        r_02[i] = n2[i] - n0[i];
-        r_12[i] = n2[i] - n1[i];        
-    }
+    arr3 r_01, r_02, r_12;
+    sub(n1, n0, r_01);
+    sub(n2, n0, r_02);
+    sub(n2, n1, r_12);
 
     // Get the lengths of these vectors
-    scalar r_01_sq = r_01[0] * r_01[0] + r_01[1] * r_01[1] + r_01[2] * r_01[2],
-            r_02_sq = r_02[0] * r_02[0] + r_02[1] * r_02[1] + r_02[2] * r_02[2],
-            r_12_sq = r_12[0] * r_12[0] + r_12[1] * r_12[1] + r_12[2] * r_12[2];
+    const scalar r_01_sq = magnitude2(r_01);
+    const scalar r_02_sq = magnitude2(r_02);
+    const scalar r_12_sq = magnitude2(r_12);
 
     // Calculate some dot products
-    scalar r_01_dot_r_02 = r_01[0] * r_02[0] + r_01[1] * r_02[1] + r_01[2] * r_02[2],
-            r_01_dot_r_12 = r_01[0] * r_12[0] + r_01[1] * r_12[1] + r_01[2] * r_12[2];
+    const scalar r_01_dot_r_02 = dot(r_01, r_02);
+    const scalar r_01_dot_r_12 = dot(r_01, r_12);
 
     // Get the size of the angle through which we need to integrate
-    scalar theta_max = acos(r_01_dot_r_02 / sqrt(r_01_sq * r_02_sq));
+    const scalar theta_max = acos(r_01_dot_r_02 / sqrt(r_01_sq * r_02_sq));
 
     // Get the vector between node 0 and the point perpendicularly opposite (on line node 1 to 2)
     arr3 r_0_perp;
@@ -245,12 +240,11 @@ scalar BEM_Poisson_Boltzmann::self_term(arr3 &n0, arr3 &n1, arr3 &n2, int precis
         r_0_perp[i] = r_01[i] - r_01_dot_r_12 * r_12[i] / r_12_sq;
     }
 
-
     // Get the perpendicular distance between node 0 and line 1 to 2
-    scalar L_perp = sqrt(r_0_perp[0] * r_0_perp[0] + r_0_perp[1] * r_0_perp[1] + r_0_perp[2] * r_0_perp[2]);
+    const scalar L_perp = magnitude(r_0_perp);
 
     // Get the angle between side 01 and the perpedicular line between 0 and side 12.
-    scalar theta_star = acos(L_perp / sqrt(r_01_sq));
+    const scalar theta_star = acos(L_perp / sqrt(r_01_sq));
 
     return integrate_function_1d_tri(theta_max, L_perp, theta_star, precision);
 }

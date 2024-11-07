@@ -239,8 +239,8 @@ void QR_decompose_gram_schmidt(const float9 &matrix_3x3, OUT float9 &Q, float9 &
     float3 e2;
     normalize(u2, e2);
     float3 u3;
-    float a3_dot_e1 = a3[0]*e1[0] + a3[1]*e1[1] + a3[2]*e1[2];
-    float a3_dot_e2 = a3[0]*e2[0] + a3[1]*e2[1] + a3[2]*e2[2];
+    const float a3_dot_e1 = dot(a3, e1);
+    const float a3_dot_e2 = dot(a3, e2);
     vec3d(n) u3[n] = a3[n] - a3_dot_e1*e1[n] - a3_dot_e2*e2[n];
     float3 e3;
     normalize(u3, e3);
@@ -576,8 +576,7 @@ bool points_out_of_tet(const float3 &node1, const float3 &node2, const float3 &n
     vec3d(n){tet_centroid[n] /= 4.0;}
     float3 path_to_centroid;
     vec3d(n){path_to_centroid[n] = attachment_node[n] - tet_centroid[n];}
-    float dotprod = 0;
-    vec3d(n){dotprod += attachment_element[n] * path_to_centroid[n];}
+    float dotprod = dot(attachment_element, path_to_centroid);
     bool points_out = dotprod<0;
     return points_out;
 }
@@ -884,7 +883,7 @@ void Rod_blob_interface::get_attachment_node(OUT float3 &attachment_node, float3
         polarity_multiplication_factor = 1;
     }
     
-    //float dotprod = path_to_centroid[0]*attachment_node[0] + path_to_centroid[1]*attachment_node[1] + path_to_centroid[2]*attachment_node[2];
+    //float dotprod = dot(path_to_centroid,attachment_node[0]);
     
     bool points_out = points_out_of_tet(face_node_1, face_node_2, face_node_3, non_face_node, attachment_node, attachment_node_pos);
     
@@ -910,7 +909,7 @@ void Rod_blob_interface::get_attachment_node(OUT float3 &attachment_node, float3
     //vec3d(n){way_to_centroid[n] = blob_centroid->data[n] - attachment_node_pos[n];}
     //vec3d(n){way_to_centroid[n] = this->connected_tet->centroid[n] - attachment_node_pos[n];}
     //normalize(way_to_centroid, way_to_centroid);
-    //float dotprod = way_to_centroid[0]*attachment_node[0] + way_to_centroid[1]*attachment_node[1] + way_to_centroid[2]*attachment_node[2];
+    //float dotprod = dot(way_to_centroid, attachment_node);
     // print_array("  attachment node pos", attachment_node_pos); //dbg
     // print_array("  attachment node", attachment_node); //dbg
     //print_array(" blob centroid", blob_centroid->data);
@@ -1447,7 +1446,7 @@ void Rod_blob_interface::get_node_energy(
         // This version seems right, but regardless it's not used
         vec3d(n) { facevec[n] = deformed_tet_nodes[this->face_node_indices[0]][n].pos[n] -  deformed_tet_nodes[this->face_node_indices[1]][n].pos[n]; }
         normalize(facevec, facevec);
-        //float edge_attachment_dotprod = (facevec[0] * attachment_node[0]) + (facevec[1] * attachment_node[1]) + (facevec[2] * attachment_node[2]);
+        //float edge_attachment_dotprod = dot(facevec, attachment_node);
                 
         this->get_attachment_node_pos(attachment_node_pos, false);
         

@@ -52,18 +52,6 @@
     res[2] = a[0]*b[1]-b[0]*a[1];		\
   }
 
-#define SUB(res,a,b) {				\
-    res[0] = a[0]-b[0];				\
-    res[1] = a[1]-b[1];				\
-    res[2] = a[2]-b[2];				\
-  }
-
-#define SUB_DOT(a,b,c) (			\
-			(a[0]-b[0])*c[0]+	\
-			(a[1]-b[1])*c[1]+	\
-			(a[2]-b[2])*c[2]	\
-						)
-
 // Functions from the checkVars object
 
 /* checkVars::checkVars() {
@@ -137,11 +125,15 @@ inline bool FaceA_2(scalar * Coord, int & maskEdges, checkVars vars, const arr3 
   maskEdges = 000;
   // scalar * v_ref = V1_1;
   // arr3 * v_ref = V1_1;
-  
-  if (( Coord[0] = SUB_DOT(V2_0,V1_1, vars.n)) > 0.0) maskEdges = 001;	
-  if (( Coord[1] = SUB_DOT(V2_1,V1_1, vars.n)) > 0.0) maskEdges |= 002; 
-  if (( Coord[2] = SUB_DOT(V2_2,V1_1, vars.n)) > 0.0) maskEdges |= 004; 
-  if (( Coord[3] = SUB_DOT(V2_3,V1_1, vars.n)) > 0.0) maskEdges |= 010; 
+  arr3 t;
+  sub(V2_0, V1_1, t);
+  if (( Coord[0] = dot(t, vars.n)) > 0.0) maskEdges = 001;
+  sub(V2_1, V1_1, t);
+  if (( Coord[1] = dot(t, vars.n)) > 0.0) maskEdges |= 002;
+  sub(V2_2, V1_1, t);
+  if (( Coord[2] = dot(t, vars.n)) > 0.0) maskEdges |= 004;
+  sub(V2_3, V1_1, t);
+  if (( Coord[3] = dot(t, vars.n)) > 0.0) maskEdges |= 010;
   
   return (maskEdges == 017);	
 }
@@ -161,10 +153,15 @@ inline bool FaceB_1(checkVars vars)
 inline bool FaceB_2(checkVars vars, const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr3 &V1_3, const arr3 &V2_1)
 {
   // scalar * v_ref = V2_1;
-  return	(( SUB_DOT(V1_0,V2_1 , vars.n) > 0.0)  &&
-		 ( SUB_DOT(V1_1,V2_1 , vars.n) > 0.0)  &&
-		 ( SUB_DOT(V1_2,V2_1 , vars.n) > 0.0)  &&
-		 ( SUB_DOT(V1_3,V2_1 , vars.n) > 0.0) );
+    std::array<arr3, 4> t;
+	sub(V1_0, V2_1, t[0]);
+	sub(V1_1, V2_1, t[1]);
+	sub(V1_2, V2_1, t[2]);
+	sub(V1_3, V2_1, t[3]);
+    return ((dot(t[0], vars.n) > 0.0)  &&
+		    (dot(t[1], vars.n) > 0.0)  &&
+		    (dot(t[2], vars.n) > 0.0)  &&
+		    (dot(t[3], vars.n) > 0.0) );
 }
 
 
@@ -255,43 +252,43 @@ bool tet_a_tetII(const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr
   // First, we must define the variable object for this call (to ensure thread safety)
   checkVars vars;
   
-  SUB(vars.P_V1[0] ,V2_0,V1_0);	
-  SUB(vars.P_V1[1] ,V2_1,V1_0);	
-  SUB(vars.P_V1[2] ,V2_2,V1_0);	
-  SUB(vars.P_V1[3] ,V2_3,V1_0);	
+  sub(V2_0, V1_0, vars.P_V1[0]);
+  sub(V2_1, V1_0, vars.P_V1[1]);
+  sub(V2_2, V1_0, vars.P_V1[2]);
+  sub(V2_3, V1_0, vars.P_V1[3]);
   
   
-  SUB(vars.e_v1[0] , V1_1 , V1_0);	
-  SUB(vars.e_v1[1] , V1_2 , V1_0);
+  sub(V1_1 , V1_0, vars.e_v1[0]);
+  sub(V1_2 , V1_0, vars.e_v1[1]);
   
 
   VECT(vars.n , vars.e_v1[0] ,vars.e_v1[1]);		// find the normal to  face 0
   
   
-  if(FaceA_1(&vars.Coord_1[0][0],vars.masks[0], vars))	return false; // if FaceA_1 returns true, it means that a separation plane has been found, and thus returns false, so both tetrahedra don't intersect.
+  if(FaceA_1(vars.Coord_1[0].data(),vars.masks[0], vars))	return false; // if FaceA_1 returns true, it means that a separation plane has been found, and thus returns false, so both tetrahedra don't intersect.
   
   
-  SUB(vars.e_v1[2],V1_3,V1_0);
+  sub(V1_3, V1_0, vars.e_v1[2]);
   VECT(vars.n ,vars.e_v1[2] ,  vars.e_v1[0]);
   
-  if(FaceA_1(&vars.Coord_1[1][0], vars.masks[1], vars)) 	return false;		
+  if(FaceA_1(vars.Coord_1[1].data(), vars.masks[1], vars)) 	return false;
   
   if(EdgeA(0,1, vars)) return false;	
   
   
   VECT(vars.n,  vars.e_v1[1] , vars.e_v1[2]); 
   
-  if(FaceA_1(&vars.Coord_1[2][0], vars.masks[2], vars)) 	return false;	
+  if(FaceA_1(vars.Coord_1[2].data(), vars.masks[2], vars)) 	return false;
   
   if(EdgeA(0,2, vars)) return false;	
   if(EdgeA(1,2, vars)) return false;  	
   
-  SUB(vars.e_v1[4], V1_3,V1_1);
-  SUB(vars.e_v1[3], V1_2,V1_1);
+  sub(V1_3,V1_1, vars.e_v1[4]);
+  sub(V1_2,V1_1, vars.e_v1[3]);
   
   VECT(vars.n ,vars.e_v1[4] , vars.e_v1[3]);
   
-  if(FaceA_2(&vars.Coord_1[3][0],vars.masks[3], vars, V2_0, V2_1, V2_2, V2_3, V1_1))  return false;	
+  if(FaceA_2(vars.Coord_1[3].data(), vars.masks[3], vars, V2_0, V2_1, V2_2, V2_3, V1_1))  return false;
   
   if(EdgeA(0,3, vars)) return false;	
   if(EdgeA(1,3, vars)) return false; 	
@@ -302,19 +299,19 @@ bool tet_a_tetII(const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr
   
   // from now on, if there is a separating plane it is parallel to a face of b
   
-  SUB(vars.P_V2[0] , V1_0,V2_0);
-  SUB(vars.P_V2[1] , V1_1,V2_0);	
-  SUB(vars.P_V2[2] , V1_2,V2_0);	
-  SUB(vars.P_V2[3] , V1_3,V2_0);	
+  sub(V1_0,V2_0, vars.P_V2[0]);
+  sub(V1_1,V2_0, vars.P_V2[1]);
+  sub(V1_2,V2_0, vars.P_V2[2]);
+  sub(V1_3,V2_0, vars.P_V2[3]);
   
   
-  SUB(vars.e_v2[0] , V2_1, V2_0);
-  SUB(vars.e_v2[1] , V2_2, V2_0);
+  sub(V2_1, V2_0, vars.e_v2[0]);
+  sub(V2_2, V2_0, vars.e_v2[1]);
   
   VECT(vars.n, vars.e_v2[0] , vars.e_v2[1] );
   if(FaceB_1(vars)) return false;	
   
-  SUB(vars.e_v2[2], V2_3, V2_0);
+  sub(V2_3, V2_0, vars.e_v2[2]);
   
   VECT(vars.n,  vars.e_v2[2] ,  vars.e_v2[0]);
   
@@ -324,8 +321,8 @@ bool tet_a_tetII(const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr
   
   if(FaceB_1(vars)) return false;
   
-  SUB(vars.e_v2[4] , V2_3 , V2_1);
-  SUB(vars.e_v2[3] , V2_2 , V2_1);
+  sub(V2_3 , V2_1, vars.e_v2[4]);
+  sub(V2_2 , V2_1, vars.e_v2[3]);
   
   VECT(vars.n , vars.e_v2[4] , vars.e_v2[3]);
   
@@ -334,7 +331,4 @@ bool tet_a_tetII(const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr
   return true;
 }
 
-#undef DOT
-#undef SUB
-#undef SUB_DOT
 #undef VECT

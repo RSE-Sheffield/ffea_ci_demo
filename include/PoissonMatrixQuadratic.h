@@ -58,8 +58,6 @@ private:
     };
 
     void add_grad_dot_products(std::array<arr3, NUM_NODES_QUADRATIC_TET> &grad_psi, scalar det_J, scalar weight);
-
-    static scalar grad_dot(arr3 &grad_psi_i, arr3 &grad_psi_j);
 };
 
 

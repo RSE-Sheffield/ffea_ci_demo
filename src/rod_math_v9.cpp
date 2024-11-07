@@ -283,22 +283,7 @@ namespace rod
         }
         std::cout << ")\n";
     }
-
-    /**
- Return a section of a float vector between start_index and end_index (inclusive)
- TODO: generalise to all vector types
-*/
-    std::vector<float> slice_vector(std::vector<float> vec, int start_index, int end_index)
-    {
-
-        std::vector<float> slice(end_index - start_index + 1);
-        std::vector<float>::iterator start_iter = vec.begin() + start_index;
-        std::vector<float>::iterator end_iter = vec.begin() + end_index + 1;
-
-        std::copy(start_iter, end_iter, slice.begin());
-
-        return slice;
-    }
+    
 
 // These are just generic vector functions that will be replaced by mat_vec_fns at some point
 
@@ -538,14 +523,6 @@ namespace rod
         out[6] = a[6] * b[0] + a[7] * b[3] + a[8] * b[6];
         out[7] = a[6] * b[1] + a[7] * b[4] + a[8] * b[7];
         out[8] = a[6] * b[2] + a[7] * b[5] + a[8] * b[8];
-    }
-
-    /**
- Dot product of two 3x1 vectors.
-*/
-    float dot_product_3x1(const float3 &a, const float3 &b)
-    {
-        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
     }
 
     // These are utility functions specific to the math for the rods

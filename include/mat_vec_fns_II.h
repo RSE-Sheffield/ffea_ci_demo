@@ -340,26 +340,14 @@ T magnitude(const std::vector<T>& a) {
     }
     return  std::sqrt(result);
 }
-/** Given a scalar f, change v so that v += f*u */
+/** Return the length of a vector squared, aka dot product with self */
 template <typename T, size_t N, template<typename, size_t> typename Array>
 T magnitude2(const Array<T, N> &a) {
-    T result = 0;
-#pragma omp simd reduction(+:result)
-    for (int i = 0; i < N; ++i) {
-        const T t = a[i] - a[i];
-        result += t * t;
-    }
-    return result;
+    return dot(a, a);
 }
 template <typename T>
 T magnitude2(const std::vector<T> &a) {
-    T result = 0;
-#pragma omp simd reduction(+:result)
-    for (int i = 0; i < a.size(); ++i) {
-        const T t = a[i] - a[i];
-        result += t * t;
-    }
-    return result;
+    return dot(a, a);
 }
 /** Fill the iterable with zeros */
 template <typename T, size_t N, template<typename, size_t> typename Array>
