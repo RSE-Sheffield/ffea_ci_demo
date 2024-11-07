@@ -2041,12 +2041,8 @@ scalar Blob::get_strain_energy() {
 }
 
 void Blob::get_min_max(arr3 &blob_min, arr3 &blob_max) {
-    blob_min[0] = INFINITY;
-    blob_max[0] = -1 * INFINITY;
-    blob_min[1] = INFINITY;
-    blob_max[1] = -1 * INFINITY;
-    blob_min[2] = INFINITY;
-    blob_max[2] = -1 * INFINITY;
+    std::fill(blob_min.begin(), blob_min.end(), std::numeric_limits<scalar>::max());
+    std::fill(blob_max.begin(), blob_max.end(), std::numeric_limits<scalar>::min());
 
     for(const auto &node_i : node) {
         if(node_i.pos[0] > blob_max[0]) {

@@ -1264,32 +1264,16 @@ namespace rod
 
     Rod Rod::get_min_max(const std::vector<float> &r, OUT float3 &min, float3 &max)
     {
+        std::fill(min.begin(), min.end(), std::numeric_limits<float>::max());
+        std::fill(max.begin(),max.end(), std::numeric_limits<float>::min());
         for (int i = 0; i < this->length; i += 3)
         {
-            if (r[i + x] > max[x])
-            {
-                max[x] = r[i + x];
-            }
-            if (r[i + y] > max[x])
-            {
-                max[y] = r[i + y];
-            }
-            if (r[i + z] > max[z])
-            {
-                max[z] = r[i + z];
-            }
-            if (r[i + x] < min[x])
-            {
-                min[x] = r[i + x];
-            }
-            if (r[i + y] < min[y])
-            {
-                min[y] = r[i + y];
-            }
-            if (r[i + z] < min[z])
-            {
-                min[z] = r[i + z];
-            }
+            min[x] = std::min(r[i + x], min[x]);
+            max[x] = std::max(r[i + x], max[x]);
+            min[y] = std::min(r[i + y], min[y]);
+            max[y] = std::max(r[i + y], max[y]);
+            min[z] = std::min(r[i + z], min[z]);
+            max[z] = std::max(r[i + z], max[z]);
         }
         return *this;
     }
