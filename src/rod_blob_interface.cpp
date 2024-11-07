@@ -860,8 +860,7 @@ void Rod_blob_interface::get_attachment_node(OUT float3 &attachment_node, float3
         vec3d(n){attachment_node_pos[n] = this->tet_origin[n] + (this->edge_vecs[0][n]*this->node_weighting[0] + this->edge_vecs[1][n]*this->node_weighting[1] + this->edge_vecs[2][n]*this->node_weighting[2]);}
        // }
     }
-
-    float3 end_node;
+    
     int index;
     if (this->ends_at_rod){
         index = 0;
@@ -872,7 +871,6 @@ void Rod_blob_interface::get_attachment_node(OUT float3 &attachment_node, float3
     
     float3 end_node_pos;
     vec3d(n){end_node_pos[n] = this->connected_rod->current_r[(index*3)+n];}
-    //normalize(end_node, end_node);
     
     print_array("   attachment_node_pos", attachment_node_pos);
     print_array("   attachment_node", attachment_node);
@@ -900,8 +898,6 @@ void Rod_blob_interface::get_attachment_node(OUT float3 &attachment_node, float3
     }
     
     print_array("   attachment_node (reverse'd)", attachment_node);
-    vec3d(n){end_node[n] = this->connected_rod->current_r[(index*3)+3+n] - this->connected_rod->current_r[(index*3)+n];}
-    print_array("   end node (unmodified)", end_node);
     print_array("   end node pos (unmodified)", end_node_pos);
         
     // print_array("  end_node", end_node, 3); //dbg
