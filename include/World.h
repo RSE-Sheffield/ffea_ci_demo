@@ -90,16 +90,16 @@ public:
     void init(string FFEA_script_filename, int frames_to_delete, int mode, bool writeEnergy);
 
     /* */
-    void get_smallest_time_constants();
+    void get_smallest_time_constants() const;
 
     /* */
-    void lem(set<int> blob_indices, int num_modes);
+    void lem(const set<int> &blob_indices, int num_modes);
 
     /* */
-    void dmm(set<int> blob_indices, int num_modes);
+    void dmm(const set<int> &blob_indices, int num_modes);
 
     /* */
-    void dmm_rp(set<int> blob_indices, int num_modes);
+    void dmm_rp(const set<int> &blob_indices, int num_modes);
 
     /* */
     void run();
@@ -123,16 +123,16 @@ public:
     void print_kinetic_rates_to_screen(int type);
 
     /* */
-    void get_system_CoM(arr3 &system_CoM);
+    void get_system_CoM(arr3 &system_CoM) const;
 
     /* */
-    void get_system_centroid(arr3 &centroid);
+    void get_system_centroid(arr3 &centroid) const;
 
     /* */
-    void get_system_dimensions(arr3 &dimenstion_vector);
+    void get_system_dimensions(arr3 &dimenstion_vector) const;
 
     /* */
-    int get_num_blobs();
+    int get_num_blobs() const;
 
 
 private:

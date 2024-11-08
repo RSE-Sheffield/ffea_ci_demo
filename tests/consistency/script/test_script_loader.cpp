@@ -40,7 +40,7 @@ int main (void)
 
 	// Copy entire script into string
 	vector<string> script_vector;
-    ffeareader->file_to_lines(file_to_open, &script_vector);
+    ffeareader->file_to_lines(file_to_open, script_vector);
 
 	// Get params section
 	cout << "Extracting Parameters..." << endl;

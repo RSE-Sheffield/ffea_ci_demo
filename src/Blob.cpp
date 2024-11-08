@@ -609,8 +609,8 @@ void Blob::translate_linear(arr3 *vec) {
 }
 
 // Rotate about x axis, then y axis, then z axis
-void Blob::rotate(float xang, float yang, float zang, bool beads) {
-    scalar r[3][3];
+void Blob::rotate(scalar xang, scalar yang, scalar zang, bool beads) {
+    std::array<std::array<scalar, 3>, 3> r;
 
     // Convert to radians
     xang *= ffea_const::pi / 180.0;
@@ -633,7 +633,7 @@ void Blob::rotate(float xang, float yang, float zang, bool beads) {
            r[2][0], r[2][1], r[2][2], beads);
 }
 
-void Blob::rotate(float r11, float r12, float r13, float r21, float r22, float r23, float r31, float r32, float r33, bool beads) {
+void Blob::rotate(scalar r11, scalar r12, scalar r13, scalar r21, scalar r22, scalar r23, scalar r31, scalar r32, scalar r33, bool beads) {
     arr3 com;
     scalar x, y, z;
 
@@ -2736,7 +2736,7 @@ void Blob::load_ctforces(const string& ctforces_fname) {
 
     // read the input file, taking out comments as <!-- -->
     //  and put it into the ctforces_lines vector of strings:
-    reader.file_to_lines(ctforces_fname, &ctforces_lines);
+    reader.file_to_lines(ctforces_fname, ctforces_lines);
 
 
     // 1 - READ AND CHECK THE HEADER:

@@ -116,9 +116,9 @@ private:
   /** delta x in tabulated potentials and forces"  */
   scalar Dx = 0; 
   /** x_range */ 
-  scalar x_range[2] = {};
-  /** squared x_range */ 
-  scalar x_range2[2] = {};
+  std::array<scalar, 2> x_range = {};
+  /** squared x_range */
+  std::array<scalar, 2> x_range2 = {};
   /** number of pre-computed values per table */ 
   int n_values = 0; 
   /** total number of type interactions */

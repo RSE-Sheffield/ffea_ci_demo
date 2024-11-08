@@ -155,12 +155,12 @@ public:
      * rotates all nodes in the Blob, and brings back the Blob to the initial position.
      * If beads = 1, then it rotates its own "bead_positions" too.
      */
-    void rotate(float r11, float r12, float r13, float r21, float r22, float r23, float r31, float r32, float r33, bool beads=false);
+    void rotate(scalar r11, scalar r12, scalar r13, scalar r21, scalar r22, scalar r23, scalar r31, scalar r32, scalar r33, bool beads=false);
 
     /**
      *   Performs rotation about x axis, then y axis, then z axis
      */
-    void rotate(float xang, float yang, float zang, bool beads=false);
+    void rotate(scalar xang, scalar yang, scalar zang, bool beads=false);
 
     /**
      * Calculates the centroid of this Blob, then translates all nodes in the Blob

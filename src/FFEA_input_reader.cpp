@@ -35,7 +35,7 @@ FFEA_input_reader::~FFEA_input_reader() {
 	copying = 0;
 }
 
-void FFEA_input_reader::file_to_lines(string script_fname, vector<string> *script_vector) {
+void FFEA_input_reader::file_to_lines(const string &script_fname, vector<string> &script_vector) {
 
 	// Open script
 	ifstream fin;
@@ -45,7 +45,7 @@ void FFEA_input_reader::file_to_lines(string script_fname, vector<string> *scrip
 	}
 
 	// Copy entire script into string
-	script_vector->clear();
+	script_vector.clear();
 
 	// The following variable declarations belong to 
 	//   to the comment removal functionality
@@ -107,13 +107,13 @@ void FFEA_input_reader::file_to_lines(string script_fname, vector<string> *scrip
 
 		boost::trim(buf_string);
 		if(buf_string != "\n" && buf_string != "") {
-			script_vector->push_back(buf_string);
+			script_vector.push_back(buf_string);
 		}
 	}
 	fin.close();
 }
 
-void FFEA_input_reader::extract_block(string block_title, int block_index, vector<string> input, vector<string> *output, bool mandatory/*=true*/) {
+void FFEA_input_reader::extract_block(const string &block_title, int block_index, const vector<string> &input, vector<string> &output, bool mandatory/*=true*/) {
 
 	// Immediate error checking
 	if(block_title != "param" && block_title != "system" && block_title != "blob" && block_title != "conformation" && block_title != "kinetics" && block_title != "maps" && block_title != "interactions" && block_title != "springs" && block_title != "precomp" && block_title != "ctforces" && block_title != "rod" && block_title != "coupling" ) {
@@ -124,10 +124,10 @@ void FFEA_input_reader::extract_block(string block_title, int block_index, vecto
 	}
 
 	int count = -1;
-	output->clear();
+	output.clear();
 	//cout << "New" << endl << endl;
-	for(string_it = input.begin(); string_it != input.end(); ++string_it) {
-		buf_string = boost::erase_last_copy(boost::erase_first_copy(*string_it, "<"), ">");
+	for(const auto &string_it : input) {
+		buf_string = boost::erase_last_copy(boost::erase_first_copy(string_it, "<"), ">");
 		boost::trim(buf_string);
         
         //Parse an enclosing blokc with attributes (e.g. <coupling type = rod>)
@@ -155,7 +155,7 @@ void FFEA_input_reader::extract_block(string block_title, int block_index, vecto
 				copying = 0;
 				return;
 			} else {
-				output->push_back(*string_it);
+				output.push_back(string_it);
 			}
 		}
 	}
@@ -173,7 +173,7 @@ void FFEA_input_reader::extract_block(string block_title, int block_index, vecto
  * @param[in] string input e. g.,  string < blah = whatever>
  * @param[out] string[2] output; string[0] = blah, string[1] = whatever.
  */
-void FFEA_input_reader::parse_tag(string input, string *output) {
+void FFEA_input_reader::parse_tag(const string &input, std::array<string, 2> &output) {
 
 	string tag;
 	vector<string> lrvalvec;
@@ -195,28 +195,29 @@ void FFEA_input_reader::parse_tag(string input, string *output) {
 	
 }
 
-void FFEA_input_reader::parse_map_tag(string input, int *map_indices, string *map_fname) {
+void FFEA_input_reader::parse_map_tag(const string &input, std::array<int, 2> &map_indices, string &map_fname) {
 
 	// Parse whole tag
-	string lrvalue[2], indexlrvalue[2];
+	std::array<string, 2> lrvalue;
+	std::array<string, 2> indexlrvalue;
 	parse_tag(input, lrvalue);
 
 	// Check if map
-	split_string(lrvalue[0], indexlrvalue, "(", 2);
+	split_string(lrvalue[0], indexlrvalue.data(), "(", 2);
 	if(indexlrvalue[0] != "map") {
 		cout << indexlrvalue[0] << endl;
 		throw FFEAException("Expected '<map (from,to) = fname>' but got %s.", input.c_str());
 	}
 
 	// Assign map!
-	*map_fname = lrvalue[1];
+	map_fname = lrvalue[1];
 
 	// Get indices
 	indexlrvalue[1] = boost::erase_last_copy(indexlrvalue[1], ")");
-	split_string(indexlrvalue[1], map_indices, ",", 2);
+	split_string(indexlrvalue[1], map_indices.data(), ",", 2);
 }
 
-int FFEA_input_reader::split_string(string input, string *output, string delim, size_t output_length) {
+int FFEA_input_reader::split_string(const string &input, string *output, const string &delim, size_t output_length) {
 
 	vector<string> lrvalvec;
 	vector<string>::iterator it;
@@ -234,7 +235,7 @@ int FFEA_input_reader::split_string(string input, string *output, string delim, 
 	return lrvalvec.size();
 }
 
-int FFEA_input_reader::split_string(string input, vector<string> &output, string delim) {
+int FFEA_input_reader::split_string(const string &input, vector<string> &output, const string &delim) {
 
 	vector<string> lrvalvec;
 	vector<string>::iterator it;
@@ -249,7 +250,7 @@ int FFEA_input_reader::split_string(string input, vector<string> &output, string
 	return lrvalvec.size();
 }
 
-int FFEA_input_reader::split_string(string input, int *output, string delim, size_t output_length) {
+int FFEA_input_reader::split_string(const string &input, int *output, const string &delim, size_t output_length) {
 
 	vector<string> lrvalvec;
 	vector<string>::iterator it;
@@ -265,7 +266,7 @@ int FFEA_input_reader::split_string(string input, int *output, string delim, siz
 	return lrvalvec.size();
 }
 
-int FFEA_input_reader::split_string(string input, scalar *output, string delim, size_t output_length) {
+int FFEA_input_reader::split_string(const string &input, scalar *output, const string &delim, size_t output_length) {
 
 	vector<string> lrvalvec;
 	vector<string>::iterator it;

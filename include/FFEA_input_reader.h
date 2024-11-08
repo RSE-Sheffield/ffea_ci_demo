@@ -43,35 +43,32 @@ class FFEA_input_reader {
 
 
 		/** Get all lines from ffea, strip them of whitespace and return as a vector object */ 
-		void file_to_lines(string script_fname, vector<string> *output);
+		void file_to_lines(const string &script_fname, vector<string> &output);
 
 		/** Extract any block from the current block */ 
-		void extract_block(string block_title, int block_index, vector<string> input, vector<string> *output, bool mandatory=true); 
+		void extract_block(const string& block_title, int block_index, const vector<string> &input, vector<string> &output, bool mandatory=true);
 
 		/** Get rvalue from block */ 
-		void parse_tag(string input, string *output);
+		void parse_tag(const string &input, std::array<string, 2> &output);
 
 		/** Specifically return map data */ 
-		void parse_map_tag(string input, int *map_indices, string *map_fname);
+		void parse_map_tag(const string &input, std::array<int, 2> &map_indices, string &map_fname);
 
 		/** Split string around delim and return as strings */ 
-		int split_string(string input, string *output, string delim, size_t output_length);
+		int split_string(const string &input, string *output, const string &delim, size_t output_length);
 
 		/** Split string around delim and return as strings vector. */ 
-		int split_string(string input, vector<string> &output, string delim);
+		int split_string(const string &input, vector<string> &output, const string &delim);
 
 		/** Split string around delim and return as ints */ 
-		int split_string(string input, int *output, string delim, size_t output_length);
+		int split_string(const string &input, int *output, const string &delim, size_t output_length);
 
 		/** Split string around delim and return as scalars */ 
-		int split_string(string input, scalar *output, string delim, size_t output_length);
+		int split_string(const string &input, scalar *output, const string &delim, size_t output_length);
         
 	private:
-
 		string buf_string;
-		int copying;
-		vector<string>::iterator string_it;
-		
+		int copying;		
 };
 
 #endif

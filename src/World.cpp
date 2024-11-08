@@ -174,7 +174,6 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
 
     // Set some constants and variables
     this->writeDetailed = writeDetail;
-    int i, j, k;
 
     string buf_string;
     FFEA_input_reader ffeareader = FFEA_input_reader();
@@ -186,7 +185,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
 
     // Copy entire script into string
     vector<string> script_vector;
-    ffeareader.file_to_lines(FFEA_script_filename, &script_vector);
+    ffeareader.file_to_lines(FFEA_script_filename, script_vector);
 
     // Get params section
     cout << "Extracting Parameters..." << endl;
@@ -226,11 +225,11 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
         kinetic_state = std::vector<std::vector<KineticState>>(params.num_blobs);
 
         // Assign all memory
-        for (i = 0; i < params.num_blobs; ++i) {
+        for (int i = 0; i < params.num_blobs; ++i) {
             if (params.num_conformations[i] != 1) {
                 kinetic_map[i] = std::vector<std::vector<std::shared_ptr<SparseMatrixFixedPattern>>>(params.num_conformations[i]);
                 kinetic_return_map[i] = std::vector<std::vector<std::shared_ptr<SparseMatrixFixedPattern>>>(params.num_conformations[i]);
-                for (j = 0; j < params.num_conformations[i]; ++j) {
+                for (int j = 0; j < params.num_conformations[i]; ++j) {
                     kinetic_map[i][j] = std::vector<std::shared_ptr<SparseMatrixFixedPattern>>(params.num_conformations[i], nullptr);
                     kinetic_return_map[i][j] = std::vector<std::shared_ptr<SparseMatrixFixedPattern>>(params.num_conformations[i], nullptr);
                 }
@@ -280,9 +279,8 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
         if (userInfo::verblevel > 1)
         {
             cout << "RngStream initialised using: ";
-            for (int ni = 0; ni < 6; ni++)
-            {
-                cout << sixseed[ni] << " ";
+            for (const auto &ss : sixseed) {
+                cout << ss << " ";
             }
             cout << endl;
         }
@@ -338,7 +336,6 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
         int num_active_rng = num_threads;
         if (params.calc_kinetics)
             num_active_rng += 1;
-        int nlines = checkpoint_v.size();
 
         num_seeds = max(num_active_rng, num_seeds_read);
 
@@ -440,7 +437,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
     }
 
     // Set up a Box:
-    arr3 world_centroid, shift;
+    arr3 world_centroid;
     get_system_centroid(world_centroid);
     if (params.es_N_x < 1 || params.es_N_y < 1 || params.es_N_z < 1)
     {
@@ -458,9 +455,10 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
     box_dim[1] = params.ssint_cutoff * params.es_N_y;
     box_dim[2] = params.ssint_cutoff * params.es_N_z;
 
-    shift[0] = box_dim[0] / 2.0 - world_centroid[0];
-    shift[1] = box_dim[1] / 2.0 - world_centroid[1];
-    shift[2] = box_dim[2] / 2.0 - world_centroid[2];
+    arr3 shift = {
+        box_dim[0] / 2.0 - world_centroid[0],
+        box_dim[1] / 2.0 - world_centroid[1],
+        box_dim[2] / 2.0 - world_centroid[2]};
 
     std::cout << "Box dimensions: (" << box_dim[0] << ", " << box_dim[1] << ", " << box_dim[2] << ")\n";
     std::cout << "World centroid: (" << world_centroid[0] << ", " << world_centroid[1] << ", " << world_centroid[2] << ")\n";
@@ -468,14 +466,14 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
 
     if (params.move_into_box == 1)
     { // && params.restart == 0)
-        for (i = 0; i < params.num_blobs; i++)
+        for (int i = 0; i < params.num_blobs; i++)
         {
             //active_blob_array[i]->get_centroid(&world_centroid);
             active_blob_array[i]->move(shift[0], shift[1], shift[2]);
             active_blob_array[i]->calc_all_centroids();
         }
         rod::float3 shift_rod = {(float)shift[0], (float)shift[1], (float)shift[2]}; // this class is some historical junk
-        for (i = 0; i < params.num_rods; i++)
+        for (int i = 0; i < params.num_rods; i++)
         {
             if (rod_array[i]->restarting == false)
             {
@@ -485,7 +483,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
             }
         }
         // todo: for each attachment, move the attachment_node_pos by shift
-        for (i = 0; i < params.num_interfaces; i++)
+        for (int i = 0; i < params.num_interfaces; i++)
         {
             //for(int j=0; j<3; j++){rod_blob_interface_array[i]->attachment_node_pos[j] += shift_rod[j];}
             rod_blob_interface_array[i]->update_internal_state(true, true);
@@ -506,9 +504,9 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
     }
 
     // Now everything has been moved into boxes etc, save all initial positions
-    for (i = 0; i < params.num_blobs; ++i)
+    for (int i = 0; i < params.num_blobs; ++i)
     {
-        for (j = 0; j < params.num_conformations[i]; ++j)
+        for (int j = 0; j < params.num_conformations[i]; ++j)
         {
             blob_array[i][j].set_pos_0();
         }
@@ -543,16 +541,16 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
             // HEADER FOR TRAJECTORY
             // Print initial info stuff
             fprintf(trajectory_out, "FFEA_trajectory_file\n\nInitialisation:\nNumber of Blobs %d\nNumber of Conformations", params.num_blobs);
-            for (i = 0; i < params.num_blobs; ++i)
+            for (int i = 0; i < params.num_blobs; ++i)
             {
                 fprintf(trajectory_out, " %d", params.num_conformations[i]);
             }
             fprintf(trajectory_out, "\n");
 
-            for (i = 0; i < params.num_blobs; ++i)
+            for (int i = 0; i < params.num_blobs; ++i)
             {
                 fprintf(trajectory_out, "Blob %d:\t", i);
-                for (j = 0; j < params.num_conformations[i]; ++j)
+                for (int j = 0; j < params.num_conformations[i]; ++j)
                 {
                     fprintf(trajectory_out, "Conformation %d Nodes %d\t", j, blob_array[i][j].get_num_nodes());
                 }
@@ -610,7 +608,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
                 detailed_meas_out = fopen(params.detailed_meas_out_fname.c_str(), "wb");
                 fprintf(detailed_meas_out, "FFEA Detailed Measurement File\n\nMeasurements:\n");
                 fprintf(detailed_meas_out, "%-14s", "Time");
-                for (i = 0; i < params.num_blobs; ++i)
+                for (int i = 0; i < params.num_blobs; ++i)
                 {
                     fprintf(detailed_meas_out, "| B%d ", i);
                     if (active_blob_array[i]->there_is_mass())
@@ -623,9 +621,9 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
 
                 if (params.calc_ssint == 1 || params.calc_steric == 1 || params.calc_preComp == 1 || params.calc_springs == 1)
                 {
-                    for (i = 0; i < params.num_blobs; ++i)
+                    for (int i = 0; i < params.num_blobs; ++i)
                     {
-                        for (j = i; j < params.num_blobs; ++j)
+                        for (int j = i; j < params.num_blobs; ++j)
                         {
                             fprintf(detailed_meas_out, "| B%dB%d ", i, j);
                             if (active_blob_array[i]->there_is_ssint() && active_blob_array[j]->there_is_ssint())
@@ -665,12 +663,12 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
                     throw FFEAFileException(params.kinetics_out_fname);
                 }
                 fprintf(kinetics_out, "FFEA_kinetic_trajectory_file\n\nNumber of Blobs %d\n\n", params.num_blobs);
-                for (i = 0; i < params.num_blobs; ++i)
+                for (int i = 0; i < params.num_blobs; ++i)
                 {
                     fprintf(kinetics_out, "              Blob %d         ", i);
                 }
                 fprintf(kinetics_out, "\n# step ");
-                for (i = 0; i < params.num_blobs; ++i)
+                for (int i = 0; i < params.num_blobs; ++i)
                 {
                     fprintf(kinetics_out, "|state | conformation |");
                 }
@@ -707,8 +705,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
             }
 
             // Variable to store position of last asterisk in trajectory file (initialise it at end of file)
-            long last_asterisk_pos;
-            last_asterisk_pos = ftell(trajectory_out);
+            long last_asterisk_pos = ftell(trajectory_out);
 
             int num_asterisks = 0;
             int num_asterisks_to_find = 3 + (frames_to_delete)*2 + 1; // 3 to get to top of last frame, then two for every subsequent frame. Final 1 to find ending conformations of last step
@@ -724,14 +721,14 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
                     // This loop will allow the script to find the 'final' asterisk
                     while (true)
                     {
-                        if ((c = fgetc(trajectory_out)) == '*')
+                        if (fgetc(trajectory_out) == static_cast<int>('*'))
                         {
                             fseek(trajectory_out, -1, SEEK_CUR);
                             break;
                         }
                     }
                 }
-                c = fgetc(trajectory_out);
+                c = static_cast<char>(fgetc(trajectory_out));
                 if (c == '*')
                 {
                     num_asterisks++;
@@ -745,7 +742,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
             }
 
             // char sline[255];
-            if ((c = fgetc(trajectory_out)) != '\n')
+            if ((c = static_cast<char>(fgetc(trajectory_out))) != '\n')
             {
                 ungetc(c, trajectory_out);
             }
@@ -755,21 +752,21 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
             }
 
             // Get the conformations for the last snapshot (or set them as 0 if we have only 1 frame)
-            int current_conf, crap;
+            int current_conf;
             if (!singleframe)
             {
-                crap = fscanf(trajectory_out, "Conformation Changes:\n");
-                for (i = 0; i < params.num_blobs; ++i)
+                fscanf(trajectory_out, "Conformation Changes:\n");
+                for (int i = 0; i < params.num_blobs; ++i)
                 {
-                    crap = fscanf(trajectory_out, "Blob %*d: Conformation %*d -> Conformation %d\n", &current_conf);
+                    fscanf(trajectory_out, "Blob %*d: Conformation %*d -> Conformation %d\n", &current_conf);
                     active_blob_array[i] = &blob_array[i][current_conf];
                 }
-                crap = fscanf(trajectory_out, "*\n");
+                fscanf(trajectory_out, "*\n");
                 last_asterisk_pos = ftell(trajectory_out);
             }
             else
             {
-                for (i = 0; i < params.num_blobs; ++i)
+                for (int i = 0; i < params.num_blobs; ++i)
                 {
                     active_blob_array[i] = &blob_array[i][0];
                 }
@@ -777,8 +774,9 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
 
             // Load this frame
             printf("Loading Blob position and velocity data from last completely written snapshot \n");
-            int blob_id, conformation_id;
-            long long rstep;
+            int blob_id = -1;
+            int conformation_id = -1;
+            long long rstep = -1;
             for (int b = 0; b < params.num_blobs; b++)
             {
                 if (fscanf(trajectory_out, "Blob %d, Conformation %d, step %lld\n", &blob_id, &conformation_id, &rstep) != 3)
@@ -794,12 +792,12 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
             }
 
             // Final conformation bit
-            crap = fscanf(trajectory_out, "*\nConformation Changes:\n");
-            for (i = 0; i < params.num_blobs; ++i)
+            fscanf(trajectory_out, "*\nConformation Changes:\n");
+            for (int i = 0; i < params.num_blobs; ++i)
             {
-                crap = fscanf(trajectory_out, "Blob %*d: Conformation %*d -> Conformation %*d\n");
+                fscanf(trajectory_out, "Blob %*d: Conformation %*d -> Conformation %*d\n");
             }
-            crap = fscanf(trajectory_out, "*\n");
+            fscanf(trajectory_out, "*\n");
 
             // Set truncation location
             //   last_asterisk_pos = ftell(trajectory_out);
@@ -830,7 +828,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
                 throw FFEAException("Could not seek to end of file");
             }
 
-            last_asterisk_pos = ftell(measurement_out);
+            ftell(measurement_out);
 
             // Looking for newlines this time, as each measurement frame is a single line
             int num_newlines = 0;
@@ -863,7 +861,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
             // Append a newline to the end of this truncated measurement file (to replace the one that may or may not have been there)
             //fprintf(measurement_out, "#==RESTART==\n");
 
-            last_asterisk_pos = ftell(measurement_out);
+            ftell(measurement_out);
 
             // Detailed
             if (writeDetailed)
@@ -879,7 +877,7 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
                     throw FFEAException("Could not seek to end of file");
                 }
 
-                last_asterisk_pos = ftell(detailed_meas_out);
+                ftell(detailed_meas_out);
 
                 // Looking for newlines this time, as each measurement frame is a single line
                 num_newlines = 0;
@@ -954,9 +952,9 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
 
     // Check if there are static blobs:
     bool there_are_static_blobs = false;
-    for (i = 0; i < params.num_blobs; i++)
+    for (int i = 0; i < params.num_blobs; i++)
     {
-        for (j = 0; j < params.num_conformations[i]; ++j)
+        for (int j = 0; j < params.num_conformations[i]; ++j)
         {
             if (blob_array[i][j].get_motion_state() != FFEA_BLOB_IS_DYNAMIC)
             {
@@ -988,9 +986,9 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
 
     // Calculate the total number of vdw interacting faces in the entire system
     total_num_surface_faces = 0;
-    for (i = 0; i < params.num_blobs; i++)
+    for (int i = 0; i < params.num_blobs; i++)
     {
-        for (j = 0; j < params.num_conformations[i]; ++j)
+        for (int j = 0; j < params.num_conformations[i]; ++j)
         {
             total_num_surface_faces += blob_array[i][j].get_num_faces();
         }
@@ -1015,15 +1013,15 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
 
         // Add all the faces from each Blob to the lookup pool
         printf("Adding all faces to nearest neighbour grid lookup pool\n");
-        for (i = 0; i < params.num_blobs; i++)
+        for (int i = 0; i < params.num_blobs; i++)
         {
-            for (j = 0; j < params.num_conformations[i]; ++j)
+            for (int j = 0; j < params.num_conformations[i]; ++j)
             {
                 int num_faces_added = 0;
-                for (k = 0; k < blob_array[i][j].get_num_faces(); k++)
+                for (int k = 0; k < blob_array[i][j].get_num_faces(); k++)
                 {
                     Face *b_face = blob_array[i][j].get_face(k);
-                    if (b_face != nullptr)
+                    if (b_face)
                     {
 #ifdef FFEA_PARALLEL_FUTURE
                         lookup.add_to_pool_dual(b_face);
@@ -1093,21 +1091,25 @@ void World::init(string FFEA_script_filename, int frames_to_delete, int mode, bo
  *   algebra using the Eigen libraries to find the largest allowed timestep for
  *   ffea numerical integration.
  * */
-void World::get_smallest_time_constants()
+void World::get_smallest_time_constants() const
 {
     // This is currently only for active blob, as inactive blobs are all at infinity due to linked list problems
 
     // Global variables
-    int i, j, dt_min_bin, dt_max_bin, num_nodes, num_rows;
-    scalar dt_min_world = INFINITY, dt_max_world = -1 * INFINITY;
-    string dt_min_world_type = "viscous", dt_max_world_type = "viscous";
-    Eigen::EigenSolver<Eigen_MatrixX> es_v, es_m;
-    vector<scalar> tauv, taum;
-    vector<scalar>::iterator it;
+    int dt_min_bin = -1;
+    int dt_max_bin = -1;
+    scalar dt_min_world = std::numeric_limits<scalar>::max();
+    scalar dt_max_world = std::numeric_limits<scalar>::min();
+    string dt_min_world_type = "viscous";
+    string dt_max_world_type = "viscous";
+    Eigen::EigenSolver<Eigen_MatrixX> es_v;
+    Eigen::EigenSolver<Eigen_MatrixX> es_m;
+    vector<scalar> tauv;
+    vector<scalar> taum;
 
     cout << "Calculating time constants..." << endl
          << endl;
-    for (i = 0; i < params.num_blobs; ++i)
+    for (int i = 0; i < params.num_blobs; ++i)
     {
         cout << "\tBlob " << i << ":" << endl
              << endl;
@@ -1124,10 +1126,10 @@ void World::get_smallest_time_constants()
         // Viscous only
 
         // Build matrices
-        num_nodes = active_blob_array[i]->get_num_linear_nodes();
+        const int num_nodes = active_blob_array[i]->get_num_linear_nodes();
 
         // Direction matters here
-        num_rows = 3 * num_nodes;
+        const int num_rows = 3 * num_nodes;
 
         Eigen::SparseMatrix<scalar> K(num_rows, num_rows);
         Eigen::SparseMatrix<scalar> A(num_rows, num_rows);
@@ -1139,7 +1141,6 @@ void World::get_smallest_time_constants()
         cout << "\r\t\tCalculating the Viscosity Matrix, K (task 1/5)..." << flush;
         active_blob_array[i]->build_linear_node_viscosity_matrix(&K);
         cout << "done!" << flush;
-        //cout << K * (mesoDimensions::force / mesoDimensions::velocity) << endl;
         // Build elasticity matrix, A
         cout << "\r\t\tCalculating the Elasticity Matrix, A (task 2/5)..." << flush;
         active_blob_array[i]->build_linear_node_elasticity_matrix(&A);
@@ -1147,21 +1148,23 @@ void World::get_smallest_time_constants()
 
         // Invert K (it's symmetric! Will not work if stokes_visc == 0)
         cout << "\r\t\tAttempting to invert K to form K_inv (task 3/5)..." << flush;
-        Eigen::SimplicialCholesky<Eigen::SparseMatrix<scalar>> Cholesky(K); // performs a Cholesky factorization of K
-        I.setIdentity();
-        K_inv = Cholesky.solve(I);
-        if (Cholesky.info() == Eigen::Success)
         {
-            cout << "done!" << flush;
-        }
-        else if (Cholesky.info() == Eigen::NumericalIssue)
-        {
-            throw FFEAException("\n\t\t"
-                 "Viscosity Matrix could not be inverted via Cholesky factorisation due to numerical issues. You possibly don't have an external solvent set, or it is too low.");
-        }
-        else if (Cholesky.info() == Eigen::NoConvergence)
-        {
-            throw FFEAException("\nInversion iteration couldn't converge. K must be a crazy matrix. Possibly has zero eigenvalues?");
+            Eigen::SimplicialCholesky<Eigen::SparseMatrix<scalar>> Cholesky(K); // performs a Cholesky factorization of K
+            I.setIdentity();
+            K_inv = Cholesky.solve(I);
+            if (Cholesky.info() == Eigen::Success)
+            {
+                cout << "done!" << flush;
+            }
+            else if (Cholesky.info() == Eigen::NumericalIssue)
+            {
+                throw FFEAException("\n\t\t"
+                    "Viscosity Matrix could not be inverted via Cholesky factorisation due to numerical issues. You possibly don't have an external solvent set, or it is too low.");
+            }
+            else if (Cholesky.info() == Eigen::NoConvergence)
+            {
+                throw FFEAException("\nInversion iteration couldn't converge. K must be a crazy matrix. Possibly has zero eigenvalues?");
+            }
         }
 
         // Apply to A
@@ -1170,11 +1173,10 @@ void World::get_smallest_time_constants()
         cout << "done!" << flush;
         printf("%c[2K", 27);
 
-        // Diagonalise
-        //cout << "\r" << "\t\t                                                                     " << flush;
+        // Diagonalise                                                                 " << flush;
         cout << "\r\t\tDiagonalising tau_inv (task 5/5)..." << flush;
         es_v.compute(tau_inv);
-        for (j = 0; j < num_rows; ++j)
+        for (int j = 0; j < num_rows; ++j)
         {
             tauv.push_back(1.0 / fabs(es_v.eigenvalues()[j].real()));
         }
@@ -1187,38 +1189,33 @@ void World::get_smallest_time_constants()
             // Inertial 'always' fastest
 
             // Build matrices
-            num_nodes = active_blob_array[i]->get_num_linear_nodes();
 
             // Direction still matters here due to viscosity (potentially)
-            num_rows = 3 * num_nodes;
             Eigen::SparseMatrix<scalar> M(num_rows, num_rows);
             Eigen_MatrixX M_inv(num_rows, num_rows);
             Eigen::VectorXd Mev(num_rows);
-            //Mev.setZero();
-            //for(j = 0; j < num_nodes; ++j) {
-            //	Mev(3*j) = 1.0;
-            //}
 
             // Build mass matrix, M
             cout << "\r\t\tCalculating the Mass Matrix, M (task 1/4)..." << flush;
             active_blob_array[i]->build_linear_node_mass_matrix(&M);
             cout << "done!" << flush;
-            //cout << endl << flush << mesoDimensions::mass * (Mev.transpose() * M * Mev) << endl;
-            //cout << (4.0 / 3.0) * 3.1415926535 * 125e-27 * 1500 << endl;
-            //exit(0);
 
             // Build eigenvector, apply and output the mass...
 
             // Invert M (it's symmetric!)
             cout << "\r\t\tAttempting to invert M to form M_inv (task 2/4)..." << flush;
-            Eigen::SimplicialCholesky<Eigen::SparseMatrix<scalar>> Cholesky(M); // performs a Cholesky factorization of M
-            M_inv = Cholesky.solve(I);
-            if (Cholesky.info() == Eigen::Success) {
-                cout << "done!" << flush;
-            } else if (Cholesky.info() == Eigen::NumericalIssue) {
-                throw FFEAException("\t\tMass Matrix could not be inverted via Cholesky factorisation due to numerical issues. This...should not be the case. You have a very odd mass distribution. Try the CG_nomass solver");
-            } else if (Cholesky.info() == Eigen::NoConvergence) {
-                throw FFEAException("\t\tInversion iteration couldn't converge. M must be a crazy matrix. Possibly has zero eigenvalues? Try the CG_nomass solver.");
+            {
+                Eigen::SimplicialCholesky<Eigen::SparseMatrix<scalar>> Cholesky(M); // performs a Cholesky factorization of M
+                M_inv = Cholesky.solve(I);
+                if (Cholesky.info() == Eigen::Success) {
+                    cout << "done!" << flush;
+                }
+                else if (Cholesky.info() == Eigen::NumericalIssue) {
+                    throw FFEAException("\t\tMass Matrix could not be inverted via Cholesky factorisation due to numerical issues. This...should not be the case. You have a very odd mass distribution. Try the CG_nomass solver");
+                }
+                else if (Cholesky.info() == Eigen::NoConvergence) {
+                    throw FFEAException("\t\tInversion iteration couldn't converge. M must be a crazy matrix. Possibly has zero eigenvalues? Try the CG_nomass solver.");
+                }
             }
 
             // Apply to K
@@ -1226,11 +1223,10 @@ void World::get_smallest_time_constants()
             tau_inv = M_inv * K;
             cout << "done!" << flush;
             printf("%c[2K", 27);
-            // Diagonalise
-            //cout << "\r" << "\t\t                                                                                                            " << flush;
+            // Diagonalise                                                                                                         " << flush;
             cout << "\r\t\tDiagonalising tau_inv (task 4/4)..." << flush;
             es_m.compute(tau_inv);
-            for (j = 0; j < num_rows; ++j)
+            for (int j = 0; j < num_rows; ++j)
             {
                 taum.push_back(1.0 / fabs(es_m.eigenvalues()[j].real()));
             }
@@ -1254,14 +1250,6 @@ void World::get_smallest_time_constants()
         scalar dt_min_blob = tauv.at(0);
         string dt_min_blob_type = "viscous", dt_max_blob_type = "viscous";
 
-        //for(int l = 0; l < 10; ++l) {
-        //	cout << endl << "ev " << l << " visc - " << tauv.at(l) << " mass - " << taum.at(l) << endl;
-        //}
-        //for(int l = num_rows - 10; l < num_rows; ++l) {
-        //		cout << endl << "ev " << l << " visc - " << tauv.at(l) << " mass - " << taum.at(l) << endl;
-        //}
-        //exit(0);
-
         // We don't need to ignore top 6 here as they have energy associated with them now i.e. not zero eigenvalues
         if (active_blob_array[i]->get_linear_solver() != FFEA_NOMASS_CG_SOLVER)
         {
@@ -1277,23 +1265,18 @@ void World::get_smallest_time_constants()
                 dt_min_blob_type = "inertial";
             }
         }
-
-        //cout << "\r\t\tThe time-constant of the slowest mode in Blob " << blob_index << ", tau_max = " << (1.0 / smallest_val) * mesoDimensions::time << "s" << endl;
-        //cout << "\t\tThe time-constant of the fastest mode in Blob " << blob_index << ", tau_min = " << (1.0 / largest_val) * mesoDimensions::time << "s" << endl << endl;
+        
         cout << "\r\t\tFastest Mode: tau (" << dt_min_blob_type << ") = " << dt_min_blob * mesoDimensions::time << "s" << endl;
         cout << "\t\tSlowest Mode: tau (" << dt_max_blob_type << ") = " << dt_max_blob * mesoDimensions::time << "s" << endl
              << endl;
 
         // Global stuff
-        if (dt_max_blob > dt_max_world)
-        {
+        if (dt_max_blob > dt_max_world) {
             dt_max_world = dt_max_blob;
             dt_max_world_type = dt_max_blob_type;
             dt_max_bin = i;
         }
-
-        if (dt_min_blob < dt_min_world)
-        {
+        if (dt_min_blob < dt_min_world) {
             dt_min_world = dt_min_blob;
             dt_min_world_type = dt_min_blob_type;
             dt_min_bin = i;
@@ -1321,97 +1304,6 @@ void World::get_smallest_time_constants()
          << endl;
 }
 
-/*void World::get_smallest_time_constants() {
-
-	int blob_index;
-	int num_nodes, num_rows;
-	scalar dt_min = INFINITY;
-	scalar dt_max = -1 * INFINITY;
-	int dt_max_bin = -1, dt_min_bin = -1;
-	cout << "\n\nFFEA mode - Calculate Maximum Allowed Timesteps" << endl << endl;
-
-	// Do active blobs first
-	for(blob_index = 0; blob_index < params.num_blobs; ++blob_index) {
-
-		cout << "Blob " << blob_index << ":" << endl << endl;
-
-		// Ignore if we have a static blob
-		if(active_blob_array[blob_index]->get_motion_state() == FFEA_BLOB_IS_STATIC) {
-			cout << "Blob " << blob_index << " is STATIC. No associated timesteps." << endl;
-			continue;
-		}
-
-		// Define and reset all required variables for this crazy thing (maybe don't use stack memory??)
-		num_nodes = active_blob_array[blob_index]->get_num_linear_nodes();
-		num_rows = 3 * num_nodes;
-
-		Eigen::SparseMatrix<scalar> K(num_rows, num_rows);
-		Eigen::SparseMatrix<scalar> A(num_rows, num_rows);
-		Eigen_MatrixX K_inv(num_rows, num_rows);
-		Eigen_MatrixX I(num_rows, num_rows);
-		Eigen_MatrixX tau_inv(num_rows, num_rows);
-
-		// Build K
-		cout << "\tCalculating the Global Viscosity Matrix, K...";
-		active_blob_array[blob_index]->build_linear_node_viscosity_matrix(&K);
-		cout << "done!" << endl;
-
-		// Build A
-		cout << "\tCalculating the Global Linearised Elasticity Matrix, A...";
-		active_blob_array[blob_index]->build_linear_node_elasticity_matrix(&A);
-		cout << "done!" << endl;
-
-		// Invert K (it's symmetric! Will not work if stokes_visc == 0)
-		cout << "\tAttempting to invert K to form K_inv...";
-		Eigen::SimplicialCholesky<Eigen::SparseMatrix<scalar>> Cholesky(K); // performs a Cholesky factorization of K
-		I.setIdentity();
-		K_inv = Cholesky.solve(I);
-		if(Cholesky.info() == Eigen::Success) {
-			cout << "done! Successful inversion of K!" << endl;
-		} else if (Cholesky.info() == Eigen::NumericalIssue) {
-			cout << "\nK cannot be inverted via Cholesky factorisation due to numerical issues. You possible don't have an external solvent set." << endl;
-			return;
-		} else if (Cholesky.info() == Eigen::NoConvergence) {
-			cout << "\nInversion iteration couldn't converge. K must be a crazy matrix. Possibly has zero eigenvalues?" << endl;
-			return;
-		}
-
-		// Apply to A
-		cout << "\tCalculating inverse time constant matrix, tau_inv = K_inv * A...";
-		tau_inv = K_inv * A;
-		cout << "done!" << endl;
-
-		// Diagonalise
-		cout << "\tDiagonalising tau_inv..." << flush;
-		Eigen::EigenSolver<Eigen_MatrixX> es(tau_inv);
-
-
-		cout << "done!" << endl;
-
-		// Output. Ignore the 6 translational modes (they are the slowest 6 modes)
-		scalar smallest_val = fabs(es.eigenvalues()[6].real());
-		scalar largest_val = fabs(es.eigenvalues()[0].real());
-
-		cout << "\tThe time-constant of the slowest mode in Blob " << blob_index << ", tau_max = " << (1.0 / smallest_val) * mesoDimensions::time << "s" << endl;
-		cout << "\tThe time-constant of the fastest mode in Blob " << blob_index << ", tau_min = " << (1.0 / largest_val) * mesoDimensions::time << "s" << endl << endl;
-
-		// Global stuff
-		if(1.0 / smallest_val > dt_max) {
-			dt_max = 1.0 / smallest_val;
-			dt_max_bin = blob_index;
-		}
-
-		if(1.0 / largest_val < dt_min) {
-			dt_min = 1.0 / largest_val;
-			dt_min_bin = blob_index;
-		}
-
-	}
-	cout << "The time-constant of the slowest mode in all blobs, tau_max = " << dt_max * mesoDimensions::time << "s, from Blob " << dt_max_bin << endl;
-	cout << "The time-constant of the fastest mode in all blobs, tau_min = " << dt_min * mesoDimensions::time << "s, from Blob " << dt_min_bin << endl << endl;
-	cout << "Remember, the energies in your system will begin to be incorrect long before the dt = tau_min. I'd have dt << tau_min if I were you." << endl;
-}*/
-
 /**
  * @brief Calculates an linear elastic model for a given blob.
  * @param[in] set<int> List of blobs to get Linear Elastic Model
@@ -1420,27 +1312,16 @@ void World::get_smallest_time_constants()
  * this function performs matrix algebra using the Eigen libraries to diagonalise
  * elasticity matrix and output pseudo-trajectories based upon these eigenvectors
  * */
-void World::lem(set<int> blob_indices, int num_modes)
+void World::lem(const set<int> &blob_indices, int num_modes)
 {
-    int i, j;
-    int num_nodes, num_rows;
-    set<int>::iterator it;
-
-    vector<string> all;
-    string traj_out_fname, base, ext, evals_out_fname, evecs_out_fname;
-
     // For all blobs in this set, calculate and output the elastic normal modes
-    for (it = blob_indices.begin(); it != blob_indices.end(); it++)
+    for (const int &i : blob_indices)
     {
-
-        // Get the index
-        i = *it;
-
         cout << "\tBlob " << i << ":" << endl
              << endl;
 
         // Get an elasticity matrix
-        num_nodes = active_blob_array[i]->get_num_linear_nodes();
+        const int num_nodes = active_blob_array[i]->get_num_linear_nodes();
 
         // Check this is allowed
         if (num_modes > 3 * num_nodes - 6)
@@ -1449,7 +1330,7 @@ void World::lem(set<int> blob_indices, int num_modes)
                  << endl;
             num_modes = 3 * num_nodes - 6;
         }
-        num_rows = num_nodes * 3;
+        const int num_rows = num_nodes * 3;
         Eigen::SparseMatrix<scalar> A(num_rows, num_rows);
 
         cout << "\t\tCalculating the Linearised Elasticity Matrix, A...";
@@ -1466,7 +1347,8 @@ void World::lem(set<int> blob_indices, int num_modes)
 
         // Most important mode will have motion ~ largest system size. Get a length...
         scalar dx = -1 * INFINITY;
-        arr3 min, max;
+        arr3 min;
+        arr3 max;
         active_blob_array[i]->get_min_max(min, max);
         if (max[0] - min[0] > dx)
         {
@@ -1492,17 +1374,18 @@ void World::lem(set<int> blob_indices, int num_modes)
         // Get filename base
         ostringstream bi;
         bi << i;
+        std::vector<string> all;
         boost::split(all, params.trajectory_out_fname, boost::is_any_of("."));
-        ext = "." + all.at(all.size() - 1);
-        base = boost::erase_last_copy(params.trajectory_out_fname, ext);
-        for (j = 6; j < 6 + num_modes; ++j)
+        string ext = "." + all.at(all.size() - 1);
+        string base = boost::erase_last_copy(params.trajectory_out_fname, ext);
+        for (int j = 6; j < 6 + num_modes; ++j)
         {
             cout << "\t\t\tEigenvector " << j << " / Mode " << j - 6 << "...";
 
             // Get a filename end
             ostringstream mi;
             mi << j - 6;
-            traj_out_fname = base + "_FFEAlem_blob" + bi.str() + "mode" + mi.str() + ext;
+            string traj_out_fname = base + "_FFEAlem_blob" + bi.str() + "mode" + mi.str() + ext;
             make_trajectory_from_eigenvector(traj_out_fname, i, j - 6, es.eigenvectors().col(j), dx);
             cout << "done!" << endl;
         }
@@ -1511,8 +1394,8 @@ void World::lem(set<int> blob_indices, int num_modes)
         // Print out relevant eigenvalues and eigenvectors
 
         // Get a filename
-        evals_out_fname = base + "_FFEAlem_blob" + bi.str() + ".evals";
-        evecs_out_fname = base + "_FFEAlem_blob" + bi.str() + ".evecs";
+        string evals_out_fname = base + "_FFEAlem_blob" + bi.str() + ".evals";
+        string evecs_out_fname = base + "_FFEAlem_blob" + bi.str() + ".evecs";
 
         print_evecs_to_file(evecs_out_fname, es.eigenvectors(), num_rows, num_modes);
         print_evals_to_file(evals_out_fname, es.eigenvalues(), num_modes, unitscaler);
@@ -1529,29 +1412,17 @@ void World::lem(set<int> blob_indices, int num_modes)
  * pseudo-trajectories based upon these eigenvectors
  * */
 
-void World::dmm(set<int> blob_indices, int num_modes)
+void World::dmm(const set<int> &blob_indices, int num_modes)
 {
-
-    int i, j, k;
-    int num_nodes, num_rows;
-    set<int>::iterator it;
-
-    vector<string> all;
-    string traj_out_fname, base, ext, evecs_out_fname, evals_out_fname;
-
     // For all blobs in this set, calculate and output the dynamic normal modes
-    for (it = blob_indices.begin(); it != blob_indices.end(); it++)
+    for (const int& i : blob_indices)
     {
-
-        // Get the index
-        i = *it;
-
         cout << "\tBlob " << i << ":" << endl
              << endl;
 
         // Get a viscosity matrix
-        num_nodes = active_blob_array[i]->get_num_linear_nodes();
-        num_rows = num_nodes * 3;
+        const int num_nodes = active_blob_array[i]->get_num_linear_nodes();
+        const int num_rows = num_nodes * 3;
 
         // Check this is allowed
         if (num_modes > 3 * num_nodes - 6)
@@ -1576,7 +1447,7 @@ void World::dmm(set<int> blob_indices, int num_modes)
         cout << "\t\tBuilding the matrix Q from the eigenvalues of K...";
         Eigen::SparseMatrix<scalar> Q(num_rows, num_rows);
         std::vector<Eigen::Triplet<scalar>> vals;
-        for (j = 0; j < num_rows; ++j)
+        for (int j = 0; j < num_rows; ++j)
         {
             vals.push_back(Eigen::Triplet<scalar>(j, j, 1.0 / sqrt(fabs(esK.eigenvalues()[j]))));
         }
@@ -1607,8 +1478,9 @@ void World::dmm(set<int> blob_indices, int num_modes)
         // The most important mode corresponds to the smallest non-zero eigenvalue
 
         // Most important mode will have motion ~ largest system size. Get a length...
-        scalar dx = -1 * INFINITY;
-        arr3 min, max;
+        scalar dx = std::numeric_limits<scalar>::min();
+        arr3 min;
+        arr3 max;
         active_blob_array[i]->get_min_max(min, max);
         if (max[0] - min[0] > dx)
         {
@@ -1628,10 +1500,10 @@ void World::dmm(set<int> blob_indices, int num_modes)
         // Make some trajectories (ignoring the first 6)
         // Firstly, normalise the first num_modes eigenvectors
         scalar sum;
-        for (j = 6; j < num_modes + 6; ++j)
+        for (int j = 6; j < num_modes + 6; ++j)
         {
             sum = 0;
-            for (k = 0; k < num_rows; ++k)
+            for (int k = 0; k < num_rows; ++k)
             {
                 sum += R.col(j)[k] * R.col(j)[k];
             }
@@ -1641,13 +1513,14 @@ void World::dmm(set<int> blob_indices, int num_modes)
         cout << "\t\tMaking trajectories from eigenvectors..." << endl;
 
         // Get filename base
-        ostringstream bi, mi;
+        ostringstream bi;
         bi << i;
+        vector<string> all;
         boost::split(all, params.trajectory_out_fname, boost::is_any_of("."));
-        ext = "." + all.at(all.size() - 1);
-        base = boost::erase_last_copy(params.trajectory_out_fname, ext);
+        string ext = "." + all.at(all.size() - 1);
+        string base = boost::erase_last_copy(params.trajectory_out_fname, ext);
 
-        for (j = 6; j < 6 + num_modes; ++j)
+        for (int j = 6; j < 6 + num_modes; ++j)
         {
 
             cout << "\t\t\tEigenvector " << j << " / Mode " << j - 6 << "...";
@@ -1655,7 +1528,7 @@ void World::dmm(set<int> blob_indices, int num_modes)
             // Get a filename end
             ostringstream mi;
             mi << j - 6;
-            traj_out_fname = base + "_FFEAdmm_blob" + bi.str() + "mode" + mi.str() + ext;
+            string traj_out_fname = base + "_FFEAdmm_blob" + bi.str() + "mode" + mi.str() + ext;
 
             make_trajectory_from_eigenvector(traj_out_fname, i, j - 6, R.col(j), dx);
             cout << "done!" << endl;
@@ -1665,8 +1538,8 @@ void World::dmm(set<int> blob_indices, int num_modes)
         // Print out relevant eigenvalues and eigenvectors
 
         // Get a filename
-        evals_out_fname = base + "_FFEAdmm_blob" + bi.str() + ".evals";
-        evecs_out_fname = base + "_FFEAdmm_blob" + bi.str() + ".evecs";
+        string evals_out_fname = base + "_FFEAdmm_blob" + bi.str() + ".evals";
+        string evecs_out_fname = base + "_FFEAdmm_blob" + bi.str() + ".evecs";
 
         print_evecs_to_file(evecs_out_fname, R, num_rows, num_modes);
         print_evals_to_file(evals_out_fname, esAhat.eigenvalues(), num_modes, 1.0);
@@ -1683,29 +1556,18 @@ void World::dmm(set<int> blob_indices, int num_modes)
  * pseudo-trajectories based upon these eigenvectors
  * */
 
-void World::dmm_rp(set<int> blob_indices, int num_modes)
+void World::dmm_rp(const set<int> &blob_indices, int num_modes)
 {
-
-    int i, j, k, l;
-    int num_nodes, num_rows;
-    set<int>::iterator it;
-
-    vector<string> all;
-    string traj_out_fname, base, ext, evecs_out_fname, evals_out_fname;
-
     // For all blobs in this set, calculate and output the dynamic normal modes
-    for (it = blob_indices.begin(); it != blob_indices.end(); it++)
+    for (const int& i : blob_indices)
     {
-
-        // Get the index
-        i = *it;
 
         cout << "\tBlob " << i << ":" << endl
              << endl;
 
         // Explicitly calculate a diffusion matrix
-        num_nodes = active_blob_array[i]->get_num_linear_nodes();
-        num_rows = num_nodes * 3;
+        const int num_nodes = active_blob_array[i]->get_num_linear_nodes();
+        const int num_rows = num_nodes * 3;
 
         // Check this is allowed
         if (num_modes > 3 * num_nodes - 6)
@@ -1742,18 +1604,17 @@ void World::dmm_rp(set<int> blob_indices, int num_modes)
         Eigen::VectorXi Rvals_indices(num_modes + 6);
         Rvals.setZero();
         Rvecs.setZero();
-        scalar min_eig, max_eig, aneig;
-        int max_eig_index, fail;
 
         // Get the 6 zero modes and the num_modes required modes in order
-        for (j = 0; j < num_modes + 6; ++j)
+        for (int j = 0; j < num_modes + 6; ++j)
         {
-
+            int max_eig_index = 0;
             // Set limits
-            max_eig = INFINITY;
+            scalar max_eig = std::numeric_limits<scalar>::max();
+            scalar min_eig;
             if (j == 0)
             {
-                min_eig = -1 * INFINITY;
+                min_eig = std::numeric_limits<scalar>::min();
             }
             else
             {
@@ -1761,7 +1622,7 @@ void World::dmm_rp(set<int> blob_indices, int num_modes)
             }
 
             // Sweep the eigenvalue range
-            for (k = 0; k < num_rows; ++k)
+            for (int k = 0; k < num_rows; ++k)
             {
 
                 // Ignore imaginary stuff (should be none anyway, but you know how numerical errors are...)
@@ -1769,15 +1630,15 @@ void World::dmm_rp(set<int> blob_indices, int num_modes)
                 {
                     continue;
                 }
-                aneig = fabs(esF.eigenvalues()[k].real());
+                scalar aneig = fabs(esF.eigenvalues()[k].real());
 
                 // If within limits
                 if (aneig <= max_eig && aneig >= min_eig)
                 {
 
                     // Check if already exists in vector (probably quicker to use a set but I've started now!)
-                    fail = 0;
-                    for (l = 0; l < j; ++l)
+                    int fail = 0;
+                    for (int l = 0; l < j; ++l)
                     {
                         if (Rvals_indices(l) == k)
                         {
@@ -1803,8 +1664,9 @@ void World::dmm_rp(set<int> blob_indices, int num_modes)
         // The most important mode corresponds to the smallest non-zero eigenvalue
 
         // Most important mode will have motion ~ largest system size. Get a length...
-        scalar dx = -1 * INFINITY;
-        arr3 min, max;
+        scalar dx = std::numeric_limits<scalar>::min();
+        arr3 min;
+        arr3 max;
         active_blob_array[i]->get_min_max(min, max);
         if (max[0] - min[0] > dx)
         {
@@ -1824,10 +1686,10 @@ void World::dmm_rp(set<int> blob_indices, int num_modes)
         // Make some trajectories (ignoring the first 6)
         // Firstly, normalise the first num_modes eigenvectors
         scalar sum;
-        for (j = 6; j < num_modes + 6; ++j)
+        for (int j = 6; j < num_modes + 6; ++j)
         {
             sum = 0;
-            for (k = 0; k < num_rows; ++k)
+            for (int k = 0; k < num_rows; ++k)
             {
                 sum += Rvecs.col(j)[k] * Rvecs.col(j)[k];
             }
@@ -1837,13 +1699,14 @@ void World::dmm_rp(set<int> blob_indices, int num_modes)
         cout << "\t\tMaking trajectories from eigenvectors..." << endl;
 
         // Get filename base
-        ostringstream bi, mi;
+        ostringstream bi;
         bi << i;
+        std::vector<string> all;
         boost::split(all, params.trajectory_out_fname, boost::is_any_of("."));
-        ext = "." + all.at(all.size() - 1);
-        base = boost::erase_last_copy(params.trajectory_out_fname, ext);
+        string ext = "." + all.at(all.size() - 1);
+        string base = boost::erase_last_copy(params.trajectory_out_fname, ext);
 
-        for (j = 6; j < 6 + num_modes; ++j)
+        for (int j = 6; j < 6 + num_modes; ++j)
         {
 
             cout << "\t\t\tEigenvector " << j << " / Mode " << j - 6 << "...";
@@ -1851,7 +1714,7 @@ void World::dmm_rp(set<int> blob_indices, int num_modes)
             // Get a filename end
             ostringstream mi;
             mi << j - 6;
-            traj_out_fname = base + "_FFEArpdmm_blob" + bi.str() + "mode" + mi.str() + ext;
+            string traj_out_fname = base + "_FFEArpdmm_blob" + bi.str() + "mode" + mi.str() + ext;
 
             make_trajectory_from_eigenvector(traj_out_fname, i, j - 6, Rvecs.col(j), dx);
             cout << "done!" << endl;
@@ -1861,8 +1724,8 @@ void World::dmm_rp(set<int> blob_indices, int num_modes)
         // Print out relevant eigenvalues and eigenvectors
 
         // Get a filename
-        evals_out_fname = base + "_FFEArpdmm_blob" + bi.str() + ".evals";
-        evecs_out_fname = base + "_FFEArpdmm_blob" + bi.str() + ".evecs";
+        string evals_out_fname = base + "_FFEArpdmm_blob" + bi.str() + ".evals";
+        string evecs_out_fname = base + "_FFEArpdmm_blob" + bi.str() + ".evecs";
 
         print_evecs_to_file(evecs_out_fname, Rvecs, num_rows, num_modes);
         print_evals_to_file(evals_out_fname, Rvals, num_modes, 1.0);
@@ -1923,23 +1786,19 @@ void World::run()
         for (int i = 0; i < params.num_blobs; i++)
         {
             active_blob_array[i]->zero_force();
-            /* if ((step+1) % params.check == 0) { // we only do measurements if we need so.
-                // if (params.calc_vdw == 1) active_blob_array[i]->zero_vdw_bb_measurement_data(); // DEPRECATED
-                // if (params.sticky_wall_xz == 1) active_blob_array[i]->zero_vdw_xz_measurement_data(); // DEPRECATED
-            } */
 
             // If blob centre of mass moves outside simulation box, apply PBC to it
             arr3 com;
             active_blob_array[i]->calc_and_store_centroid(com);
 
-            scalar dx = 0, dy = 0, dz = 0;
+            arr3 dxyz = {0,0,0};
             int check_move = 0;
-
+            
             if (com[0] < 0)
             {
                 if (params.wall_x_1 == WALL_TYPE_PBC)
                 {
-                    dx += box_dim[0];
+                    dxyz[0] += box_dim[0];
                     active_blob_array[i]->pbc_count[0] -= 1;
                     check_move = 1;
                 }
@@ -1948,7 +1807,7 @@ void World::run()
             {
                 if (params.wall_x_2 == WALL_TYPE_PBC)
                 {
-                    dx -= box_dim[0];
+                    dxyz[0] -= box_dim[0];
                     active_blob_array[i]->pbc_count[0] += 1;
                     check_move = 1;
                 }
@@ -1957,7 +1816,7 @@ void World::run()
             {
                 if (params.wall_y_1 == WALL_TYPE_PBC)
                 {
-                    dy += box_dim[1];
+                    dxyz[1] += box_dim[1];
                     active_blob_array[i]->pbc_count[1] -= 1;
                     check_move = 1;
                 }
@@ -1966,7 +1825,7 @@ void World::run()
             {
                 if (params.wall_y_2 == WALL_TYPE_PBC)
                 {
-                    dy -= box_dim[1];
+                    dxyz[1] -= box_dim[1];
                     active_blob_array[i]->pbc_count[1] += 1;
                     check_move = 1;
                 }
@@ -1975,7 +1834,7 @@ void World::run()
             {
                 if (params.wall_z_1 == WALL_TYPE_PBC)
                 {
-                    dz += box_dim[2];
+                    dxyz[2] += box_dim[2];
                     active_blob_array[i]->pbc_count[2] -= 1;
                     check_move = 1;
                 }
@@ -1984,7 +1843,7 @@ void World::run()
             {
                 if (params.wall_z_2 == WALL_TYPE_PBC)
                 {
-                    dz -= box_dim[2];
+                    dxyz[2] -= box_dim[2];
                     active_blob_array[i]->pbc_count[2] += 1;
                     check_move = 1;
                 }
@@ -1992,7 +1851,7 @@ void World::run()
             // So if it has to move, do so and update its centroid.
             if (check_move == 1)
             {
-                active_blob_array[i]->move(dx, dy, dz);
+                active_blob_array[i]->move(dxyz[0], dxyz[1], dxyz[2]);
                 active_blob_array[i]->calc_and_store_centroid(com);
             }
 
@@ -2037,7 +1896,7 @@ void World::run()
                 pc_solver.build_pc_nearest_neighbour_lookup();
 #endif
             } catch (...) {
-                die_with_dignity(step, wtime);
+                die_with_dignity(static_cast<int>(step), wtime);
                 throw;
             }
             // FINSHED REFRESHING LINKED LISTS.
@@ -2129,9 +1988,7 @@ void World::run()
         // Calculate the PreComp forces:
         if (params.calc_preComp == 1)
         {
-            // pc_solver.solve(blob_corr); // keep that one as reference implementation.
-            // pc_solver.solve_using_neighbours();
-            pc_solver.solve_using_neighbours_non_critical(blob_corr); // blob_corr == nullptr if force_pbc = 0
+            pc_solver.solve_using_neighbours_non_critical(blob_corr);
         }
 
 #ifdef BENCHMARK
@@ -2165,7 +2022,7 @@ void World::run()
 #endif
 
         // Output to checkpoint files the random numbers responsible for the current system before they advance in the update_internal_forces bit
-        if ((step) % params.check == 0)
+        if (step % params.check == 0)
         {
             print_checkpoints();
         }
@@ -2180,15 +2037,15 @@ void World::run()
                 active_blob_array[i]->update_internal_forces();
             }
         } catch (...) {
-            die_with_dignity(step, wtime);
+            die_with_dignity(static_cast<int>(step), wtime);
             throw;
         }
 
         // Now, for this step, all forces and positions are correct, as are the kinetic states
-        if ((step) % params.check == 0)
+        if (step % params.check == 0)
         {
-            print_trajectory_and_measurement_files(step, wtime);
-            print_kinetic_files(step);
+            print_trajectory_and_measurement_files(static_cast<int>(step), wtime);
+            print_kinetic_files(static_cast<int>(step));
         }
 
         // Finally, update the positions
@@ -2211,17 +2068,15 @@ void World::run()
         // This means is must happen either at the very end of a timstep, or at the very beginning
         if (params.calc_kinetics == 1 && step % params.kinetics_update == 0)
         {
-
             // Calculate the kinetic switching probablilites. These are scaled from the base rates provided
             calculate_kinetic_rates();
 
             // Now we can treat each blob separately
-            int target;
             for (int i = 0; i < params.num_blobs; ++i)
             {
 
                 // Find out what the state change should be based on the rates
-                target = active_blob_array[i]->get_state_index();
+                int target = active_blob_array[i]->get_state_index();
                 choose_new_kinetic_state(i, &target);
                 change_kinetic_state(i, target);
             }
@@ -2246,13 +2101,6 @@ void World::run()
     cout << "benchmarking--------update blobs for \t" << time3 << "seconds" << endl;
     cout << "benchmarking--------writing and measuring \t" << time4 << "seconds" << endl;
     cout << "benchmarking--------Total time in World::run():" << omp_get_wtime() - wtime << "seconds" << endl;
-
-    /* cout<< "benchmarking--------PreComp decomposition: " << endl;
-    cout<< "            --------Cleaning: " << pc_solver.timep0 << " seconds" << endl;
-    cout<< "            --------Positions: " << pc_solver.timep1 << " seconds" << endl;
-    cout<< "            --------Doubleloop: " << pc_solver.timep2 << " seconds" << endl;
-    cout<< "            ------------------part1 : " << pc_solver.timep3 << " seconds" << endl;
-    cout<< "            ------------------part2 : " << pc_solver.timep4 << " seconds" << endl; */
 #endif
 
     printf("\n\nTime taken: %2f seconds\n", (omp_get_wtime() - wtime));
@@ -2351,18 +2199,14 @@ void World::change_kinetic_state(int blob_index, int target_state)
  */
 void World::read_and_build_system(const vector<string> &script_vector)
 {
-
     // READ and parse more
     // Reading variables
     FFEA_input_reader systemreader = FFEA_input_reader();
-    int i, j;
-    string lrvalue[2]; //, maplvalue[2];
-    vector<string> blob_vector, interactions_vector, conformation_vector, kinetics_vector, map_vector, spring_vector;
-    vector<string>::iterator it;
+    std::array<string, 2> lrvalue;
 
     vector<string> nodes, topology, surface, material, stokes, ssint, binding, pin, beads;
     string map_fname;
-    int map_indices[2];
+    std::array<int, 2> map_indices;
     int set_motion_state = 0, set_nodes = 0, set_top = 0, set_surf = 0, set_mat = 0, set_stokes = 0, set_ssint = 0, set_binding = 0, set_pin = 0, set_solver = 0, set_preComp = 0, set_scale = 0, set_states = 0, set_rates = 0, calc_compress = 0;
     scalar scale = 1, compress = 1;
     int solver = FFEA_NOMASS_CG_SOLVER;
@@ -2370,11 +2214,12 @@ void World::read_and_build_system(const vector<string> &script_vector)
 
     vector<Blob_conf> blob_conf;
 
+    vector<string> interactions_vector;
     // Read the INTERACTIONS block:
     // Get interactions vector first, for later use
     if ((params.calc_preComp == 1) || (params.calc_springs == 1) || (params.calc_ctforces == 1))
     {
-        systemreader.extract_block("interactions", 0, script_vector, &interactions_vector);
+        systemreader.extract_block("interactions", 0, script_vector, interactions_vector);
     }
 
     // Get precomputed data first
@@ -2383,9 +2228,9 @@ void World::read_and_build_system(const vector<string> &script_vector)
     if (params.calc_preComp == 1)
     {
         vector<string> precomp_vector;
-        systemreader.extract_block("precomp", 0, interactions_vector, &precomp_vector);
+        systemreader.extract_block("precomp", 0, interactions_vector, precomp_vector);
 
-        for (i = 0; i < precomp_vector.size(); i++)
+        for (int i = 0; i < precomp_vector.size(); i++)
         {
             systemreader.parse_tag(precomp_vector[i], lrvalue);
             if (lrvalue[0] == "types")
@@ -2421,7 +2266,7 @@ void World::read_and_build_system(const vector<string> &script_vector)
     if (params.calc_ctforces == 1)
     {
         vector<string> ctforces_vector;
-        systemreader.extract_block("ctforces", 0, interactions_vector, &ctforces_vector);
+        systemreader.extract_block("ctforces", 0, interactions_vector, ctforces_vector);
         if (ctforces_vector.size() != 1)
         {
             throw FFEAException("only a single field is allowed in <ctforces> block.");
@@ -2445,7 +2290,8 @@ void World::read_and_build_system(const vector<string> &script_vector)
 
     if (params.calc_springs == 1)
     {
-        systemreader.extract_block("springs", 0, interactions_vector, &spring_vector);
+        vector<string> spring_vector;
+        systemreader.extract_block("springs", 0, interactions_vector, spring_vector);
 
         if (spring_vector.size() > 1)
         {
@@ -2480,29 +2326,30 @@ void World::read_and_build_system(const vector<string> &script_vector)
         blob_corr = std::vector<scalar>(params.num_blobs * params.num_blobs * 3, 0);
 
     // Read in each blob one at a time
-    for (i = 0; i < params.num_blobs; ++i)
+    for (int i = 0; i < params.num_blobs; ++i)
     {
 
         // Initialise some blob_conf stuff:
-        blob_conf.push_back(Blob_conf());
+        blob_conf.emplace_back(Blob_conf());
         blob_conf[i].set_centroid = 0;
         blob_conf[i].set_velocity = 0;
         blob_conf[i].set_rotation = 0;
 
         // Get blob data
-        systemreader.extract_block("blob", i, script_vector, &blob_vector);
+        vector<string> blob_vector;
+        systemreader.extract_block("blob", i, script_vector, blob_vector);
 
         // Read all conformations
         bool enforce_conf_blocks = false;
         bool read_blob_as_conf = false;
         if (params.num_conformations[i] > 1)
             enforce_conf_blocks = true;
-        for (j = 0; j < params.num_conformations[i]; ++j)
+        for (int j = 0; j < params.num_conformations[i]; ++j)
         {
-
+            vector<string> conformation_vector;
             // Get conformation data
             try {
-                systemreader.extract_block("conformation", j, blob_vector, &conformation_vector, enforce_conf_blocks);
+                systemreader.extract_block("conformation", j, blob_vector, conformation_vector, enforce_conf_blocks);
             } catch (FFEAException &err) {
                 if (enforce_conf_blocks == true)
                     throw;
@@ -2511,15 +2358,15 @@ void World::read_and_build_system(const vector<string> &script_vector)
             }
 
             // Error check
-            if (conformation_vector.size() == 0)
+            if (conformation_vector.empty())
             {
                 throw FFEAException("In 'Blob' block %d, expected at least a single 'conformation' block.", i);
             }
 
             // Parse conformation data
-            for (it = conformation_vector.begin(); it != conformation_vector.end(); ++it)
+            for (auto &it : conformation_vector)
             {
-                systemreader.parse_tag(*it, lrvalue);
+                systemreader.parse_tag(it, lrvalue);
 
                 // Assign if possible
                 if (lrvalue[0] == "motion_state")
@@ -2629,10 +2476,10 @@ void World::read_and_build_system(const vector<string> &script_vector)
                 }
                 else
                 {
-                    topology.push_back("");
-                    material.push_back("");
-                    stokes.push_back("");
-                    pin.push_back("");
+                    topology.emplace_back("");
+                    material.emplace_back("");
+                    stokes.emplace_back("");
+                    pin.emplace_back("");
                     set_top = 1;
                     set_mat = 1;
                     set_stokes = 1;
@@ -2642,19 +2489,19 @@ void World::read_and_build_system(const vector<string> &script_vector)
                 // Optional stuff
                 if (set_preComp == 0)
                 {
-                    beads.push_back("");
+                    beads.emplace_back("");
                     set_preComp = 1;
                 }
 
                 if (set_binding == 0)
                 {
-                    binding.push_back("");
+                    binding.emplace_back("");
                     set_binding = 1;
                 }
 
                 if (set_pin == 0)
                 {
-                    pin.push_back("");
+                    pin.emplace_back("");
                     set_pin = 1;
                 }
             }
@@ -2675,21 +2522,22 @@ void World::read_and_build_system(const vector<string> &script_vector)
         // Read kinetic info (if necessary)
         if (params.calc_kinetics == 1 && params.num_states[i] != 1)
         {
-
+            vector<string> kinetics_vector;
+            vector<string> map_vector;
             // Get kinetic data
-            systemreader.extract_block("kinetics", 0, blob_vector, &kinetics_vector);
+            systemreader.extract_block("kinetics", 0, blob_vector, kinetics_vector);
 
             // Get map info if necessary
             if (params.num_conformations[i] > 1)
             {
 
                 // Get map data
-                systemreader.extract_block("maps", 0, kinetics_vector, &map_vector);
+                systemreader.extract_block("maps", 0, kinetics_vector, map_vector);
 
                 // Parse map data
-                for (it = map_vector.begin(); it != map_vector.end(); ++it)
+                for (const auto &it : map_vector)
                 {
-                    systemreader.parse_map_tag(*it, map_indices, &map_fname);
+                    systemreader.parse_map_tag(it, map_indices, map_fname);
                     blob_conf[i].maps.push_back(map_fname);
                     blob_conf[i].maps_conf_index_from.push_back(map_indices[0]);
                     blob_conf[i].maps_conf_index_to.push_back(map_indices[1]);
@@ -2705,9 +2553,9 @@ void World::read_and_build_system(const vector<string> &script_vector)
             // Then, states and rates data if necessary
             if (params.num_states[i] > 1)
             {
-                for (it = kinetics_vector.begin(); it != kinetics_vector.end(); ++it)
+                for (const auto &it : kinetics_vector)
                 {
-                    systemreader.parse_tag(*it, lrvalue);
+                    systemreader.parse_tag(it, lrvalue);
                     if (lrvalue[0] == "maps" || lrvalue[0] == "/maps")
                     {
                         continue;
@@ -2742,11 +2590,9 @@ void World::read_and_build_system(const vector<string> &script_vector)
         }
 
         // Finally, get the extra blob data (solver, scale, centroid etc)
-        int rotation_type = -1;
-
-        for (it = blob_vector.begin(); it != blob_vector.end(); ++it)
+        for (const auto &blob_str : blob_vector)
         {
-            systemreader.parse_tag(*it, lrvalue);
+            systemreader.parse_tag(blob_str, lrvalue);
 
             if (lrvalue[0] == "conformation" || lrvalue[0] == "/conformation" || lrvalue[0] == "kinetics" || lrvalue[0] == "/kinetics" || lrvalue[0] == "maps" || lrvalue[0] == "/maps")
             {
@@ -2787,7 +2633,7 @@ void World::read_and_build_system(const vector<string> &script_vector)
             }
             else if (lrvalue[0] == "calc_compress")
             {
-                calc_compress = atof(lrvalue[1].c_str());
+                calc_compress = static_cast<int>(atof(lrvalue[1].c_str()));
             }
             else if (lrvalue[0] == "compress")
             {
@@ -2806,9 +2652,8 @@ void World::read_and_build_system(const vector<string> &script_vector)
                 lrvalue[1] = boost::erase_last_copy(boost::erase_first_copy(lrvalue[1], "("), ")");
                 boost::trim(lrvalue[1]);
                 systemreader.split_string(lrvalue[1], blob_conf[i].velocity, ",", 3);
-                for (int ivt = 0; ivt < 3; ivt++)
-                {
-                    blob_conf[i].velocity[ivt] /= mesoDimensions::velocity;
+                for (auto &ivt  : blob_conf[i].velocity){
+                    ivt /= mesoDimensions::velocity;
                 }
             }
             else if (lrvalue[0] == "rotation")
@@ -2843,7 +2688,7 @@ void World::read_and_build_system(const vector<string> &script_vector)
         // Build blob
         // Build conformations (structural data)
         // arr3 *cent = new arr3;
-        for (j = 0; j < params.num_conformations[i]; ++j)
+        for (int j = 0; j < params.num_conformations[i]; ++j)
         {
             cout << "\tConfiguring blob " << i << " conformation " << j << "..." << endl;
 
@@ -2867,8 +2712,6 @@ void World::read_and_build_system(const vector<string> &script_vector)
         beads.clear();
         scale = 1;
         solver = FFEA_NOMASS_CG_SOLVER;
-        map_vector.clear();      // container for the input <map> block
-        kinetics_vector.clear(); // container for the input <kinetics> block
         blob_vector.clear();     // container for the input <blob> block
         set_scale = 0;
         set_solver = 0;
@@ -2881,12 +2724,12 @@ void World::read_and_build_system(const vector<string> &script_vector)
     //    thread they will be. Hopefully will work, though that
     //    leaves us with schedule static.
 #ifdef FFEA_PARALLEL_PER_BLOB
-#pragma omp parallel for default(none) schedule(static) private(i, j) shared(blob_conf) // shared(params, blob_array, systemreader, blob_conf)
+#pragma omp parallel for default(none) schedule(static) shared(blob_conf) // shared(params, blob_array, systemreader, blob_conf)
 
 #endif
-    for (i = 0; i < params.num_blobs; ++i)
+    for (int i = 0; i < params.num_blobs; ++i)
     {
-        for (j = 0; j < params.num_conformations[i]; ++j)
+        for (int j = 0; j < params.num_conformations[i]; ++j)
         {
             blob_array[i][j].init();
 
@@ -2994,9 +2837,9 @@ void World::read_and_build_system(const vector<string> &script_vector)
         rod_array[i] = rod_from_block(script_vector, i, systemreader);
 
         // Carry over params from script file
-        rod_array[i]->viscosity = params.stokes_visc;
-        rod_array[i]->timestep = params.dt;
-        rod_array[i]->kT = params.kT;
+        rod_array[i]->viscosity = static_cast<float>(params.stokes_visc);
+        rod_array[i]->timestep = static_cast<float>(params.dt);
+        rod_array[i]->kT = static_cast<float>(params.kT);
         rod_array[i]->calc_noise = params.calc_noise;
         rod_array[i]->calc_steric = params.calc_steric_rod;
         rod_array[i]->calc_vdw = params.calc_vdw_rod;
@@ -3064,11 +2907,9 @@ void World::read_and_build_system(const vector<string> &script_vector)
  * */
 void World::load_kinetic_maps(const vector<string> &map_fnames, const vector<int> &map_from, const vector<int> &map_to, int blob_index)
 {
-
-    unsigned int i, j, num_rows, num_cols, num_entries;
     string buf_string;
     vector<string> string_vec;
-    for (i = 0; i < map_fnames.size(); ++i)
+    for (int i = 0; i < map_fnames.size(); ++i)
     {
 
         cout << "\t\t\tReading map " << i << ", " << map_fnames.at(i) << ": from conformation " << map_from.at(i) << " to " << map_to.at(i) << endl;
@@ -3089,7 +2930,7 @@ void World::load_kinetic_maps(const vector<string> &map_fnames, const vector<int
         // Get nodes to and from and check against the structures
         getline(fin, buf_string);
         boost::split(string_vec, buf_string, boost::is_space(), boost::token_compress_on);
-        num_cols = atoi(string_vec.at(string_vec.size() - 1).c_str());
+        const int num_cols = atoi(string_vec.at(string_vec.size() - 1).c_str());
 
         if (num_cols != blob_array[blob_index][map_from.at(i)].get_num_nodes())
         {
@@ -3098,7 +2939,7 @@ void World::load_kinetic_maps(const vector<string> &map_fnames, const vector<int
 
         getline(fin, buf_string);
         boost::split(string_vec, buf_string, boost::is_space(), boost::token_compress_on);
-        num_rows = atoi(string_vec.at(string_vec.size() - 1).c_str());
+        const int num_rows = atoi(string_vec.at(string_vec.size() - 1).c_str());
 
         if (num_rows != blob_array[blob_index][map_to.at(i)].get_num_nodes())
         {
@@ -3108,7 +2949,7 @@ void World::load_kinetic_maps(const vector<string> &map_fnames, const vector<int
         // Get num_entries
         getline(fin, buf_string);
         boost::split(string_vec, buf_string, boost::is_space(), boost::token_compress_on);
-        num_entries = atoi(string_vec.at(string_vec.size() - 1).c_str());
+        const int num_entries = atoi(string_vec.at(string_vec.size() - 1).c_str());
 
         // Create some memory for the matrix stuff
         std::vector<scalar> entries = std::vector<scalar>(num_entries);
@@ -3122,7 +2963,7 @@ void World::load_kinetic_maps(const vector<string> &map_fnames, const vector<int
         // 'entries -'
         fin >> buf_string;
         fin >> buf_string;
-        for (j = 0; j < num_entries; j++)
+        for (int j = 0; j < num_entries; j++)
         {
             fin >> buf_string;
             entries[j] = atof(buf_string.c_str());
@@ -3131,7 +2972,7 @@ void World::load_kinetic_maps(const vector<string> &map_fnames, const vector<int
         // 'key -'
         fin >> buf_string;
         fin >> buf_string;
-        for (j = 0; j < num_rows + 1; j++)
+        for (int j = 0; j < num_rows + 1; j++)
         {
             fin >> buf_string;
             key[j] = atoi(buf_string.c_str());
@@ -3140,7 +2981,7 @@ void World::load_kinetic_maps(const vector<string> &map_fnames, const vector<int
         // 'columns -'
         fin >> buf_string;
         fin >> buf_string;
-        for (j = 0; j < num_entries; j++)
+        for (int j = 0; j < num_entries; j++)
         {
             fin >> buf_string;
             col_index[j] = atoi(buf_string.c_str());
@@ -3188,26 +3029,18 @@ void World::build_kinetic_identity_maps() {
 
 void World::calculate_kinetic_rates()
 {
-    int i, j;
-    int current_state;
-    float prob_sum;
-
-    int base_bsindex, target_bsindex, other_blob_index;
-    int base_type, target_type;
-    BindingSite *base_site, *target_site;
-
     // For each blob
-    for (i = 0; i < params.num_blobs; ++i)
+    for (int i = 0; i < params.num_blobs; ++i)
     {
 
         // Get current state
-        current_state = active_blob_array[i]->get_state_index();
+        int current_state = active_blob_array[i]->get_state_index();
         //cout << "Current State = " << current_state << endl;
         // Set total probability to 0
-        prob_sum = 0.0;
+        scalar prob_sum = 0.0;
 
         // And for each state we could switch to
-        for (j = 0; j < params.num_states[i]; ++j)
+        for (int j = 0; j < params.num_states[i]; ++j)
         {
 
             // No need to check if j == current_state
@@ -3238,13 +3071,13 @@ void World::calculate_kinetic_rates()
                 kinetic_rate[i][current_state][j] = 0.0;
 
                 // Get the base and target types
-                base_type = kinetic_state[i][j].get_base_bsite_type();
-                target_type = kinetic_state[i][j].get_target_bsite_type();
+                int base_type = kinetic_state[i][j].get_base_bsite_type();
+                int target_type = kinetic_state[i][j].get_target_bsite_type();
 
                 // Scan all sites on this blob
-                for (base_bsindex = 0; base_bsindex < active_blob_array[i]->getNumBindingSites(); ++base_bsindex)
+                for (int base_bsindex = 0; base_bsindex < active_blob_array[i]->getNumBindingSites(); ++base_bsindex)
                 {
-                    base_site = active_blob_array[i]->get_binding_site(base_bsindex);
+                    BindingSite *base_site = active_blob_array[i]->get_binding_site(base_bsindex);
 
                     // If wrong type, move on
                     if (base_site->get_type() != base_type)
@@ -3253,7 +3086,7 @@ void World::calculate_kinetic_rates()
                     }
 
                     // Else, scan all other binding sites in the world
-                    for (other_blob_index = 0; other_blob_index < params.num_blobs; ++other_blob_index)
+                    for (int other_blob_index = 0; other_blob_index < params.num_blobs; ++other_blob_index)
                     {
 
                         // If same blob, continue (for now)
@@ -3263,10 +3096,10 @@ void World::calculate_kinetic_rates()
                         }
 
                         // Scan all sites on this blob too
-                        for (target_bsindex = 0; target_bsindex < active_blob_array[other_blob_index]->getNumBindingSites(); ++target_bsindex)
+                        for (int target_bsindex = 0; target_bsindex < active_blob_array[other_blob_index]->getNumBindingSites(); ++target_bsindex)
                         {
 
-                            target_site = active_blob_array[other_blob_index]->get_binding_site(target_bsindex);
+                            BindingSite *target_site = active_blob_array[other_blob_index]->get_binding_site(target_bsindex);
 
                             // If wrong type, move on
                             if (target_site->get_type() != target_type)
@@ -3326,14 +3159,12 @@ void World::calculate_kinetic_rates()
 
 void World::choose_new_kinetic_state(int blob_index, int *target)
 {
-
-    int i;
     scalar switch_check;
 
     // Make some bins
     vector<scalar[2]> bin(params.num_states[blob_index]);
     scalar total = 0.0;
-    for (i = 0; i < params.num_states[blob_index]; ++i)
+    for (int i = 0; i < params.num_states[blob_index]; ++i)
     {
 
         // Lower limit
@@ -3351,7 +3182,7 @@ void World::choose_new_kinetic_state(int blob_index, int *target)
     switch_check = kinetic_rng->RandU01();
 
     // See which bin this falls into
-    for (i = 0; i < params.num_states[blob_index]; ++i)
+    for (int i = 0; i < params.num_states[blob_index]; ++i)
     {
         if (switch_check > bin[i][0] && switch_check <= bin[i][1])
         {
@@ -3362,13 +3193,10 @@ void World::choose_new_kinetic_state(int blob_index, int *target)
 
 void World::load_kinetic_states(string states_fname, int blob_index)
 {
-
-    int i, j, num_states, conf_index, from, to; //, site_index;
     const int MAX_BUF_SIZE = 255;
-    char buf[MAX_BUF_SIZE];
+    std::array<char, MAX_BUF_SIZE> buf = {};
     string buf_string;
     vector<string> sline;
-    vector<string>::iterator it;
 
     // Load a default, single state
     if (states_fname == "")
@@ -3391,9 +3219,9 @@ void World::load_kinetic_states(string states_fname, int blob_index)
     cout << "\n\t\tReading in Kinetic States file: " << states_fname << endl;
 
     // Get header stuff and check for errors
-    fin.getline(buf, MAX_BUF_SIZE);
+    fin.getline(buf.data(), MAX_BUF_SIZE);
 
-    if (strcmp(buf, "ffea kinetic states file") != 0)
+    if (strcmp(buf.data(), "ffea kinetic states file") != 0)
     {
         throw FFEAException("\nExpected 'ffea kinetic states file' as first line. This may not be an FFEA kinetic states file.");
     }
@@ -3402,8 +3230,8 @@ void World::load_kinetic_states(string states_fname, int blob_index)
     getline(fin, buf_string);
     boost::trim(buf_string);
     boost::split(sline, buf_string, boost::is_space(), boost::token_compress_on);
-    ;
-    num_states = atoi(sline.at(1).c_str());
+    
+    int num_states = atoi(sline.at(1).c_str());
 
     if (num_states != params.num_states[blob_index])
     {
@@ -3417,7 +3245,7 @@ void World::load_kinetic_states(string states_fname, int blob_index)
     kinetic_state[blob_index] = std::vector<KineticState>(num_states);
 
     // Get actual states (each line varies)
-    for (i = 0; i < num_states; ++i)
+    for (int i = 0; i < num_states; ++i)
     {
 
         // Get conformation_index first
@@ -3425,7 +3253,7 @@ void World::load_kinetic_states(string states_fname, int blob_index)
         boost::trim(buf_string);
         boost::split(sline, buf_string, boost::is_space(), boost::token_compress_on);
 
-        conf_index = atoi(sline.at(1).c_str());
+        int conf_index = atoi(sline.at(1).c_str());
 
         if (conf_index < 0 || conf_index >= params.num_conformations[blob_index])
         {
@@ -3441,12 +3269,9 @@ void World::load_kinetic_states(string states_fname, int blob_index)
         // Check line consistency
 
         // No sites defined
-        if (sline.size() == 1)
-        {
-            from = -1;
-            to = -1;
-        }
-        else
+        int from = -1;
+        int to = -1;
+        if (sline.size() != 1)
         {
 
             if (sline.size() - 1 != 2)
@@ -3457,17 +3282,17 @@ void World::load_kinetic_states(string states_fname, int blob_index)
             sline.erase(sline.begin());
 
             // Reset counter
-            j = -1;
-            for (it = sline.begin(); it != sline.end(); ++it)
+            int j = -1;
+            for (auto &it : sline)
             {
                 j++;
                 if (j == 0)
                 {
-                    from = atoi((*it).c_str());
+                    from = atoi(it.c_str());
                 }
                 else if (j == 1)
                 {
-                    to = atoi((*it).c_str());
+                    to = atoi(it.c_str());
 
                     if (from >= binding_matrix.num_interaction_types || to >= binding_matrix.num_interaction_types)
                     {
@@ -3492,13 +3317,11 @@ void World::load_kinetic_states(string states_fname, int blob_index)
 
 void World::load_kinetic_rates(string rates_fname, int blob_index)
 {
-    int i, j, num_states;
-    char *crap;
-    char buf[255];
+    const int MAX_BUF_SIZE = 255;
+    std::array<char, MAX_BUF_SIZE> buf = {};
     string buf_string;
     vector<string> sline;
     vector<string>::iterator it;
-    FILE *fin;
 
     // Load a default, single rate
     if (rates_fname == "")
@@ -3518,15 +3341,15 @@ void World::load_kinetic_rates(string rates_fname, int blob_index)
     }
 
     // Open the file
-    fin = fopen(rates_fname.c_str(), "rb");
+    FILE*fin = fopen(rates_fname.c_str(), "rb");
 
     // Get header stuff and check for errors
-    crap = fgets(buf, 255, fin);
-    if (strcmp(buf, "ffea kinetic rates file\n") != 0)
+    fgets(buf.data(), 255, fin);
+    if (strcmp(buf.data(), "ffea kinetic rates file\n") != 0)
     {
         throw FFEAException("\nExpected 'ffea kinetic rates file' as first line. This may not be an FFEA kinetic rates file.");
     }
-
+    int num_states;
     if (fscanf(fin, "num_states %d\n", &num_states) != 1)
     {
         throw FFEAException("\nExpected 'num_states %%d' as second line. Unable to read further.");
@@ -3535,12 +3358,12 @@ void World::load_kinetic_rates(string rates_fname, int blob_index)
     {
         throw FFEAException("\nnum_states defined in '%s', %d, does not correspond to the initial script file, %d.", rates_fname.c_str(), num_states, params.num_states[blob_index]);
     }
-    crap = fgets(buf, 255, fin);
+     fgets(buf.data(), 255, fin);
 
     // Create rates matrix
     kinetic_rate[blob_index] = std::vector<std::vector<scalar>>(num_states);
     kinetic_base_rate[blob_index] = std::vector<std::vector<scalar>>(num_states);
-    for (i = 0; i < num_states; ++i)
+    for (int i = 0; i < num_states; ++i)
     {
         kinetic_rate[blob_index][i] = std::vector<scalar>(num_states);
         kinetic_base_rate[blob_index][i] = std::vector<scalar>(num_states);
@@ -3549,19 +3372,19 @@ void World::load_kinetic_rates(string rates_fname, int blob_index)
     scalar total_prob;
 
     // Get each state's rates and check total probability is conserved
-    for (i = 0; i < num_states; ++i)
+    for (int i = 0; i < num_states; ++i)
     {
         total_prob = 0.0;
 
         // Get a line and split it
-        crap = fgets(buf, 255, fin);
+        fgets(buf.data(), 255, fin);
         boost::split(sline, buf, boost::is_any_of(" "), boost::token_compress_on);
         if (sline.size() > num_states)
         {
             throw FFEAException("\nState %d contains %zd rate values, instead of 'num_states', %d.", i, sline.size(), num_states);
         }
 
-        j = -1;
+        int j = -1;
         for (it = sline.begin(); it != sline.end(); ++it)
         {
 
@@ -3592,23 +3415,22 @@ void World::load_kinetic_rates(string rates_fname, int blob_index)
 
 void World::print_kinetic_rates_to_screen(int type)
 {
-    int i, j, k;
     cout << "Kinetic Rates:" << endl;
-    for (i = 0; i < params.num_blobs; ++i)
+    for (int i = 0; i < params.num_blobs; ++i)
     {
         cout << "\tBlob " << i << ":\n"
              << endl;
         cout << "\tto";
-        for (j = 0; j < params.num_states[i]; ++j)
+        for (int j = 0; j < params.num_states[i]; ++j)
         {
             cout << "\t" << j;
         }
         cout << endl
              << "from" << endl;
-        for (j = 0; j < params.num_states[i]; ++j)
+        for (int j = 0; j < params.num_states[i]; ++j)
         {
             cout << j << "\t\t";
-            for (k = 0; k < params.num_states[i]; ++k)
+            for (int k = 0; k < params.num_states[i]; ++k)
             {
                 if (type == 0)
                 {
@@ -3627,11 +3449,9 @@ void World::print_kinetic_rates_to_screen(int type)
 }
 
 /* */
-void World::get_system_CoM(arr3 &system_CoM)
+void World::get_system_CoM(arr3 &system_CoM) const
 {
-    system_CoM[0] = 0;
-    system_CoM[1] = 0;
-    system_CoM[2] = 0;
+    std::fill(system_CoM.begin(), system_CoM.end(), 0);
     scalar total_mass = 0;
     for (int i = 0; i < params.num_blobs; i++)
     {
@@ -3649,12 +3469,10 @@ void World::get_system_CoM(arr3 &system_CoM)
 }
 
 /* */
-void World::get_system_centroid(arr3 &centroid)
+void World::get_system_centroid(arr3 &centroid) const
 {
     /** Blob centroid */
-    centroid[0] = 0;
-    centroid[1] = 0;
-    centroid[2] = 0;
+    std::fill(centroid.begin(), centroid.end(), 0);
     int total_num_nodes = 0;
     for (int i = 0; i < params.num_blobs; i++)
     {
@@ -3673,9 +3491,9 @@ void World::get_system_centroid(arr3 &centroid)
         rod::float3 rod_centroid;
         rod_array[i]->get_centroid(rod_array[i]->current_r, rod_centroid);
         /** I'm leaving it like this and there's nothing you can do about it */
-        centroid[0] += rod_centroid[0] * rod_array[i]->num_nodes;
-        centroid[1] += rod_centroid[1] * rod_array[i]->num_nodes;
-        centroid[2] += rod_centroid[2] * rod_array[i]->num_nodes;
+        centroid[0] += static_cast<scalar>(rod_centroid[0] * static_cast<float>(rod_array[i]->num_nodes));
+        centroid[1] += static_cast<scalar>(rod_centroid[1] * static_cast<float>(rod_array[i]->num_nodes));
+        centroid[2] += static_cast<scalar>(rod_centroid[2] * static_cast<float>(rod_array[i]->num_nodes));
         total_num_nodes += rod_array[i]->num_nodes;
     }
 
@@ -3684,17 +3502,15 @@ void World::get_system_centroid(arr3 &centroid)
     centroid[2] /= total_num_nodes;
 }
 
-void World::get_system_dimensions(arr3 &dimension)
+void World::get_system_dimensions(arr3 &dimension) const
 {
-    dimension[0] = 0;
-    dimension[1] = 0;
-    dimension[2] = 0;
-
-    arr3 min, max;
+    arr3 min;
+    arr3 max;
     std::fill(min.begin(), min.end(), std::numeric_limits<scalar>::max());
     std::fill(max.begin(), max.end(), std::numeric_limits<scalar>::min());
 
-    arr3 blob_min, blob_max;
+    arr3 blob_min;
+    arr3 blob_max;
     for (int i = 0; i < params.num_blobs; i++) {
         active_blob_array[i]->get_min_max(blob_min, blob_max);
         for (int j = 0; j < 3; ++j) {
@@ -3703,7 +3519,8 @@ void World::get_system_dimensions(arr3 &dimension)
         }
     }
 
-    rod::float3 rod_min, rod_max;
+    rod::float3 rod_min;
+    rod::float3 rod_max;
     for (int i = 0; i < params.num_rods; i++)
     {
         rod_array[i]->get_min_max(rod_array[i]->current_r, rod_min, rod_max);
@@ -3718,19 +3535,17 @@ void World::get_system_dimensions(arr3 &dimension)
     dimension[2] = max[2] - min[2];
 }
 
-int World::get_num_blobs()
+int World::get_num_blobs() const
 {
-
     return params.num_blobs;
 }
 
 void World::load_springs(const char *fname)
 {
-
-    int i, crap;
+    
     FILE *in = nullptr;
     const int max_line_size = 50;
-    char line[max_line_size];
+    std::array<char, max_line_size> line = {};
 
     // open the spring file
     if (!(in = fopen(fname, "rb")))
@@ -3740,12 +3555,12 @@ void World::load_springs(const char *fname)
     printf("\tReading in springs file: %s\n", fname);
 
     // first line should be the file type "ffea springs file"
-    if (!fgets(line, max_line_size, in))
+    if (!fgets(line.data(), max_line_size, in))
     {
         fclose(in);
         throw FFEAException("Error reading first line of spring file");
     }
-    if (strcmp(line, "ffea springs file\n") != 0)
+    if (strcmp(line.data(), "ffea springs file\n") != 0)
     {
         fclose(in);
         throw FFEAException("This is not a 'ffea spring file' (read '%s')", line);
@@ -3764,8 +3579,8 @@ void World::load_springs(const char *fname)
     spring_array = std::vector<Spring>(num_springs);
 
     // Read in next line
-    crap = fscanf(in, "springs:\n");
-    for (i = 0; i < num_springs; ++i)
+    fscanf(in, "springs:\n");
+    for (int i = 0; i < num_springs; ++i)
     {
         if (fscanf(in, "%lf %lf %d %d %d %d %d %d\n", &spring_array[i].k, &spring_array[i].l, &spring_array[i].blob_index[0], &spring_array[i].blob_index[1], &spring_array[i].conformation_index[0], &spring_array[i].conformation_index[1], &spring_array[i].node_index[0], &spring_array[i].node_index[1]) != 8)
         {
@@ -3819,7 +3634,7 @@ void World::load_springs(const char *fname)
 
     // Inititalise the energy array (move to a solver in the future, like the ssint)
     springfieldenergy = std::vector<std::vector<scalar>>(params.num_blobs);
-    for (i = 0; i < params.num_blobs; ++i)
+    for (int i = 0; i < params.num_blobs; ++i)
     {
         springfieldenergy[i] = std::vector<scalar>(params.num_blobs);
     }
@@ -3830,7 +3645,7 @@ void World::load_springs(const char *fname)
 rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> block, int interface_id, FFEA_input_reader &systemreader, rod::Rod **rod_array, Blob **blob_array)
 {
 
-    string tag_out[2];
+    std::array<string, 2> tag_out;
     bool coupling_parent = false;
 
     int block_no = -1;
@@ -3848,7 +3663,7 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
     rod::float3 rotation;
     rod::float3 node_weighting;
 
-    for (auto &tag_str : block)
+    for (const auto &tag_str : block)
     {
 
         systemreader.parse_tag(tag_str, tag_out);
@@ -3865,10 +3680,7 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
         {
             continue;
         }
-
-        // Set filename
-        //if (tag_out[0] == "output" && coupling_parent){ current_rod->change_filename(tag_out[1]); }
-
+        
         // parse coupling block
         if (tag_out[0] == "coupling type" && coupling_parent && (tag_out[1] == "rod-to-blob" || tag_out[1] == "blob-to-rod"))
         {
@@ -3878,8 +3690,8 @@ rod::Rod_blob_interface *World::rod_blob_interface_from_block(vector<string> blo
                 ends_at_rod = false;
             }
             vector<string> sub_block;
-            systemreader.extract_block("coupling", interface_id, block, &sub_block, true);
-            string sub_tag_out[2];
+            systemreader.extract_block("coupling", interface_id, block, sub_block, true);
+            std::array<string, 2> sub_tag_out;
             for (auto &sub_tag_str : sub_block)
             {
                 systemreader.parse_tag(sub_tag_str, sub_tag_out);
@@ -3961,7 +3773,7 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
 {
 
     // Find trajectory file
-    string tag_out[2];
+    std::array<string, 2> tag_out;
     string filename;
     string out_filename;
     int rod_block_no = -1; // start indexing rod blocks from 0 (we add 1 to this if rod is found)
@@ -4015,8 +3827,7 @@ rod::Rod *World::rod_from_block(vector<string> block, int block_id, FFEA_input_r
 
     bool rod_parent = false;
     rod_block_no = -1; // start indexing rod blocks from 0
-
-    int coupling_counter = 0;
+    
     for (auto &tag_str : block)
     {
         systemreader.parse_tag(tag_str, tag_out);
@@ -4240,18 +4051,11 @@ void World::rod_box_length_check(rod::Rod *current_rod, std::vector<float> dim)
 
 void World::activate_springs()
 {
-    for (int i = 0; i < spring_array.size(); ++i)
+    for (auto &spring : spring_array)
     {
-
         // If both ends of spring are active molecules, activate! This could probably be done more quickly with pointers if necessary in future
-        if (spring_array[i].conformation_index[0] == active_blob_array[spring_array[i].blob_index[0]]->conformation_index && spring_array[i].conformation_index[1] == active_blob_array[spring_array[i].blob_index[1]]->conformation_index)
-        {
-            spring_array[i].am_i_active = true;
-        }
-        else
-        {
-            spring_array[i].am_i_active = false;
-        }
+        spring.am_i_active = (spring.conformation_index[0] == active_blob_array[spring.blob_index[0]]->conformation_index && 
+                              spring.conformation_index[1] == active_blob_array[spring.blob_index[1]]->conformation_index);
     }
 }
 
@@ -4259,12 +4063,12 @@ void World::apply_springs()
 {
     scalar force_mag;
     arr3 n1, n0, force0, force1, sep, sep_norm;
-    for (int i = 0; i < spring_array.size(); ++i)
+    for (auto& spring : spring_array)
     {
-        if (spring_array[i].am_i_active == true)
+        if (spring.am_i_active == true)
         {
-            active_blob_array[spring_array[i].blob_index[1]]->get_node(spring_array[i].node_index[1], n1);
-            active_blob_array[spring_array[i].blob_index[0]]->get_node(spring_array[i].node_index[0], n0);
+            active_blob_array[spring.blob_index[1]]->get_node(spring.node_index[1], n1);
+            active_blob_array[spring.blob_index[0]]->get_node(spring.node_index[0], n0);
             sep[0] = n1[0] - n0[0];
             sep[1] = n1[1] - n0[1];
             sep[2] = n1[2] - n0[2];
@@ -4289,7 +4093,7 @@ void World::apply_springs()
                 }
             }
 
-            force_mag = spring_array[i].k * (magnitude(sep) - spring_array[i].l);
+            force_mag = spring.k * (magnitude(sep) - spring.l);
             force0[0] = force_mag * sep_norm[0];
             force0[1] = force_mag * sep_norm[1];
             force0[2] = force_mag * sep_norm[2];
@@ -4297,8 +4101,8 @@ void World::apply_springs()
             force1[0] = -1 * force_mag * sep_norm[0];
             force1[1] = -1 * force_mag * sep_norm[1];
             force1[2] = -1 * force_mag * sep_norm[2];
-            active_blob_array[spring_array[i].blob_index[0]]->add_force_to_node(force0, spring_array[i].node_index[0]);
-            active_blob_array[spring_array[i].blob_index[1]]->add_force_to_node(force1, spring_array[i].node_index[1]);
+            active_blob_array[spring.blob_index[0]]->add_force_to_node(force0, spring.node_index[0]);
+            active_blob_array[spring.blob_index[1]]->add_force_to_node(force1, spring.node_index[1]);
         }
     }
 }

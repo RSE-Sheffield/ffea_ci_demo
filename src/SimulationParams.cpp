@@ -206,11 +206,11 @@ void SimulationParams::extract_params(vector<string> script_vector) {
     // Extract param string from script string
     vector<string> param_vector;
     FFEA_input_reader paramreader = FFEA_input_reader();
-    paramreader.extract_block("param", 0, script_vector, &param_vector);
+    paramreader.extract_block("param", 0, script_vector, param_vector);
 
     // Parse the section
     vector<string>::iterator it;
-    string lrvalue[2];
+    std::array<string, 2> lrvalue;
     for (it = param_vector.begin(); it != param_vector.end(); ++it)
     {
         paramreader.parse_tag(*it, lrvalue);
