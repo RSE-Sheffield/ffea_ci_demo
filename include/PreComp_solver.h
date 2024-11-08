@@ -48,10 +48,10 @@ using namespace std;
 
 class PreComp_solver{
 public:
-  void init(PreComp_params *pc_params, SimulationParams *params, Blob **blob_array);
+  void init(const PreComp_params *pc_params, const SimulationParams *params, Blob **blob_array);
   void solve(scalar *blob_corr=nullptr); ///< calculate the forces using a straightforward double loop.
   void solve_using_neighbours();  ///< calculate the forces using linkedlists.
-  void solve_using_neighbours_non_critical(scalar *blob_corr=nullptr);  ///< using linkedlists, calculate twice the forces to avoid any critical regions.
+  void solve_using_neighbours_non_critical(const std::vector<scalar> &blob_corr = {});  ///< using linkedlists, calculate twice the forces to avoid any critical regions.
   void reset_fieldenergy(); 
   scalar get_U(scalar x, int typei, int typej);
   scalar get_F(scalar x, int typei, int typej);
@@ -72,7 +72,7 @@ private:
   int msg(string whatever); 
   int msg(int whatever); 
   
-  void read_tabulated_values(PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z);
+  void read_tabulated_values(const PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z);
 
   void calc_force_from_pot();
   

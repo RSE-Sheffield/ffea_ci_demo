@@ -40,7 +40,7 @@ public:
 
     void init(NearestNeighbourLinkedListCube *surface_face_lookup, arr3 &box_size, SSINT_matrix *ssint_matrix, scalar &steric_factor, int num_blobs, int inc_self_ssint, string ssint_type_string, scalar &steric_dr, int calc_kinetics, bool working_w_static_blobs);
 
-    void solve(scalar *blob_corr);
+    void solve(std::vector<scalar> &blob_corr);
 
     /** Allow protein VdW interactions along the top and bottom x-z planes */
     void solve_sticky_wall(scalar h);
@@ -79,15 +79,15 @@ protected:
     // static const struct tri_gauss_point gauss_pointx[num_tri_gauss_quad_points];
     static const std::array<tri_gauss_point, 3> gauss_points;
 
-    bool consider_interaction(Face *f1, int l_index_i, int motion_state_i, LinkedListNode<Face> *l_j, scalar *blob_corr);
+    bool consider_interaction(Face *f1, int l_index_i, int motion_state_i, LinkedListNode<Face> *l_j, std::vector<scalar> &blob_corr);
 
-    virtual void do_interaction(Face *f1, Face *f2, scalar *blob_corr);
+    virtual void do_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr);
 
-    bool do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr);
+    bool do_steric_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr);
 
-    void do_lj_interaction(Face *f1, Face *f2, scalar *blob_corr); 
+    void do_lj_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr); 
 
-    void do_gensoft_interaction(Face *f1, Face *f2, scalar *blob_corr);
+    void do_gensoft_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr);
 
     void do_sticky_xz_interaction(Face *f, bool bottom_wall, scalar dim_y);
 

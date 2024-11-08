@@ -351,9 +351,9 @@ private:
     void print_static_trajectory(int step, scalar wtime, int blob_index);
 
     /** @brief calculates the blob to blob corrections due to periodic boundary conditions*/
-    void calc_blob_corr_matrix(int num_blobs,scalar *blob_corr);
+    void calc_blob_corr_matrix(int num_blobs, std::vector<scalar> &blob_corr);
 
-    scalar *blob_corr;
+    std::vector<scalar> blob_corr;
 
     void die_with_dignity(int step, scalar wtime);
 };

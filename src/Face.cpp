@@ -192,7 +192,7 @@ void Face::barycentric_calc_point(scalar b1, scalar b2, scalar b3, arr3 &p) {
         p[i] = b1 * n[0]->pos[i] + b2 * n[1]->pos[i] + b3 * n[2]->pos[i];
 }
 
-void Face::barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+void Face::barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     for (int i = 0; i < 3; ++i)
         p[i] = b1 * (n[0]->pos[i]-blob_corr[f2_daddy_blob_index*(this->num_blobs)*3 + f1_daddy_blob_index*3])  + b2 * (n[1]->pos[i]-blob_corr[f2_daddy_blob_index*(this->num_blobs)*3 + f1_daddy_blob_index*3]) + b3 * (n[2]->pos[i]-blob_corr[f2_daddy_blob_index*(this->num_blobs)*3 + f1_daddy_blob_index*3+i]);
     //printf("blob_corr element for blob %d to blob %d is %f \n ",f1_daddy_blob_index,f2_daddy_blob_index,blob_corr[f1_daddy_blob_index*(this->num_blobs)*3 + f2_daddy_blob_index*3]);
@@ -309,7 +309,7 @@ void Face::getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geo
 
 
 
-bool Face::checkTetraIntersection(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+bool Face::checkTetraIntersection(const Face *f2, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     // V1 = n
     // V2 = f2->n
     std::array<arr3, 4> tetA, tetB;
@@ -375,7 +375,7 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *
 }
 
 
-bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2, const std::vector<scalar> &blob_corr, int f1_daddy_blob_index, int f2_daddy_blob_index) {
     std::array<grr3, 4> tetB, tetC, tetD;
     grr3 ap1, ap2, cm;
     geoscalar vol_m, vol_M;
@@ -419,7 +419,7 @@ bool Face::getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *
 }
 
 
-scalar Face::getTetraIntersectionVolume(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+scalar Face::getTetraIntersectionVolume(const Face *f2, const std::vector<scalar> &blob_corr, int f1_daddy_blob_index,int f2_daddy_blob_index) {
     grr3 cm;
     std::array<grr3, 4> tetB;
     double assx=0, assy=0, assz=0;
@@ -431,7 +431,7 @@ scalar Face::getTetraIntersectionVolume(const Face *f2, const scalar *blob_corr,
     return volumeIntersectionII(n[0]->pos, n[1]->pos, n[2]->pos, n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
 }
 
-scalar Face::checkTetraIntersectionAndGetVolume(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+scalar Face::checkTetraIntersectionAndGetVolume(const Face *f2, const std::vector<scalar> &blob_corr, int f1_daddy_blob_index,int f2_daddy_blob_index) {
     arr3 cm;
     std::array<arr3, 4> tetB;
 
@@ -447,7 +447,7 @@ scalar Face::checkTetraIntersectionAndGetVolume(const Face *f2, const scalar *bl
             n[3]->pos, tetB[0], tetB[1], tetB[2], tetB[3], false, cm);
 }
 
-void Face::getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &_area, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+void Face::getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &_area, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     std::array<grr3, 4> tetA, tetB;
     for (int i=0; i<4; i++) {
         tetA[i][0] = n[i]->pos[0];
@@ -482,7 +482,7 @@ scalar Face::length_of_longest_edge() {
 }
 
 template <class brr3>
-void Face::vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
+void Face::vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index) {
     //this->get_centroid();
     //f2->get_centroid();
     for(int i =0; i <3; ++i)
@@ -498,11 +498,11 @@ void Face::vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w, const scalar *blob_corr,int 
 //////////////////////////////////////////////////
 template void Face::add_force_to_node<arr3>(int i, arr3 &f);
 // template void Face::add_bb_vdw_force_to_record<arr3>(arr3 &f, int other_blob_index); // DEPRECATED
-template void Face::vec3Vec3SubsToArr3Mod<arr3>(Face *f2, arr3 &w, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+template void Face::vec3Vec3SubsToArr3Mod<arr3>(Face *f2, arr3 &w, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
 
 #ifndef USE_DOUBLE
 template void Face::add_force_to_node<grr3>(int i, grr3 &f);
 // template void Face::add_bb_vdw_force_to_record<grr3>(grr3 &f, int other_blob_index); // DEPRECATED
-template void Face::vec3Vec3SubsToArr3Mod<grr3>(Face *f2, grr3 &w, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+template void Face::vec3Vec3SubsToArr3Mod<grr3>(Face *f2, grr3 &w, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 #endif

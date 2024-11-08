@@ -123,7 +123,7 @@ void VdW_solver::reset_fieldenergy() {
 }
 
 /** Solve VdW */
-void VdW_solver::solve(scalar *blob_corr) {
+void VdW_solver::solve(std::vector<scalar> &blob_corr) {
     LinkedListNode<Face> *l_i = nullptr;
     LinkedListNode<Face> *l_j = nullptr;
     Face *f_i, *f_j;
@@ -188,7 +188,7 @@ void VdW_solver::solve_sticky_wall(scalar h) {
     }
 }
 
-void VdW_solver::do_lj_interaction(Face *f1, Face *f2, scalar *blob_corr) {
+void VdW_solver::do_lj_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr) {
 
     int f1_daddy_blob_index = f1->daddy_blob->blob_index;
     int f2_daddy_blob_index = f2->daddy_blob->blob_index;
@@ -201,7 +201,7 @@ void VdW_solver::do_lj_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     arr3 force_pair_matrix[num_tri_gauss_quad_points][num_tri_gauss_quad_points];
 
     // Convert all area coordinate gauss points to cartesian
-    if (!blob_corr) {
+    if (blob_corr.empty()) {
         for (int i = 0; i < num_tri_gauss_quad_points; i++) {
             f1->barycentric_calc_point(gauss_points[i].eta[0], gauss_points[i].eta[1], gauss_points[i].eta[2], p[i]);
             f2->barycentric_calc_point(gauss_points[i].eta[0], gauss_points[i].eta[1], gauss_points[i].eta[2], q[i]);
@@ -257,11 +257,11 @@ void VdW_solver::do_lj_interaction(Face *f1, Face *f2, scalar *blob_corr) {
 }
 
 /**Alters interaction calculations to apply periodic boundary conditions*/
-void VdW_solver::do_interaction(Face *f1, Face *f2, scalar *blob_corr) {
+void VdW_solver::do_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr) {
     do_lj_interaction(f1, f2, blob_corr);
 }
 
-bool VdW_solver::consider_interaction(Face *f_i, int l_index_i, int motion_state_i, LinkedListNode<Face> *l_j, scalar *blob_corr) {
+bool VdW_solver::consider_interaction(Face *f_i, int l_index_i, int motion_state_i, LinkedListNode<Face> *l_j, std::vector<scalar> &blob_corr) {
     bool interaction_needed = false;
     if (l_index_i < l_j->index) {
         if ((inc_self_ssint == 1) || ( (inc_self_ssint == 0 ) && (f_i->daddy_blob != l_j->obj->daddy_blob))) {
@@ -287,7 +287,7 @@ bool VdW_solver::consider_interaction(Face *f_i, int l_index_i, int motion_state
             // 2.1 - Check that faces are in front of each other
             //     - Robin suspected this was leading to unstabilities for the LJ case.
             arr3 sep;
-            if (!blob_corr) {
+            if (blob_corr.empty()) {
                 for (int i = 0; i < 3; ++i)
                     sep[i] = f_j->centroid[i] - f_i->centroid[i];
             } else {
@@ -379,7 +379,7 @@ void VdW_solver::do_sticky_xz_interaction(Face *f, bool bottom_wall, scalar dim_
     }
 }
 
-bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr) {
+bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr) {
     int f1_daddy_blob_index = f1->daddy_blob->blob_index;
     int f2_daddy_blob_index = f2->daddy_blob->blob_index;
 
@@ -388,11 +388,11 @@ bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     grr3 dVdr;
     grr4 phi1, phi2;
 
-    if (!blob_corr) {
+    if (blob_corr.empty()) {
       if (!f1->getTetraIntersectionVolumeTotalGradientAndShapeFunctions(f2, steric_dr, dVdr, vol, phi1, phi2))
           return false;
     } else {
-      if (!f1->getTetraIntersectionVolumeTotalGradientAndShapeFunctions(f2, steric_dr, dVdr, vol, phi1, phi2,blob_corr,f1_daddy_blob_index, f2_daddy_blob_index))
+      if (!f1->getTetraIntersectionVolumeTotalGradientAndShapeFunctions(f2, steric_dr, dVdr, vol, phi1, phi2, blob_corr, f1_daddy_blob_index, f2_daddy_blob_index))
           return false;
     }
 
@@ -463,7 +463,7 @@ bool VdW_solver::do_steric_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     return true;
 }
 
-void VdW_solver::do_gensoft_interaction(Face *f1, Face *f2, scalar *blob_corr) {
+void VdW_solver::do_gensoft_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr) {
     int f1_daddy_blob_index = f1->daddy_blob->blob_index;
     int f2_daddy_blob_index = f2->daddy_blob->blob_index;
 
@@ -475,7 +475,7 @@ void VdW_solver::do_gensoft_interaction(Face *f1, Face *f2, scalar *blob_corr) {
     arr3 force_pair_matrix[num_tri_gauss_quad_points][num_tri_gauss_quad_points];
 
     // Convert all area coordinate gauss points to cartesian
-    if (!blob_corr) {
+    if (blob_corr.empty()) {
         for (int i = 0; i < num_tri_gauss_quad_points; i++) {
             f1->barycentric_calc_point(gauss_points[i].eta[0], gauss_points[i].eta[1], gauss_points[i].eta[2], p[i]);
             f2->barycentric_calc_point(gauss_points[i].eta[0], gauss_points[i].eta[1], gauss_points[i].eta[2], q[i]);

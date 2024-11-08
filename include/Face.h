@@ -90,7 +90,7 @@ public:
       * It calls some private functions.
       **/
     bool checkTetraIntersection(const Face *f2);
-    bool checkTetraIntersection(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    bool checkTetraIntersection(const Face *f2, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     /** Get the volume that the enclose the intersection
       *   of the tetrahedron formed by this face an the opposite
@@ -98,7 +98,7 @@ public:
       * It calls volumeIntersection, at volumeIntersection.h
       **/
     scalar getTetraIntersectionVolume(const Face *f2);
-    scalar getTetraIntersectionVolume(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    scalar getTetraIntersectionVolume(const Face *f2, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     /** Check whether the tetrahedron formed by this face an the opposite
       *   linear node does intersect with the corresponding tetrahedron in f2.
@@ -107,7 +107,7 @@ public:
       *  interaction occurs.
       **/
     scalar checkTetraIntersectionAndGetVolume(const Face *f2);
-    scalar checkTetraIntersectionAndGetVolume(const Face *f2, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    scalar checkTetraIntersectionAndGetVolume(const Face *f2, const std::vector<scalar> &blob_corr, int f1_daddy_blob_index,int f2_daddy_blob_index);
 
 
     /** Get the volume and area that the enclose the intersection
@@ -116,7 +116,7 @@ public:
       * It calls volumeIntersection, at volumeIntersection.h
       **/
     void getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &area);
-    void getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &area, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    void getTetraIntersectionVolumeAndArea(const Face *f2, geoscalar &vol, geoscalar &area, const std::vector<scalar> &blob_corr, int f1_daddy_blob_index,int f2_daddy_blob_index);
 
 
      /** Get the volume that enclose the intersection
@@ -129,7 +129,7 @@ public:
       * This version works well for the double loop i<j. 
       **/
     bool getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2);
-    bool getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2, const scalar *blob_corr, int f1_daddy_blob_index, int f2_daddy_blob_index);
+    bool getTetraIntersectionVolumeTotalGradientAndShapeFunctions(const Face *f2, geoscalar dr, grr3 &dVdr, geoscalar &vol, grr4 &phi1, grr4 &phi2, const std::vector<scalar> &blob_corr, int f1_daddy_blob_index, int f2_daddy_blob_index);
 
 
     Blob *daddy_blob;
@@ -152,7 +152,7 @@ public:
 
     /** Calculate the point p on this triangle given the barycentric coordinates b1, b2, b3. Altered to act periodically around box boundaries. **/
     void barycentric_calc_point(scalar b1, scalar b2, scalar b3, arr3 &p);
-    void barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    void barycentric_calc_point_f2(scalar b1, scalar b2, scalar b3, arr3 &p, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     /** Returns the average electrostatic potential of this face **/
     scalar average_phi();
@@ -170,7 +170,7 @@ public:
     void set_ssint_xz_interaction_flag(bool state);
 
     template <class brr3>
-    void vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w, const scalar *blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
+    void vec3Vec3SubsToArr3Mod(Face *f2, brr3 &w, const std::vector<scalar> &blob_corr,int f1_daddy_blob_index,int f2_daddy_blob_index);
 
     bool is_ssint_active();
     bool is_kinetic_active();

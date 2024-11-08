@@ -59,7 +59,7 @@ void PreComp_solver::reset_fieldenergy() {
     }
 }
 
-void PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Blob **blob_array) {
+void PreComp_solver::init(const PreComp_params *pc_params, const SimulationParams *params, Blob **blob_array) {
 
    /* Firstly, we get the number of lines, x_range, 
     * and Dx from the first pair type potential file. 
@@ -508,7 +508,7 @@ void PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, B
    cout << "done!" << endl;
 }
 
-void PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=nullptr*/){
+void PreComp_solver::solve_using_neighbours_non_critical(const std::vector<scalar> &blob_corr){
     scalar d, f_ij; //, f_ijk_i, f_ijk_j; 
     arr3 dx, dxik;
     int type_i; 
@@ -563,7 +563,7 @@ void PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=nul
            }
 
            daddy_j = b_daddyblob[b_index_j];
-           if (!blob_corr) {
+           if (blob_corr.empty()) {
              dx[0] = (b_pos[3*b_index_j  ] - b_pos[3*b_index_i  ]);
              dx[1] = (b_pos[3*b_index_j+1] - b_pos[3*b_index_i+1]);
              dx[2] = (b_pos[3*b_index_j+2] - b_pos[3*b_index_i+2]);
@@ -867,7 +867,7 @@ void PreComp_solver::calc_force_from_pot() {
 
 /** Read either the .pot or .force files
   * and store its contents either in U or F */
-void PreComp_solver::read_tabulated_values(PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z){
+void PreComp_solver::read_tabulated_values(const PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z){
    stringstream ssfile; 
    ifstream fin;
    string line; 

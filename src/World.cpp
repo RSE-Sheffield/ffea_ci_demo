@@ -58,7 +58,7 @@ World::World()
     vdw_solver = nullptr;
     Seeds = {};
     num_seeds = 0;
-    blob_corr = nullptr;
+    blob_corr = {};
     
     kineticenergy = 0.0;
     strainenergy = 0.0;
@@ -102,7 +102,7 @@ World::~World()
     
     phi_Gamma.clear();
 
-    delete[] blob_corr;
+    blob_corr.clear();
     
     Seeds.clear();
     num_seeds = 0;
@@ -2477,7 +2477,7 @@ void World::read_and_build_system(const vector<string> &script_vector)
 
     //creates blob correction array if specified in input file
     if (params.force_pbc == 1)
-        blob_corr = new scalar[params.num_blobs * params.num_blobs * 3];
+        blob_corr = std::vector<scalar>(params.num_blobs * params.num_blobs * 3, 0);
 
     // Read in each blob one at a time
     for (i = 0; i < params.num_blobs; ++i)
@@ -5001,7 +5001,7 @@ void World::print_static_trajectory(int step, scalar wtime, int blob_index)
     active_blob_array[blob_index]->write_nodes_to_file(trajectory_out);
 }
 
-void World::calc_blob_corr_matrix(int num_blobs, scalar *blob_corr)
+void World::calc_blob_corr_matrix(int num_blobs, std::vector<scalar> &blob_corr)
 {
 
     //calculates blob corrections for periodic interactions
