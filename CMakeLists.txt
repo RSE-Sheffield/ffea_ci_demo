@@ -65,7 +65,7 @@ endif()
 # Debug
 if(USE_DEBUG)
     # Let the user know what mayhem they may have caused
-    message(STATUS "USE_DEBUG has been removed, instead pass -DCMAKE_BUILD_TYPE=Debug at CMake configure time.")
+    message(SEND_ERROR "USE_DEBUG has been removed, instead pass -DCMAKE_BUILD_TYPE=Debug at CMake configure time.")
 endif(USE_DEBUG)
 get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(NOT is_multi_config)
@@ -136,24 +136,12 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/src")
 ######## INSTALL THE FFEA TOOLS  ######
 
 #######################################
-
 if(USE_FFEATOOLS_INTERNAL AND WIN32)
     set(USE_FFEATOOLS_INTERNAL OFF)
-    message(WARNING "FFEATools cannot be built on Windows")
+    message(WARNING "FFEATools does not support Windows")
 endif()
-if(USE_FFEATOOLS_INTERNAL) 
-    message(STATUS "Configuring internal FFEATools")
-    include(cmake/GetFFEATools.cmake)
-#else() 
-#find_package(FFEATools REQUIRED)
-#if(NOT FFEATools_FOUND)
-#    message(FATAL_ERROR "You could provide valid paths through either:
-#    -- FFEATOOLS_ROOT or
-#    try reconfiguring with -DUSE_FFEATOOLS_INTERNAL")
-#endif()
-endif()
-# Temporary until CMake upgraded to support Python3 FFEATools
-set(NUMPY_FOUND "FAIL")
+message(STATUS "Configuring FFEATools")
+include(cmake/GetFFEATools.cmake)
 
 
 #####################################################
