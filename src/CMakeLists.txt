@@ -296,18 +296,21 @@ endif()
 if(USE_BOOST_INTERNAL) 
     message(STATUS "Configuring internal Boost")
     include(../cmake/GetBoostModern.cmake)
+    target_link_libraries(ffea_lib PUBLIC Boost::core Boost::program_options Boost::math Boost::algorithm)
 else() 
     set(Boost_NO_BOOST_CMAKE ON)
     set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost REQUIRED COMPONENTS program_options)
-if(NOT Boost_FOUND)
-    message(FATAL_ERROR "You could provide valid paths through either:
-    -- BOOST_ROOT or
-    -- BOOST_INCLUDEDIR and BOOST_LIBRARYDIR or
-    try reconfiguring with -DUSE_BOOST_INTERNAL")
+    find_package(Boost REQUIRED COMPONENTS program_options)
+    if(NOT Boost_FOUND)
+        message(FATAL_ERROR "You could provide valid paths through either:
+        -- BOOST_ROOT or
+        -- BOOST_INCLUDEDIR and BOOST_LIBRARYDIR or
+        try reconfiguring with -DUSE_BOOST_INTERNAL=ON")
+    else()
+        #findBoost() has less precise targets for headers than findConfig()
+        target_link_libraries(ffea_lib PUBLIC Boost::boost Boost::program_options)
+    endif()
 endif()
-endif()
-target_link_libraries(ffea_lib PUBLIC Boost::core Boost::program_options Boost::math Boost::algorithm)
 
 # EIGEN3
 if(USE_EIGEN3_INTERNAL) 
