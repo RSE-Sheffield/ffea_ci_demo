@@ -340,10 +340,9 @@ void tetra_element_linear::print_structural_details() {
  *
  */
 scalar tetra_element_linear::calc_volume() {
-
 	matrix3 J;
 	calculate_jacobian(J);
-        calc_shape_function_derivatives_and_volume(J);
+    calc_shape_function_derivatives_and_volume(J);
 	return vol;
 }
 

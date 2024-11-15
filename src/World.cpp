@@ -4319,7 +4319,7 @@ void World::make_trajectory_from_eigenvector(string traj_out_fname, int blob_ind
         }
 
         // Translate all the nodes
-        active_blob_array[blob_index]->translate_linear(node_trans.data());
+        active_blob_array[blob_index]->translate_linear(node_trans);
         fprintf(fout, "Blob 0, Conformation 0, step %d\n", i);
         active_blob_array[blob_index]->write_nodes_to_file(fout);
         fprintf(fout, "*\n");

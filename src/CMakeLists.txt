@@ -181,11 +181,14 @@ set(FFEA_DEVEL OFF)
 if(FFEA_DEVEL)
     target_compile_definitions(ffea_lib PUBLIC FFEA_DEVEL)
 endif()
+# Disable MSVC min and max defines
+if(WIN32)
+    target_compile_definitions(ffea_lib PUBLIC NOMINMAX)
+endif()
 
 ##############################
 #### LIBRARIES AND CFLAGS ####
 ##############################
-
 # MPI
 if(USE_MPI)
     find_package(MPI REQUIRED)
