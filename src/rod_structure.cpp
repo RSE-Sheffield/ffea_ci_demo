@@ -438,9 +438,9 @@ namespace rod
             r_i[0] = current_r[node_no * 3];
             r_i[1] = current_r[(node_no * 3) + 1];
             r_i[2] = current_r[(node_no * 3) + 2];
-            r_ip1[0] = current_r[(node_no * 3) + 3];
-            r_ip1[1] = current_r[(node_no * 3) + 4];
-            r_ip1[2] = current_r[(node_no * 3) + 5];
+            r_ip1[0] = current_r[((node_no * 3) + 3) % current_r.size()];
+            r_ip1[1] = current_r[((node_no * 3) + 4) % current_r.size()];
+            r_ip1[2] = current_r[((node_no * 3) + 5) % current_r.size()];
             get_p_i(r_i, r_ip1, previous_p_i);
 
             // Get fluctuating force

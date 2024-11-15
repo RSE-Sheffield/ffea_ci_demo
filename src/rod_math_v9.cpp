@@ -1103,7 +1103,7 @@ namespace rod
         int shift = (offset - 2) * 3;
         for (int j = 0; j < 4; j++)
         {
-            vec3d(n) { p[j][n] = r[shift + (j * 3) + 3 + n] - r[shift + (j * 3) + n]; }
+            vec3d(n) { p[j][n] = r[(shift + (j * 3) + 3 + n)%r.size()] - r[(shift + (j * 3) + n)%r.size()]; }
         }
     }
 
@@ -1115,9 +1115,9 @@ namespace rod
         int shift = (offset - 2) * 3; // *3 for the 1-d array, -2 for offset 0 spanning i-2 to i+1
         for (int j = 0; j < 4; j++)
         {
-            m_loaded[j][0] = m[shift];
-            m_loaded[j][1] = m[shift + 1];
-            m_loaded[j][2] = m[shift + 2];
+            m_loaded[j][0] = m[(shift + 0) % m.size()];
+            m_loaded[j][1] = m[(shift + 1) % m.size()];
+            m_loaded[j][2] = m[(shift + 2) % m.size()];
             shift += 3;
         }
     }
@@ -1222,10 +1222,10 @@ namespace rod
         int shift = (offset - 2) * 4; // *3 for the 1-d array, -2 for offset 0 spanning i-2 to i+1
         for (int n = 0; n < 4; n++)
         {
-            B[n][0] = B_matrix[shift + 0];
-            B[n][1] = B_matrix[shift + 1];
-            B[n][2] = B_matrix[shift + 2];
-            B[n][3] = B_matrix[shift + 3];
+            B[n][0] = B_matrix[(shift + 0) % B_matrix.size()];
+            B[n][1] = B_matrix[(shift + 1) % B_matrix.size()];
+            B[n][2] = B_matrix[(shift + 2) % B_matrix.size()];
+            B[n][3] = B_matrix[(shift + 3) % B_matrix.size()];
             shift += 4;
         }
     }
