@@ -1092,6 +1092,16 @@ namespace rod
     /*------------*/
 
     // Dear function pointer likers: no.
+    /**
+     * Return vec[i], instead returning NaN if i is out of bounds
+     *
+     * @note Used by load_p(), load_m() and load_B_all() via get_perturbation_energy()
+     *       get_perturbation_energy() does not touch the out of bounds values
+     *       by setting them to NaN, this should expose if that changes.
+     */
+    inline float getInBounds(const int i, const std::vector<float> &vec) {
+        return i < 0 || i >= vec.size() ? std::numeric_limits<float>::quiet_NaN() : vec[i];
+    }
 
     /**
 * This will load a region of a 1-d array containing nodes into an array
@@ -1103,7 +1113,9 @@ namespace rod
         int shift = (offset - 2) * 3;
         for (int j = 0; j < 4; j++)
         {
-            vec3d(n) { p[j][n] = r[(shift + (j * 3) + 3 + n)%r.size()] - r[(shift + (j * 3) + n)%r.size()]; }
+            vec3d(n) {
+                p[j][n] = getInBounds(shift + (j * 3) + 3 + n, r) - getInBounds(shift + (j * 3) + n, r);
+            }
         }
     }
 
@@ -1115,9 +1127,9 @@ namespace rod
         int shift = (offset - 2) * 3; // *3 for the 1-d array, -2 for offset 0 spanning i-2 to i+1
         for (int j = 0; j < 4; j++)
         {
-            m_loaded[j][0] = m[(shift + 0) % m.size()];
-            m_loaded[j][1] = m[(shift + 1) % m.size()];
-            m_loaded[j][2] = m[(shift + 2) % m.size()];
+            m_loaded[j][0] = getInBounds(shift + 0, m);
+            m_loaded[j][1] = getInBounds(shift + 1, m);
+            m_loaded[j][2] = getInBounds(shift + 2, m);
             shift += 3;
         }
     }
@@ -1222,10 +1234,10 @@ namespace rod
         int shift = (offset - 2) * 4; // *3 for the 1-d array, -2 for offset 0 spanning i-2 to i+1
         for (int n = 0; n < 4; n++)
         {
-            B[n][0] = B_matrix[(shift + 0) % B_matrix.size()];
-            B[n][1] = B_matrix[(shift + 1) % B_matrix.size()];
-            B[n][2] = B_matrix[(shift + 2) % B_matrix.size()];
-            B[n][3] = B_matrix[(shift + 3) % B_matrix.size()];
+            B[n][0] = getInBounds(shift + 0, B_matrix);
+            B[n][1] = getInBounds(shift + 1, B_matrix);
+            B[n][2] = getInBounds(shift + 2, B_matrix);
+            B[n][3] = getInBounds(shift + 3, B_matrix);
             shift += 4;
         }
     }
@@ -1408,6 +1420,7 @@ namespace rod
         // Compute unperturbed energy.
         // I could make this less verbose, but the explicit lookup table is a bit clearer about what's going on.
         // The basic idea is: if we're close to the 'edge' of the rod, don't compute energies for non-existent nodes! Because they are out of bounds!
+        // Out of bounds values are set to NaN, so will corrupt the maths if an error is made.
         float bend_energy = 0;
         float stretch_energy = 0;
         float twist_energy = 0;
