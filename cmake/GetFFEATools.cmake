@@ -110,6 +110,7 @@ elseif(USE_FFEATOOLS_INTERNAL)
             ERROR_QUIET) # This puts out alot of junk to stderr
 
         # locate venv python
+        set(INSTALL_Python3_EXECUTABLE "${Python3_EXECUTABLE}")
         unset(Python3_EXECUTABLE)
         message(STATUS "venv dir ${VENV_DIR}")
         set(ENV{VIRTUAL_ENV} "${VENV_DIR}")
@@ -129,6 +130,9 @@ elseif(USE_FFEATOOLS_INTERNAL)
     if(${_RESULT} STREQUAL "0")
         message(STATUS "Successfully installed ffeatools (version ${_MODULE_VERSION})\n"
             "Python3 venv: ${VENV_DIR}")
+        install(DIRECTORY "${ffeatools_SOURCE_DIR}/" DESTINATION "ffeatools" COMPONENT RUNTIME PATTERN ".git" EXCLUDE)
+        configure_file("${CMAKE_SOURCE_DIR}/cmake/InstallFFEATools.cmake" "${CMAKE_BINARY_DIR}/InstallFFEATools.cmake" @ONLY)
+        install(SCRIPT "${CMAKE_BINARY_DIR}/InstallFFEATools.cmake")
     else()    
         message(FATAL_ERROR 
             "Something went wrong!\n"

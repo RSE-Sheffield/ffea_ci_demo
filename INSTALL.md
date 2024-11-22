@@ -12,16 +12,16 @@ This document gives instructions on how to build and install the FFEA package,
 
 ## Essential
 
-* [C and C++ compilers](https://gcc.gnu.org/) (GCC >=6.3.0 or Intel >=15). There is some C++ code written using 
-  the C++11 standard, and so CMake will ensure that you have a 
-  recent enough compiler. FFEA will compile with GCC 6.3.0 or Intel 15,
+* [C and C++ compilers](https://gcc.gnu.org/) (GCC >=9.4.0 or Intel >=19.1.0). There is some C++ code written using 
+  the C++17 standard, and so CMake will ensure that you have a 
+  recent enough compiler. FFEA will compile with GCC 9.4.0 or Intel 19.1.0,
   but we suggest using an up to date compiler to get the best performance.
 
-* [CMake](https://cmake.org) (>=2.8.11). Required for building FFEA.
-
-* [Python](https://www.python.org/) (2.7.X). Used to run the FFEA tools modules, in addition to unit and integration tests to verify that FFEA was correctly built. The [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/) libraries are required. **FFEA tools is currently incompatible with Python 3**, but an upgrade is in progress. 
+* [CMake](https://cmake.org) (>=3.18). Required for building FFEA.
 
 ## Recommended
+
+* [Python](https://www.python.org/) (3.10). Used to run the FFEA tools modules, in addition to unit and integration tests to verify that FFEA was correctly built. The [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/) and [Matplotlib](https://matplotlib.org/) libraries are required.
 
 * [PyMOL](https://pymol.org/) (>=1.8, though [1.8 is recommended](https://anaconda.org/mw/pymol)).
   Used to visualise FFEA systems and trajectories, with the plugin we provide.
@@ -55,12 +55,15 @@ This document gives instructions on how to build and install the FFEA package,
 
 ## Included
 
+* [FFEA tools](https://bitbucket.org/FFEA/ffeatools).
+   A python package of command-line utilities, useful for working with FFEA, will be downloaded by CMake, but this can be adjusted with a [flag](\ref cmakeflags).
+
 * [Boost](http://www.boost.org) (>=1.54.0). Used for ease of programming 
-     at the initialisation phase. Modules "system", "filesystem" and 
-     "program-options" are required. Boost 1.63 is included with FFEA, but this can be adjusted with a [flag](\ref cmakeflags).
+     at the initialisation phase. Modules "math", "algorithm" and 
+     "program-options" are required. Boost 1.85.0 will be downloaded by CMake, but this can be adjusted with a [flag](\ref cmakeflags).
 
 * [Eigen](http://eigen.tuxfamily.org) (>=3.2.10).
-   FFEA uses Eigen to calculate and solve linear approximations to the model i.e. Elastic / Dynamic Network Models. Eigen 3.3.7 will be downloaded by CMake, but this can be adjusted with a [flag](\ref cmakeflags).
+   FFEA uses Eigen to calculate and solve linear approximations to the model i.e. Elastic / Dynamic Network Models. Eigen 3.4.0 will be downloaded by CMake, but this can be adjusted with a [flag](\ref cmakeflags).
 
 * [RngStreams](http://www.iro.umontreal.ca/~lecuyer/myftp/streams00/)<sup>[2](#RngStreams1)</sup><sup>,[3](#RngStreams2)</sup>.
         Allows FFEA to safely generate random numbers when running 
@@ -86,19 +89,19 @@ FFEA uses CMake to find the compiler, dependencies and to configure files and Ma
  FFEA outside of the source tree. E.g.
  
      git clone https://bitbucket.org/FFEA/ffea.git
-     mkdir FFEA_build
-     cd FFEA_build
-     cmake ../ffea [OPTIONS]
+     cd ffea
+     mkdir build
+     cd build
+     cmake .. [OPTIONS]
 
-There is a list of ` cmake ` ` [OPTIONS] ` later in this section. Our favourite option
-is to specify the installation directory, since the default (/usr/local/) 
+There is a list of `cmake` `[OPTIONS]` later in this section. Our favourite option
+is to specify the installation directory, since the default (`/usr/local/`) 
 may not be available if you do not have administrator privileges. You should also tell cmake
-to use a Python 2.7.X interpreter if it isn't already the
-system default (/usr/bin/python), so that ffeatools can be correctly imported into Python:
+to use a Python 3.X interpreter if it isn't already on your `$PATH`, so that ffeatools can be correctly imported into Python:
 
-     cmake ../ffea -DCMAKE_INSTALL_PREFIX=$HOME/softw/ffea -DPYTHON_EXECUTABLE=/usr/bin/python2.7
+     cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/softw/ffea -DPYTHON3_ROOT_DIR=/usr/miniconda3/envs/ffea
 
-where $HOME/softw/ffea can be replaced with an installation directory of your choice.
+where `$HOME/softw/ffea` can be replaced with an installation directory of your choice.
  CMake default options seeks to build FFEA for production, and will suit most of the users.
  The following subsection gives greater detail, but if you are happy with defaults,
  you can jump to [build](\ref build).
@@ -108,22 +111,22 @@ where $HOME/softw/ffea can be replaced with an installation directory of your ch
 
 After configuring you will be able to build FFEA typing:
 
-     make 
+     cmake --build . --parallel 8
 
 Then, the following command will install FFEA:
 
-     make install
+     cmake --install .
 
 either to the folder specified through ` -DCMAKE_INSTALL_PREFIX `
   or into a default folder (where you may need administrative privileges).
 
 
-Two parallel versions of the FFEA_runner, ` ffea ` and ` ffea_mb `, 
- as well as the ffeatools, ` ffeatools ` will be found 
- in ` $FFEA_HOME/bin `. Instructions on how to use them can be read 
+Two parallel versions of the FFEA_runner, `ffea` and `ffea_mb`, 
+ as well as the ffeatools, `ffeatools`  will be found 
+ in `$FFEA_HOME/bin `. Instructions on how to use them can be read 
  [here](\ref userManual) and [here](ffeamodules/html/index.html) respectively. 
- In addition, the ` ffeatools ` Python package will be found in 
- ` $FFEA_HOME/lib/python<version>/site-packages `.
+ <!--In addition, the ` ffeatools ` Python package will be found in 
+ `$FFEA_HOME/lib/python<version>/site-packages`.-->
 
 If you built the documentation you will be able to read it with a web browser, 
   and so if firefox was the browser of your choice, and you installed 
@@ -150,22 +153,27 @@ and in order to install it, one would need to run PyMOL, and then click on
 
 # Working environment {#workingEnvironment}
 
-Executing ` ffea `, ` ffea_mb ` and ` ffeatools ` is probably what most users will wish, so 
+Executing `ffea`, `ffea_mb` and `ffeatools` is probably what most users will wish, so 
  UNIX users may find convenient to add the install folder in the ` PATH `:
 
       export PATH=$FFEA_HOME/bin:$PATH
 
-In addition, in order to have direct access to the python modules that integrate 
- the FFEA tools, and specially to those users willing to write new measure tools,
- the ` PYTHONPATH ` environment variable should be also updated: 
-
-     export PYTHONPATH=$FFEA_HOME/lib/python<version>/site-packages
+In addition, in order to have direct access to the Python modules that integrate 
+ the FFEA tools, and especially to those users willing to write new measure tools,
+ a Python environment with the ffeatools package installed should be used.
      
-ffeatools provides a suite of command-line tools to initialise FFEA systems. FFEA also provides a python API to accomplish these tasks. You can install it by entering the ffea source folder and running 
+ffeatools provides a suite of command-line tools to initialise FFEA systems,
+via a Python API, therefore it is highly recommended for both FFEA users and developers.
 
-      python setup.py install
+When downloaded by CMake, ffeatools is automatically installed into a new Python venv with all the dependencies required by the test suite. This can be activated by navigating to `build/venv` and calling
+
+      source bin/activate
+
+Alternatively, you can install ffeatools into a different Python environment by entering ffeatools' source folder (e.g. `build/_deps/ffeatools-src`) and running 
+
+      pip3 install .
       
-The FFEA API may then be used within python by running `import ffeatools`. Note: KOBRA/FFEA_rod requires this module. Information on how to use `ffeatools` can be found in the [FFEA analysis tutorial](\ref FFEAanalysistut) and the [KOBRA/rods tutorial](\ref rods).
+The FFEA API may then be used within Python by running `import ffeatools`. Note: KOBRA/FFEA_rod requires this module. Information on how to use `ffeatools` can be found in the [FFEA analysis tutorial](\ref FFEAanalysistut) and the [KOBRA/rods tutorial](\ref rods).
 
  
 # Tests {#ctest}
@@ -174,7 +182,7 @@ You may now want to check that the code was correctly compiled.
  Do so running the provided suite of tests, either sequentially (using a single processor, 
  one tests after the other):
   
-     make test
+     cmake --build . --target test
 
 or concurrently (multiple tests running independently on different processors):
 
@@ -186,14 +194,14 @@ or concurrently (multiple tests running independently on different processors):
 The following configuration flags are either fundamental to CMake or specific to FFEA:
 
   * `-DCMAKE_INSTALL_PREFIX=<install_dir>`       -  (default /usr/local) installation directory
-  * `-DPYTHON_EXECUTABLE=<program>`     - (default /usr/bin/python) Python interpreter
-  * `-DCMAKE_BUILD_TYPE=<Debug|Release>` -  (default Release) build type
-  * `-DCMAKE_CXX_COMPILER=<program>`     -  (default g++)  C++ compiler.
+  * `-DPYTHON3_ROOT_DIR=<python_env_path>`     - (e.g. /usr/miniconda3/envs/ffea) Python interpreter
+  * `-DCMAKE_BUILD_TYPE=<Debug|Release|RelWithDebInfo>` -  (default Release) build type
+  <!--* `-DCMAKE_CXX_COMPILER=<program>`     -  (default g++)  C++ compiler.-->
 
-By default, CMake will use the subset of Boost we bundled, and will download 
- Eigen 3.3.7. If you want to use your own installations you can still do so
+By default, CMake download versions of Boost and Eigen that it has ben tested with. Additionally, it will download the latest FFEATools (e.g. the `master` branch). If you want to use your own installations you can still do so
  through:
   
+  * `-DUSE_FFEATOOLS_INTERNAL=<ON|OFF>` - default ` ON `
   * `-DUSE_BOOST_INTERNAL=<ON|OFF>` - default ` ON `
   * `-DUSE_EIGEN3_INTERNAL=<ON|OFF>` - default ` ON `
  
@@ -202,7 +210,7 @@ If you decide to do so, CMake will look for the required Boost and/or Eigen libr
  installed in a standard place, you can help CMake either through: 
 
   * ` -DCMAKE_PREFIX_PATH="Path-to-Eigen;Path-to-Boost" `,
-  * ` -DEIGEN_HOME="Path-to-Eigen" ` and  ` -DBOOST_ROOT="Path-to-Boost" `
+  * ` -DEIGEN_HOME="Path-to-Eigen" `, ` -DBOOST_ROOT="Path-to-Boost" `
   * or exporting environment variables ` EIGEN_HOME `  and ` BOOST_ROOT ` 
       to the corresponding software folders
 
