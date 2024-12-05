@@ -150,6 +150,17 @@ and in order to install it, one would need to run PyMOL, and then click on
   been installed but initialization failed `. All you need to do is 
   to restart PyMOL to use the plugin.
 
+# Docker
+
+A Dockerfile is provided, when built it creates a container where `ffea` is available on the command line, and `ffeatools` is available within Python.
+
+```sh
+# Build ffea docker container
+docker build -t ffea_docker .
+# Activate ffea docker container
+docker run -t ffea_docker bash
+```
+*(`sudo` may be required, depending on how you have installed docker)*
 
 # Working environment {#workingEnvironment}
 
