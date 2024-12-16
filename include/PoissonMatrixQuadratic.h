@@ -43,29 +43,21 @@
 
 class PoissonMatrixQuadratic {
 public:
-    PoissonMatrixQuadratic();
-
     scalar * get_K_alpha_mem_loc(int i, int j);
 
-    void build(mesh_node *n[10], scalar epsilon);
+    void build(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n, scalar epsilon);
 
     scalar get_K_alpha_value(int i, int j);
 
 private:
-    scalar K_alpha[NUM_ELEMENTS_LOWER_TRIANGULAR_10X10];
+    std::array<scalar, NUM_ELEMENTS_LOWER_TRIANGULAR_10X10> K_alpha = {};
 
     struct tetrahedron_gauss_point {
         scalar W;
-        scalar eta[4];
+        std::array<scalar, 4> eta;
     };
 
-    void add_grad_dot_products(vector3 grad_psi[10], scalar det_J, scalar weight);
-
-    scalar grad_dot(vector3 *grad_psi_i, vector3 *grad_psi_j);
-
-    void zero();
-
-    void scale(scalar factor);
+    void add_grad_dot_products(std::array<arr3, NUM_NODES_QUADRATIC_TET> &grad_psi, scalar det_J, scalar weight);
 };
 
 

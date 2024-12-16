@@ -1,0 +1,8 @@
+ffea rod vdw file
+num_sites 5
+vdw params:
+0, 0.000
+0, 0.250
+0, 0.500
+0, 0.750
+0, 1.000

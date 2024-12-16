@@ -28,13 +28,13 @@ from math import sqrt, pi
 ffeatoolsFound = False
 try:
     import ffeatools# python package
-    FFEA_script = ffeatools.modules.FFEA_script
+    FFEA_script = ffeatools.modules.FFEA_script.FFEA_script
     ffeatoolsFound = True
 except:
     try:
-        import FFEA_script
+        from ffeatools.ffea_script import ffea_script as FFEA_script
     except ImportError:
-        print("Failure to import FFEA_trajectory")
+        print("Failure to import FFEA_script")
         sys.exit(1) # failure to import
 
 
@@ -50,7 +50,7 @@ r = 10e-9
 ENDNODES = [60, 61, 63, 66, 67, 69, 72, 73, 75, 78, 79, 81, 84, 85, 87, 90, 91, 93, 96, 97, 99, 102, 103, 105, 108, 109, 111, 114, 116, 156, 160, 164, 168, 172, 176, 180, 184, 188, 4310, 4311, 4312, 4313, 4314, 4315, 4316, 4317, 4318, 4319, 4320, 4321, 4322, 4323, 4324, 4325, 4326, 4327, 4328, 4329, 4330, 4331, 4332, 4333, 4334, 4335, 4336, 4337, 4338, 4339, 4340, 4341, 4342, 4343, 4344, 4345, 4346, 4347, 4348, 4349, 4350, 4351, 4352, 4353, 4354, 4355, 4356, 4357, 4358, 4359, 4360, 4361, 4362, 4363, 4364, 4365, 4366, 4367, 4368, 4369, 4370, 4371, 4372, 4373, 4374, 4375, 4376, 4377, 4378, 4379, 4380, 4381, 4382, 4383, 4384, 4385, 4386, 4387, 4388, 4389, 4390, 4391, 4392, 4393, 4394, 4395, 4396, 4397, 4398, 4399, 4400, 4401]
 
 
-script = FFEA_script.FFEA_script(sfile)
+script = FFEA_script(sfile)
 
 trj = script.load_trajectory()
 
@@ -62,7 +62,7 @@ for f in range(trj.num_frames):
     CM += trj.blob[0][0].frame[f].pos[n]
   CM /= len(ENDNODES)
   if f == 0: CM0 = CM
-  print CM, sqrt( (CM[0] - CM0[0])**2 + (CM[1] - CM0[1])**2 + (CM[2] - CM0[2])**2 )
+  print(CM, sqrt( (CM[0] - CM0[0])**2 + (CM[1] - CM0[1])**2 + (CM[2] - CM0[2])**2 ))
 
 
 
@@ -81,10 +81,10 @@ dL = sqrt( (CM[1][0] - CM[0][0])**2 + (CM[1][1] - CM[0][1])**2 + (CM[1][2] - CM[
 ## ## ## Calculate the effective Young's modulus:
 E_c = F * L / (pi * r**2 * dL)
 
-print "E_c: ", E_c
-print "E_t: ", E_t
-print "E_c/E_t: ", E_c/E_t
-print "abs(E_c/E_t -1): ", abs(E_c/E_t -1)
+print("E_c: ", E_c)
+print("E_t: ", E_t)
+print("E_c/E_t: ", E_c/E_t)
+print("abs(E_c/E_t -1): ", abs(E_c/E_t -1))
 
 err = 0
 if (abs (E_c/E_t - 1) > 0.005):

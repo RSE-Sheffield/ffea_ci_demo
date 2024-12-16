@@ -40,7 +40,7 @@ for f in CPT:
 
 for i in range(2):
   if STA[0][i] != STA[1][i]:
-    print "checkpoint files: ", CPT[0], " and ", CPT[1], " should be exactly the same"
+    print("checkpoint files: ", CPT[0], " and ", CPT[1], " should be exactly the same")
     sys.exit(1)
 
 # measurements can be SLIGHTLY different, because the trajectory positions that will be used for restarts
@@ -71,10 +71,10 @@ for i in range(len(STA[0])):
     except(ZeroDivisionError):
         d = 0
     if d < Dmin: Dmin = d
-    if d > Dmax: Dmax = d 
-  
-print "DMax: ", Dmax
-print "Dmin: ", Dmin
+    if d > Dmax: Dmax = d
+
+print("DMax: ", Dmax)
+print("Dmin: ", Dmin)
 
 if (Dmax > 5e-4): # the max error I got using Intel and GCC and different compiler flags was < 2e-4.
   sys.exit(1)

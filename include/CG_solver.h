@@ -36,11 +36,11 @@ public:
     CG_solver();
     ~CG_solver();
 
-    int init(int N, scalar tol, int max_num_iterations);
+    void init(int N, scalar tol, int max_num_iterations);
 
-    int solve(SparseMatrixFixedPattern *A, scalar *x, scalar *b);
+    void solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b);
 
-    int solve(SparseMatrixFixedPattern *A, scalar *x, scalar *b, int num_iterations);
+    void solve(std::shared_ptr<SparseMatrixFixedPattern> &A, std::vector<scalar> &x, const std::vector<scalar> &b, int num_iterations);
 
 private:
 
@@ -50,27 +50,22 @@ private:
 
     int max_num_iterations; ///< Maximum number of iterations before giving up 
 
-    scalar *inv_M; ///< The preconditioner matrix (inverse of the diagonal)
+    std::vector<scalar>inv_M; ///< The preconditioner matrix (inverse of the diagonal)
 
-    scalar *d; ///< Vector needed for use by conjugate gradient solver
-    scalar *r; ///< Vector needed for use by conjugate gradient solver
-    scalar *q; ///< Vector needed for use by conjugate gradient solver
-    scalar *s; ///< Vector needed for use by conjugate gradient solver
+    std::vector<scalar> d; ///< Vector needed for use by conjugate gradient solver
+    std::vector<scalar> r; ///< Vector needed for use by conjugate gradient solver
+    std::vector<scalar> q; ///< Vector needed for use by conjugate gradient solver
+    std::vector<scalar> s; ///< Vector needed for use by conjugate gradient solver
 
-    scalar conjugate_gradient_residual(SparseMatrixFixedPattern *A, scalar *x, scalar *b);
+    scalar conjugate_gradient_residual(std::shared_ptr<SparseMatrixFixedPattern> &, const std::vector<scalar> &x, const std::vector<scalar> &b);
 
     scalar residual2();
 
-    void parallel_vector_add_self(scalar *v1, scalar a, scalar *v2);
+    void parallel_vector_add_self(std::vector<scalar> &v1, scalar a, const std::vector<scalar> &v2);
 
-    void parallel_vector_add(scalar *v1, scalar a, scalar *v2);
+    void parallel_vector_add(std::vector<scalar> &v1, scalar a, const std::vector<scalar> &v2);
 
     scalar parallel_apply_preconditioner();
-
-    void zero(scalar *v);
-
-    /** Returns the dot product of vectors a and b, of length N */
-    scalar dot(scalar *a, scalar *b);
 };
 
 #endif

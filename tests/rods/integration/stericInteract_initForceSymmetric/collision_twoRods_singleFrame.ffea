@@ -1,0 +1,58 @@
+<param>
+	<calc_steric_rod = 1>
+    <calc_noise = 0>
+    <restart = 0>
+    <dt = 1e-13>
+    <check = 1>
+    <num_steps = 1>
+    <rng_seed = time>
+    <trajectory_out_fname = outputs/del.ftj>
+    <measurement_out_fname = outputs/del.fm>
+    <checkpoint_out = outputs/del.fcp>
+    <epsilon = 0.01>
+    <max_iterations_cg = 1000>
+    <kappa = 2e9>
+    <epsilon_0 = 1>
+    <dielec_ext = 1>
+    <calc_stokes = 0>
+    <stokes_visc = 1e-03>
+    <calc_vdw = 0>
+    <calc_kinetics = 0>
+    <vdw_type = steric>
+    <vdw_cutoff = 5e-10>
+    <inc_self_vdw = 0>
+    <vdw_steric_factor = 2e3>
+    <calc_es = 0>
+    <es_update = 4>
+    <es_N_x = 50>
+    <es_N_y = 30>
+    <es_N_z = 30>
+    <sticky_wall_xz = 0>
+    <wall_x_1 = PBC>
+    <wall_x_2 = PBC>
+    <wall_y_1 = PBC>
+    <wall_y_2 = PBC>
+    <wall_z_1 = PBC>
+    <wall_z_2 = PBC>
+    <es_h = 1>
+    <num_blobs = 0>
+    <num_rods = 2>
+    <num_conformations = (1)>
+    <num_states = (1)>
+</param>
+<system>
+    <rod>
+            <input = z-axis.rod>
+            <output = outputs/1.rodtraj>
+            <centroid_pos = (0.0,0.0,0.0)>
+            <rotation = (0.00, 0.00, 0.00)>
+            <scale = 1>
+    </rod>
+    <rod>
+            <input = z-axis.rod>
+            <output = outputs/2.rodtraj>
+            <centroid_pos = (14.7, 0.0, 0.0)>   < ! -- 2.5 nm radius [FFEA units] -- >
+            <rotation = (1.57, 0.00, 0.00)>     < ! -- 1/2 pi rad -- >
+            <scale = 1>
+    </rod>
+</system>

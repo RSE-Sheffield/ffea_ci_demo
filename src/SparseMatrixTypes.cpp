@@ -23,26 +23,14 @@
 
 #include "SparseMatrixTypes.h" 
 
-sparse_entry_sources::sparse_entry_sources() {
-    num_sources = 0;
-    sources = NULL;
-}
+#include "FFEA_return_codes.h"
 
-sparse_entry_sources::~sparse_entry_sources() {
-    num_sources = 0;
-    delete[] sources;
-    sources = NULL;
-}
-
-int sparse_entry_sources::init(int num_sources) {
-    this->num_sources = num_sources;
-    sources = new scalar*[num_sources];
-
-    if (sources == NULL) {
-        FFEA_ERROR_MESSG("Could not allocate memory (for sources array)\n")
+void sparse_entry_sources::init(int num_sources) {
+    try {
+        sources = std::vector<scalar*>(num_sources);
+    } catch (std::bad_alloc &) {
+        throw FFEAException("Could not allocate memory (for sources array).");
     }
-
-    return FFEA_OK;
 }
 
 void sparse_entry_sources::set_source(int i, scalar *s) {
@@ -51,13 +39,13 @@ void sparse_entry_sources::set_source(int i, scalar *s) {
 
 scalar sparse_entry_sources::sum_all_sources() {
     scalar sum = 0.0;
-    for (int i = 0; i < num_sources; i++) {
+    for (int i = 0; i < sources.size(); i++) {
         sum += *(sources[i]);
     }
     return sum;
 }
 
 int sparse_entry_sources::get_num_sources() {
-    return num_sources;
+    return sources.size();
 }
 

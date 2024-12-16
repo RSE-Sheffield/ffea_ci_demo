@@ -70,7 +70,7 @@ class BindingSite{
 	private:
 
 		/** Centroid of the whole site (needs recalculating if simulation has continued) */
-		vector3 centroid;
+		arr3 centroid;
 
 		/** Area of the whole site (needs recalculating if simulation has continued) */
 		scalar area;
@@ -86,7 +86,7 @@ class BindingSite_matrix{
 		BindingSite_matrix();
 		~BindingSite_matrix();
 
-		int init(string fname);
+		void init(string fname);
 		int get_num_interaction_types();
 		void print_to_screen();
 
@@ -94,7 +94,7 @@ class BindingSite_matrix{
 		int num_interaction_types;
 		
 		/** 2D matrix defining allowed interactions between site types */
-		bool **interaction;
+		std::vector<std::vector<bool>> interaction;
 };
 
 #endif

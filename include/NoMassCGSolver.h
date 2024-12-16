@@ -48,18 +48,18 @@ public:
     ~NoMassCGSolver();
 
     /** Builds a sparse matrix pattern for blob viscosity matrix from initial structure. Doesn't build the matrix though, just the key and whatnot */
-    int init(int num_nodes, int num_elements, mesh_node *node, tetra_element_linear *elem, SimulationParams *params, int num_pinned_nodes, int *pinned_nodes_list, set<int> bsite_pinned_node_list);
+    void init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) override;
 
     /** Adds values to sparse viscosity matrix and uses it to solve the system Kv = f using conjugate gradient*/
-    int solve(vector3* x);
+    void solve(std::vector<arr3> &x) override;
 
     /* */
-    void print_matrices(vector3* force);
+    void print_matrices(std::vector<arr3> &x);
 
 private:
 
     /** Pointer to the viscosity matrix that will be created */
-    SparseMatrixFixedPattern *V;
+    std::shared_ptr<SparseMatrixFixedPattern> V;
 
     /** Error tolerance threshold (squared) to determine when solution has converged */
     scalar epsilon2;
@@ -74,22 +74,22 @@ private:
     int num_nodes;
 
     /** Jacobi preconditioner (inverse of the viscosity matrix diagonal) */
-    scalar *preconditioner;
+    std::vector<scalar> preconditioner;
 
     /** Work vectors */
-    vector3 *r, *p, *z, *q, *f;
+    std::vector<arr3> r, p, z, q, f;
 
     /** Unchanging memory locoation */
     scalar one;
 
     /* */
-    scalar conjugate_gradient_residual_assume_x_zero(vector3 *b);
+    scalar conjugate_gradient_residual_assume_x_zero(std::vector<arr3> &b);
 
     /* */
     scalar residual2();
 
     /* */
-    scalar modx(vector3 *x);
+    scalar modx(const std::vector<arr3> &x);
 
     scalar get_alpha_denominator();
 
@@ -97,11 +97,10 @@ private:
     scalar parallel_apply_preconditioner();
 
     /* */
-    void check(vector3 *x);
+    void check(const std::vector<arr3> &x);
 
     /* */
-    void apply_matrix(scalar *in, scalar *result) {
-    }
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) { }
 
 };
 

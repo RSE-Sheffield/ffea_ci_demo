@@ -1,4 +1,3 @@
-# 
 #  This file is part of the FFEA simulation package
 #  
 #  Copyright (c) by the Theory and Development FFEA teams,
@@ -41,3 +40,9 @@ add_subdirectory(connection_energy_3)
 add_subdirectory(connection_identify_face)
 add_subdirectory(jacobian_rotate)
 add_subdirectory(recover_normal)
+add_subdirectory(line_connecting_rod_elements)
+add_subdirectory(point_lies_within_rod_element)
+add_subdirectory(rod_neighbour_list_construction)
+add_subdirectory(rod_steric_lj_potential)
+add_subdirectory(nearest_image_pbc)
+add_subdirectory(rod_vdw_site_placement)

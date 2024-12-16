@@ -24,12 +24,15 @@
 #ifndef SPARSEMATRIXFIXEDPATTERN_H_INCLUDED
 #define SPARSEMATRIXFIXEDPATTERN_H_INCLUDED
 
+#include <iostream>
+#include <stdlib.h>
+#include <vector>
+#include <memory>
+
 #include "FFEA_return_codes.h"
 #include "mat_vec_types.h"
 #include "mat_vec_fns.h"
 #include "SparseMatrixTypes.h"
-#include <iostream>
-#include <stdlib.h>
 
 using namespace std;
 
@@ -39,54 +42,63 @@ public:
 
     ~SparseMatrixFixedPattern();
 
-    int init(int num_rows, int num_nonzero_elements, sparse_entry *entry, int *key, sparse_entry_sources *source_list);
-    int init(int num_rows, int num_entries, scalar *entries, int *key, int *col_indices);
+    /**
+     * \brief 
+     * \param num_rows 
+     * \param num_nonzero_elements 
+     * \param entry Pass me using std::move()
+     * \param key Pass me using std::move()
+     * \param source_list 
+     * \return 
+     */
+    void init(int num_rows, int num_nonzero_elements, std::vector<sparse_entry> &&entry, std::vector<int> &&key, std::vector<sparse_entry_sources> source_list);
+    void init(int num_rows, const std::vector<scalar> &entries, std::vector<int> &&key, const std::vector<int>& col_indices);
 
     /** Reconstruct the matrix by adding up all the contributions from the sources stored in the source list */
     void build();
 
     /** Applies this matrix to the given vector 'in', writing the result to 'result' */
-    void apply(scalar *in, scalar *result);
+    void apply(const std::vector<scalar> &in, std::vector<scalar> &result) const;
 
-    /** Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'vector3's */
-    void apply(vector3 *in, vector3 *result);
+    /** Applies this matrix to the given vector 'in', writing the result to 'result'. 'in' is made of 'arr3's */
+    void apply(const std::vector<arr3> &in, std::vector<arr3> &result) const;
 
-    /** Applies each matrix element to vector i.e. each vector3 acts as a scalar */
-    void block_apply(vector3 *in, vector3 *result);
+    /** Applies each matrix element to vector i.e. each arr3 acts as a scalar */
+    void block_apply(const std::vector<arr3> &in, std::vector<arr3> &result) const;
     
-    /** Applies this matrix to the give vector 'in', writing the result to 'result'. 'in' is made of '*vector3's */
-    void block_apply(vector3 **in, vector3 **result);
+    /** Applies this matrix to the give vector 'in', writing the result to 'result'. 'in' is made of '*arr3's */
+    void block_apply(const std::vector<arr3*> &in, std::vector<arr3*> &result) const;
 
     /** Applies matrix to vector in and leaves result in in */
-    void block_apply(vector3 **in);
+    void block_apply(vector<arr3*> &in) const;
 
      /** Applies this matrix to the given sparse matrix 'in', and returns a new sparse matrix */
-    SparseMatrixFixedPattern * apply(SparseMatrixFixedPattern *in);
+    std::shared_ptr<SparseMatrixFixedPattern> apply(std::shared_ptr<SparseMatrixFixedPattern> &in) const;
 
-    void calc_inverse_diagonal(scalar *inv_D);
+    void calc_inverse_diagonal(std::vector<scalar> &inv_D) const;
 
-    void print();
+    void print() const;
 
-    void print_dense();
+    void print_dense() const;
 
     /** Prints dense matrix out to file for analysis. I suggest only letting this function run once (step = 1?) */
-    void print_dense_to_file(vector3 *a);
+    void print_dense_to_file(std::vector<arr3> &a) const;
 
-    void print_row_column();
+    void print_row_column() const;
 
-    void check_symmetry();
+    void check_symmetry() const;
 
-    void am_i_diagonally_dominant();
+    void am_i_diagonally_dominant() const;
 
-    sparse_entry * get_entries();
+    std::vector<sparse_entry> &get_entries();
 
-    int * get_key();
+    std::vector<int> &get_key();
 
-    int get_num_nonzero_elements();
+    int get_num_nonzero_elements() const;
 
-    int get_num_rows();
+    int get_num_rows() const;
 
-    int get_num_columns();
+    int get_num_columns() const;
 
 private:
 
@@ -97,16 +109,16 @@ private:
     int num_nonzero_elements;
 
     /** The offdiagonal matrix element values and column positions */
-    sparse_entry *entry;
+    std::vector<sparse_entry> entry;
 
     /** The key (array of integers, indices to the start of each row in entry array) */
-    int *key;
+    std::vector<int> key;
 
     /** An array of pointers to the diagonal elements of the matrix (for fast calculation of inverse diagonal) */
-    scalar **diagonal;
+    std::vector<scalar *>diagonal;
 
     /** Lists the source of contributions to each corresponding entry in the entry array */
-    sparse_entry_sources *source_list;
+    std::vector<sparse_entry_sources> source_list;
 };
 
 #endif

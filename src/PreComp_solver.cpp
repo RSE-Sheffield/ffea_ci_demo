@@ -31,63 +31,6 @@
 using std::cout;
 using std::endl; 
 
-const int PreComp_solver::adjacent_cells[27][3] = {
-        {-1, -1, -1},
-        {-1, -1, 0},
-        {-1, -1, +1},
-        {-1, 0, -1},
-        {-1, 0, 0},
-        {-1, 0, +1},
-        {-1, +1, -1},
-        {-1, +1, 0},
-        {-1, +1, +1},
-        {0, -1, -1},
-        {0, -1, 0},
-        {0, -1, +1},
-        {0, 0, -1},
-        {0, 0, 0},
-        {0, 0, +1},
-        {0, +1, -1},
-        {0, +1, 0},
-        {0, +1, +1},
-        {+1, -1, -1},
-        {+1, -1, 0},
-        {+1, -1, +1},
-        {+1, 0, -1},
-        {+1, 0, 0},
-        {+1, 0, +1},
-        {+1, +1, -1},
-        {+1, +1, 0},
-        {+1, +1, +1}
-};
-
-PreComp_solver::PreComp_solver() { 
-  nint = 0;
-  msgc = 0;
-  n_beads = 0;
-  num_blobs = 0;
-  U = NULL;
-  F = NULL; 
-  isPairActive = NULL;
-  b_types = NULL;
-  fieldenergy = NULL;
-} 
-
-/** @brief destructor: deallocates pointers. */
-PreComp_solver::~PreComp_solver() {
-  delete[] U;
-  delete[] F;
-  delete[] isPairActive;
-  delete[] b_types;
-  if (n_beads > 0) {
-    delete[] b_elems; 
-  }
-  delete[] fieldenergy;
-  fieldenergy = NULL;
-  num_blobs = 0;
-}
-
-
 int PreComp_solver::msg(int whatever){
   cout << "--- PreComp " << msgc << ": " << whatever << endl;
   msgc += 1;
@@ -116,19 +59,7 @@ void PreComp_solver::reset_fieldenergy() {
     }
 }
 
-
-/** 
- * @brief Read input precomputed tables
- * @param[in] vector<string> types: types of beads present.
- * @param[in] int inputData: 1 means read .force and .pot files,
- *                 while 2 means read .pot and calculate the forces
- * @details read <type_i>-<type_j>.force and <type_i>-<type_j>.pot files
- *         for all the possible pairs, setting up the potential functions.
- *         All the .pot and .force files need to have the same x_range
- *         same Dx, and same number of points. It is allowed, however, that 
- *         they have a different number of lines at the beginning starting with "#". 
- */        
-int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Blob **blob_array) {
+void PreComp_solver::init(const PreComp_params *pc_params, const SimulationParams *params, Blob **blob_array) {
 
    /* Firstly, we get the number of lines, x_range, 
     * and Dx from the first pair type potential file. 
@@ -146,19 +77,16 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    // do two simple checks: 
    //  1: number of types is greater than 0
    if (pc_params->types.size() == 0) {
-     FFEA_ERROR_MESSG("\n Number of bead types is Zero:\n\t correct it, or change to calc_PreComp = 0\n"); 
-     return FFEA_ERROR;
+       throw FFEAException("\n Number of bead types is Zero:\n\t correct it, or change to calc_PreComp = 0.");
    } 
    //  2: the folder exists:
-   b_fs::path p = pc_params->folder;
-   if (b_fs::exists(p)) {
-     if (!b_fs::is_directory(p)) {
-       FFEA_ERROR_MESSG("\n Folder %s is not a folder\n", pc_params->folder.c_str());
-       return FFEA_ERROR;
+   fs::path p = pc_params->folder;
+   if (fs::exists(p)) {
+     if (!fs::is_directory(p)) {
+         throw FFEAException("\n Folder %s is not a folder.", pc_params->folder.c_str());
      }
    } else {
-     FFEA_ERROR_MESSG("\n Folder %s does not exist\n", pc_params->folder.c_str());
-     return FFEA_ERROR;
+       throw FFEAException("\n Folder %s does not exist.", pc_params->folder.c_str());
    } 
     
 
@@ -168,8 +96,11 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
     num_threads = 1;
 #endif 
     num_blobs = params->num_blobs;
-    fieldenergy = new(std::nothrow) scalar[num_threads*num_blobs*num_blobs];
-    if (fieldenergy == NULL) FFEA_ERROR_MESSG("Failed to allocate memory for fieldenergy in PreCompSolver\n"); 
+    try {
+        fieldenergy = std::vector<scalar>(num_threads * num_blobs * num_blobs);
+    } catch (std::bad_alloc &) {
+       throw FFEAException("Failed to allocate memory for fieldenergy in PreCompSolver.");
+    }
 
    stringstream ssfile; 
    ifstream fin;
@@ -206,8 +137,7 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    end_loop:
    // and if no file was found, protest!
    if (findSomeFile == false) {
-     FFEA_ERROR_MESSG("Failed to open any file potential file in folder: %s\n", pc_params->folder.c_str());
-     return FFEA_ERROR;
+        throw FFEAException("Failed to open any file potential file in folder: %s.", pc_params->folder.c_str());
    } 
    /* read the first file, and get the number of lines
     * (n_values), Dx, and x_range */
@@ -216,8 +146,7 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    ssfile << pc_params->folder << "/" << pc_params->types[eti] << "-" << pc_params->types[etj] << ".pot";
    fin.open(ssfile.str());
    if (fin.fail()) {
-        FFEA_FILE_ERROR_MESSG(ssfile.str().c_str());
-        return FFEA_ERROR;
+        throw FFEAFileException(ssfile.str().c_str());
    }
    // get the first line that does not start with "#"
    getline(fin, line);
@@ -240,35 +169,32 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
       boost::split( vec_line, line, boost::is_any_of(" \t"), boost::token_compress_on);
       x = stod(vec_line[0]); 
       if (fabs(Dx - x + x_0) > 1e-6) { 
-        FFEA_error_text();
-        msg("Aborting: delta x was found to be non-uniform in:");
-        msg(ssfile.str());
-        return FFEA_ERROR;
+          throw FFEAException("Aborting: delta x was found to be non-uniform in: %s", ssfile.str().c_str());
       } 
       x_0 = x; 
    }  
    fin.close();
 
-
    /*--------- SECONDLY ----------*/ 
    // allocate:
-   U = new(std::nothrow) scalar[n_values * nint];    
-   F = new(std::nothrow) scalar[n_values * nint];    
-   isPairActive = new(std::nothrow) bool[ntypes * ntypes]; 
-   if (U == NULL || F == NULL || isPairActive == NULL) FFEA_ERROR_MESSG("Failed to allocate memory for arrays in PreComp_solver::init\n"); 
+   try {
+       U = std::vector<scalar>(n_values * nint);
+       F = std::vector<scalar>(n_values * nint);
+       isPairActive = std::vector<bool>(n_values * nint);
+   } catch (std::bad_alloc &) {
+       throw FFEAException("Failed to allocate memory for arrays in PreComp_solver::init.");
+   }
       
    // and load potentials and forces:
-   if (read_tabulated_values(*pc_params, "pot", U, pc_params->E_to_J / mesoDimensions::Energy)) return FFEA_ERROR;
+   read_tabulated_values(*pc_params, "pot", U, pc_params->E_to_J / mesoDimensions::Energy);
    if (pc_params->inputData == 1) {
      // scalar F_to_Jm = pc_params->E_to_J / pc_params->dist_to_m;
      scalar F_scale = ( pc_params->E_to_J / pc_params->dist_to_m ) / mesoDimensions::force;
-     if (read_tabulated_values(*pc_params, "force", F, F_scale)) return FFEA_ERROR;
+     read_tabulated_values(*pc_params, "force", F, F_scale);
    } else if (pc_params->inputData == 2) {
-     calc_force_from_pot();
+        calc_force_from_pot();
    } else {
-     FFEA_error_text();
-     msg("invalid value for precomp->inputData");
-     return FFEA_ERROR;
+        throw FFEAException("--- PreComp: invalid value for precomp->inputData");
    }
    Dx = Dx * pc_params->dist_to_m / mesoDimensions::length ;
    x_range[0] = x_range[0] * pc_params->dist_to_m / mesoDimensions::length; 
@@ -280,35 +206,34 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
 
    /*------------ THIRDLY --------*/
    // allocate the list of elements that have a bead will use: 
-   for (int i=0; i < params->num_blobs; i ++) {
-     // we only consider one conformation per blob.
-     if (params->num_conformations[i] > 1) {
-       FFEA_error_text();
-       msg("currently PreComp only deals with a single conformation per blob");
-       return FFEA_ERROR;
-     }
+    for (int i=0; i < params->num_blobs; i ++) {
+        // we only consider one conformation per blob.
+        if (params->num_conformations[i] > 1) {
+            throw FFEAException("--- PreComp: currently PreComp only deals with a single conformation per blob");
+        }
      n_beads += blob_array[i][0].get_num_beads();
-   } 
+    } 
    // Check that we have some beads!:
    if (n_beads == 0) {
-      FFEA_error_text(); 
-      msg(" ABORTING: The total number of beads is 0, but PreComp_calc was set to 1.");
-      return FFEA_ERROR;
+      throw FFEAException("--- PreComp: The total number of beads is 0, but PreComp_calc was set to 1.");
    }
-   b_elems = new(std::nothrow) TELPtr[n_beads];
-   // allocate the array that store the relative positions 
-   //    of the beads to the elements where they belong to. 
-   b_rel_pos = new(std::nothrow) scalar[n_beads*3];
-   // allocate the array to compute the absolute positions of the beads:
-   b_pos = new(std::nothrow) scalar[n_beads*3];
-   // and allocate the bead types: 
-   b_types = new(std::nothrow) int[n_beads]; 
-   if (b_elems == NULL || b_rel_pos == NULL || b_pos == NULL || b_types == NULL) FFEA_ERROR_MESSG("Failed to allocate memory for array beads in PreComp_solver::init\n"); 
+   try {
+       b_elems = std::vector<TELPtr>(n_beads);
+       // allocate the array that store the relative positions 
+       //    of the beads to the elements where they belong to. 
+       b_rel_pos = std::vector<scalar>(n_beads * 3);
+       // allocate the array to compute the absolute positions of the beads:
+       b_pos = std::vector<scalar>(n_beads * 3);
+       // and allocate the bead types: 
+       b_types = std::vector<int>(n_beads);
+   } catch (std::bad_alloc &) {
+       throw FFEAException("Failed to allocate memory for array beads in PreComp_solver::init");
+   }
    
 
    /*------------ FOURTHLY --------*/
    // get the elements of the list of "elements" that we will use: 
-   vector3 u, v, w; 
+   arr3 u, v, w; 
    tetra_element_linear *e;
    matrix3 J, J_inv; // will hold the Jacobian for the current element. 
    scalar det;  // determinant for J.
@@ -322,11 +247,11 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
      vector<vector<int>> sorting_pattern; 
      // store the bead types: 
      n = blob_array[i][0].get_num_beads();
-     memcpy(&b_types[m], blob_array[i][0].get_bead_type_ptr(), n*sizeof(int));
+     memcpy(&b_types[m], blob_array[i][0].get_bead_types().data(), n * sizeof(int));
 
      // for each bead within this blob (remember that we only deal with conf 0):
      for (int j=0; j < n; j++) {
-       blob_array[i][0].get_bead_position(j, v.data);
+       blob_array[i][0].get_bead_position(j, v);
        vector<int> b_assignment = blob_array[i][0].get_bead_assignment(j); 
        d2_0 = 1e9;
        int mj = m+j;
@@ -346,9 +271,9 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
          } 
          if (work == false) continue;
          e->calc_centroid();
-         d2 = (e->centroid.x - v.x)*(e->centroid.x - v.x) + 
-              (e->centroid.y - v.y)*(e->centroid.y - v.y) + 
-              (e->centroid.z - v.z)*(e->centroid.z - v.z);
+         d2 = (e->centroid[0] - v[0])*(e->centroid[0] - v[0]) + 
+              (e->centroid[1] - v[1])*(e->centroid[1] - v[1]) + 
+              (e->centroid[2] - v[2])*(e->centroid[2] - v[2]);
        
          if (d2 < d2_0) {
            d2_0 = d2;
@@ -376,25 +301,25 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
        //   as a fraction of the basis vectors length.
        b_elems[mj]->calculate_jacobian(J); 
        mat3_invert(J, J_inv, &det);
-       arr3arr3Substract<scalar,arr3>(v.data, b_elems[mj]->n[0]->pos.data, w.data);
+       sub(v, b_elems[mj]->n[0]->pos, w);
        vec3_mat3_mult(w, J_inv, u); 
        // now u has the relative coordinates, not under unit vectors
        //    but under full length vectors. And we store them:
-       b_rel_pos[3*mj] = u.x;
-       b_rel_pos[3*mj+1] = u.y;
-       b_rel_pos[3*mj+2] = u.z;
-       // cout << "0ead " << mj << " in: " << v.x << ", " << v.y << ", " << v.z << endl;
+       b_rel_pos[3*mj] = u[0];
+       b_rel_pos[3*mj+1] = u[1];
+       b_rel_pos[3*mj+2] = u[2];
+       // cout << "0ead " << mj << " in: " << v[0] << ", " << v[1] << ", " << v[2] << endl;
 
        // ESSENTIAL printout to relate beads to nodes!! 
        //   in case of being required.
        scalar l = mesoDimensions::length;
        stringstream beadsToNodes;
        beadsToNodes << "bead type: " << b_types[m+j] <<  ", position " <<
-                        v.x*l << ":" <<  v.y*l << ":" << v.z*l << " in element " <<
+                        v[0]*l << ":" <<  v[1]*l << ":" << v[2]*l << " in element " <<
                         b_elems[m+j]->n[0]->index << ":" << b_elems[m+j]->n[1]->index
                     <<  b_elems[m+j]->n[2]->index << ":" << b_elems[m+j]->n[3]->index
-                    <<  " position " << b_elems[m+j]->centroid.x*l << ":" <<
-                        b_elems[m+j]->centroid.y*l << ":" << b_elems[m+j]->centroid.z*l
+                    <<  " position " << b_elems[m+j]->centroid[0]*l << ":" <<
+                        b_elems[m+j]->centroid[1]*l << ":" << b_elems[m+j]->centroid[2]*l
                     <<  " - distance: " << sqrt(d2_0)*l << ", 2ndOE: " <<
                         b_elems[m+j]->n[4]->index << ":" << b_elems[m+j]->n[5]->index 
                     << ":" << b_elems[m+j]->n[6]->index << ":" <<
@@ -403,19 +328,19 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
        print_high(beadsToNodes.str());
        /*
        //  prove it: v =? s
-       vector3 s, e1, e2, e3;
+       arr3 s, e1, e2, e3;
        vec3_vec3_subs(&b_elems[mj]->n[1]->pos, &b_elems[m+j]->n[0]->pos, &e1);
        vec3_vec3_subs(&b_elems[mj]->n[2]->pos, &b_elems[m+j]->n[0]->pos, &e2);
        vec3_vec3_subs(&b_elems[mj]->n[3]->pos, &b_elems[m+j]->n[0]->pos, &e3);
        s.x = b_elems[mj]->n[0]->pos.x + u.x*e1.x + u.y*e2.x + u.z*e3.x;
        s.y = b_elems[mj]->n[0]->pos.y + u.x*e1.y + u.y*e2.y + u.z*e3.y;
        s.z = b_elems[mj]->n[0]->pos.z + u.x*e1.z + u.y*e2.z + u.z*e3.z;
-       print_vector3(v);
-       print_vector3(s);
+       print_arr3(v);
+       print_arr3(s);
        s.x = b_elems[mj]->n[0]->pos.x + u.x*J[0][0] + u.y*J[1][0] + u.z*J[2][0];
        s.y = b_elems[mj]->n[0]->pos.y + u.x*J[0][1] + u.y*J[1][1] + u.z*J[2][1];
        s.z = b_elems[mj]->n[0]->pos.z + u.x*J[0][2] + u.y*J[1][2] + u.z*J[2][2];
-       print_vector3(s);
+       print_arr3(s);
        */
 
        /* the following is useless but useful while testing:
@@ -445,9 +370,9 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
        b_types[swap_low] = b_types[swap_high];
        b_types[swap_high] = tmp_type;
 
-       arr3Store<scalar,arr3>( arr3_view<scalar,arr3>(b_rel_pos+3*swap_low,3), tmp_pos); 
-       arr3Store<scalar,arr3>( arr3_view<scalar,arr3>(b_rel_pos+3*swap_high,3), arr3_view<scalar,arr3>(b_rel_pos+3*swap_low,3) ); 
-       arr3Store<scalar,arr3>( tmp_pos, arr3_view<scalar,arr3>(b_rel_pos+3*swap_high,3)); 
+       store( arr_view<scalar,3>(b_rel_pos, 3*swap_low), tmp_pos); 
+       store( arr_view<scalar,3>(b_rel_pos, 3*swap_high), arr_view<scalar,3>(b_rel_pos, 3*swap_low) ); 
+       store( tmp_pos, arr_view<scalar,3>(b_rel_pos, 3*swap_high)); 
 
        for (int k=j; k<n; k++) {
          if (sorting_pattern[k][1] == swap_low) {
@@ -461,10 +386,13 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    }
 
    // now set up the map and create a list of unique elements.
-   b_forces = new(std::nothrow) scalar[3*n_beads]; 
-   map_e_to_b = new(std::nothrow) int[2*num_diff_elems]; 
-   b_unq_elems = new(std::nothrow) TELPtr[num_diff_elems];
-   if (b_forces == NULL || b_unq_elems == NULL || map_e_to_b == NULL) FFEA_ERROR_MESSG("Failed to allocate memory for supplementary array beads in PreComp_solver::init\n"); 
+   try {
+       b_forces = std::vector<scalar>(3 * n_beads);
+       map_e_to_b = std::vector<int>(2 * num_diff_elems);
+       b_unq_elems = std::vector<TELPtr>(num_diff_elems);
+   } catch (std::bad_alloc &) {
+       throw FFEAException("Failed to allocate memory for supplementary array beads in PreComp_solver::init.");
+   }
    m = 0; 
    int cnt = 0;
    for (int i=0; i < params->num_blobs; i ++) {
@@ -498,8 +426,11 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    // even if we have the elems, pointing to blob_index, 
    //   it may better to just store the indices, 
    //   so that b_elems can be removed some day (and used only for debugging purposes). 
-   b_daddyblob = new(std::nothrow) int[n_beads]; 
-   if (b_daddyblob == NULL) FFEA_ERROR_MESSG("Failed to allocate memory for daddy beads array in PreComp_solver::init\n");
+   try {
+       b_daddyblob = std::vector<int>(n_beads); 
+   } catch (std::bad_alloc &) {
+       throw FFEAException("Failed to allocate memory for daddy beads array in PreComp_solver::init.");
+   }
    for (int i=0; i<n_beads; i++) {
       b_daddyblob[i] = b_elems[i]->daddy_blob->blob_index;
    } 
@@ -528,40 +459,30 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    for (int i=0; i<3; i++) {
      pcVoxelsInBox[i] = dimBox[i] / pcVoxelSize; 
      if (pcVoxelsInBox[i] == 0) {
-       FFEA_ERROR_MESSG("ERROR! Zero voxels were allocated in the %d th direction.", i);
+         throw FFEAException("Zero voxels were allocated in the %d th direction.", i);
      }
    }
    printf("... with %d x %d x %d voxels of size %f, while vdwVoxelSize was %f and pc_range %f\n",
                    pcVoxelsInBox[0], pcVoxelsInBox[1], pcVoxelsInBox[2], pcVoxelSize, vdwVoxelSize, x_range[1]); 
-   int lookup_error = FFEA_OK;
+
 #ifdef FFEA_PARALLEL_FUTURE
-   lookup_error = pcLookUp.alloc_dual(pcVoxelsInBox[0], pcVoxelsInBox[1], pcVoxelsInBox[2], n_beads);
+   pcLookUp.alloc_dual(pcVoxelsInBox[0], pcVoxelsInBox[1], pcVoxelsInBox[2], n_beads);
 #else
-   lookup_error = pcLookUp.alloc(pcVoxelsInBox[0], pcVoxelsInBox[1], pcVoxelsInBox[2], n_beads);
+   pcLookUp.alloc(pcVoxelsInBox[0], pcVoxelsInBox[1], pcVoxelsInBox[2], n_beads);
 #endif
-   if (lookup_error == FFEA_ERROR) {
-       FFEA_error_text();
-       printf("When allocating memory for the PC nearest neighbour lookup grid\n");
-       return FFEA_ERROR;
-   }
 
 
    // 5.2 - store indices in there:
    for (int i=0; i<n_beads; i++) {
 #ifdef FFEA_PARALLEL_FUTURE
-     lookup_error = pcLookUp.add_to_pool_dual(NULL);
+     pcLookUp.add_to_pool_dual(nullptr);
 #else
-     lookup_error = pcLookUp.add_to_pool(NULL);
+     pcLookUp.add_to_pool(nullptr);
 #endif
-     if (lookup_error == FFEA_ERROR) {
-        FFEA_error_text();
-        printf("When attempting to add a face to the PC lookup pool\n");
-        return FFEA_ERROR;
-     }
    } 
    // one last check: see if all beads were stored.
    if (pcLookUp.get_pool_size() != n_beads) {
-      FFEA_ERROR_MESSG(" The number of beads in the LinkedList %d is not the same as the total number of beads %d", pcLookUp.get_pool_size(), n_beads); 
+      throw FFEAException(" The number of beads in the LinkedList %d is not the same as the total number of beads %d.", pcLookUp.get_pool_size(), n_beads); 
    }
 
    // 5.3 - We cannot compute_bead_positions here because the system is not into the box yet.
@@ -571,49 +492,45 @@ int PreComp_solver::init(PreComp_params *pc_params, SimulationParams *params, Bl
    /*------------ SIXTHLY ---:O---*/
    //  in case we're writing the trajectory for the beads we need to keep some data:
    if (params->trajbeads_fname_set == 1) {
-      stypes = pc_params->types; 
-      b_blob_ndx = new(std::nothrow) int[n_beads];
-      b_elems_ndx = new(std::nothrow) int[n_beads];
-      if (b_blob_ndx == NULL || b_elems_ndx == NULL) FFEA_ERROR_MESSG("Failed to allocate memory for beads details to write trajectory in PreComp_solver::init\n"); 
+      stypes = pc_params->types;
+       try {
+           b_blob_ndx = std::vector<int>(n_beads);
+           b_elems_ndx = std::vector<int>(n_beads);
+       } catch (std::bad_alloc &) {
+           throw FFEAException("Failed to allocate memory for beads details to write trajectory in PreComp_solver::init.");
+       }
       for (int i=0; i<n_beads; i++){ 
         b_elems_ndx[i] = b_elems[i]->index;
         b_blob_ndx[i] = b_elems[i]->daddy_blob->blob_index;
       } 
-   } 
-
+   }
 
    cout << "done!" << endl;
-
-   return FFEA_OK; 
 }
 
-int PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=NULL*/){
-
+void PreComp_solver::solve_using_neighbours_non_critical(const std::vector<scalar> &blob_corr){
     scalar d, f_ij; //, f_ijk_i, f_ijk_j; 
-    vector3 dx, dtemp, dxik;
+    arr3 dx, dxik;
     int type_i; 
-    scalar phi_i[4]; 
-    tetra_element_linear *e_i, *e_j;
+    std::array<scalar, 4> phi_i; 
+    tetra_element_linear* e_i;
 
     // 0 - clear fieldenery:
     reset_fieldenergy(); 
     //   - and reset b_forces!
     for (int i=0; i<3*n_beads; i++) {
       b_forces[i] = 0.;
-    } 
-
+    }
 
     // 1 - Compute the position of the beads:
     compute_bead_positions();
 
-
     // 2 - Compute all the i-j forces:
-    LinkedListNode<int> *b_i = NULL; 
-    LinkedListNode<int> *b_j = NULL; 
+    LinkedListNode<int> *b_i, *b_j;
     int b_index_i, b_index_j; 
     int daddy_i, daddy_j;
 #ifdef USE_OPENMP
-#pragma omp parallel default(none) shared(blob_corr) private(type_i,phi_i,e_i,e_j,dx,dxik,d,dtemp,f_ij,b_i,b_j,b_index_i,b_index_j,daddy_i, daddy_j)
+#pragma omp parallel default(none) shared(blob_corr) private(type_i,phi_i,e_i,dx,dxik,d,f_ij,b_i,b_j,b_index_i,b_index_j,daddy_i, daddy_j)
     {
     int thread_id = omp_get_thread_num(); 
     #pragma omp for
@@ -633,7 +550,7 @@ int PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=NULL
                                         b_i->y + adjacent_cells[c][1],
                                         b_i->z + adjacent_cells[c][2]);
   
-        while (b_j != NULL) {
+        while (b_j != nullptr) {
            b_index_j = b_j->index;
            if (b_index_j == b_index_i) {
              b_j = b_j->next; 
@@ -646,16 +563,16 @@ int PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=NULL
            }
 
            daddy_j = b_daddyblob[b_index_j];
-           if (blob_corr == NULL) {
-             dx.x = (b_pos[3*b_index_j  ] - b_pos[3*b_index_i  ]);
-             dx.y = (b_pos[3*b_index_j+1] - b_pos[3*b_index_i+1]);
-             dx.z = (b_pos[3*b_index_j+2] - b_pos[3*b_index_i+2]);
+           if (blob_corr.empty()) {
+             dx[0] = (b_pos[3*b_index_j  ] - b_pos[3*b_index_i  ]);
+             dx[1] = (b_pos[3*b_index_j+1] - b_pos[3*b_index_i+1]);
+             dx[2] = (b_pos[3*b_index_j+2] - b_pos[3*b_index_i+2]);
            } else {
-             dx.x = (b_pos[3*b_index_j  ] - blob_corr[3*(daddy_i*num_blobs + daddy_j)   ] - b_pos[3*b_index_i  ]);
-             dx.y = (b_pos[3*b_index_j+1] - blob_corr[3*(daddy_i*num_blobs + daddy_j) +1] - b_pos[3*b_index_i+1]);
-             dx.z = (b_pos[3*b_index_j+2] - blob_corr[3*(daddy_i*num_blobs + daddy_j) +2] - b_pos[3*b_index_i+2]);
+             dx[0] = (b_pos[3*b_index_j  ] - blob_corr[3*(daddy_i*num_blobs + daddy_j)   ] - b_pos[3*b_index_i  ]);
+             dx[1] = (b_pos[3*b_index_j+1] - blob_corr[3*(daddy_i*num_blobs + daddy_j) +1] - b_pos[3*b_index_i+1]);
+             dx[2] = (b_pos[3*b_index_j+2] - blob_corr[3*(daddy_i*num_blobs + daddy_j) +2] - b_pos[3*b_index_i+2]);
            }
-           d = dx.x*dx.x + dx.y*dx.y + dx.z*dx.z; 
+           d = dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2]; 
            if (d > x_range2[1]) {
              b_j = b_j->next; 
              continue; 
@@ -665,13 +582,13 @@ int PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=NULL
              continue; 
            }
            d = sqrt(d);
-           dx.x = dx.x / d;
-           dx.y = dx.y / d;
-           dx.z = dx.z / d;
+           dx[0] = dx[0] / d;
+           dx[1] = dx[1] / d;
+           dx[2] = dx[2] / d;
  
            f_ij = get_F(d, type_i, b_types[b_index_j]); 
            // += the force: 
-           arr3Resize3<scalar,arr3>(f_ij, dx.data, arr3_view<scalar,arr3>(b_forces+3*b_index_i, 3) );
+           resize3(f_ij, dx, arr_view<scalar,3>(b_forces, 3*b_index_i) );
 
            // e_j = b_elems[b_index_j];
            // fieldenergy[(thread_id*num_blobs + e_i->daddy_blob->blob_index) * num_blobs + e_j->daddy_blob->blob_index] += 0.5*get_U(d, type_i, b_types[b_index_j]);
@@ -696,38 +613,32 @@ int PreComp_solver::solve_using_neighbours_non_critical(scalar *blob_corr/*=NULL
 
         // fix input force:
         for (int k=0; k<4; k++) {
-          arr3Resize2<scalar,arr3>(-phi_i[k], arr3_view<scalar,arr3>(b_forces+3*b_index_i, 3), dxik.data); 
-          e_i->add_force_to_node(k, &dxik);
+          resize2(-phi_i[k], arr_view<scalar,3>(b_forces, 3*b_index_i), dxik); 
+          e_i->add_force_to_node(k, dxik);
         } // close k, nodes for the elements.
       }
     } 
 #ifdef USE_OPENMP
     }
 #endif
- 
-    return FFEA_OK;
 }
 
 
-int PreComp_solver::solve_using_neighbours(){
-
+void PreComp_solver::solve_using_neighbours() {
     scalar d, f_ij; //, f_ijk_i, f_ijk_j; 
-    vector3 dx, dtemp, dxik, dxjk;
+    arr3 dx, dtemp, dxik, dxjk;
     int type_i; 
-    scalar phi_i[4], phi_j[4];
+    std::array<scalar, 4> phi_i, phi_j;
     tetra_element_linear *e_i, *e_j;
 
     // 0 - clear fieldenery:
     reset_fieldenergy(); 
 
-
     // 1 - Compute the position of the beads:
     compute_bead_positions();
 
-
     // 2 - Compute all the i-j forces:
-    LinkedListNode<int> *b_i = NULL; 
-    LinkedListNode<int> *b_j = NULL; 
+    LinkedListNode<int> *b_i, *b_j;
     int b_index_i, b_index_j; 
 #ifdef USE_OPENMP
 #pragma omp parallel default(none) private(type_i,phi_i,phi_j,e_i,e_j,dx,d,dtemp,f_ij,b_i,b_j,b_index_i,b_index_j,dxik,dxjk)
@@ -753,7 +664,7 @@ int PreComp_solver::solve_using_neighbours(){
                                         b_i->y + adjacent_cells[c][1],
                                         b_i->z + adjacent_cells[c][2]);
   
-        while (b_j != NULL) {
+        while (b_j != nullptr) {
            b_index_j = b_j->index;
            if (b_index_j <= b_index_i) {
              b_j = b_j->next; 
@@ -764,10 +675,10 @@ int PreComp_solver::solve_using_neighbours(){
              b_j = b_j->next; 
              continue; 
            }
-           dx.x = (b_pos[3*b_index_j  ] - b_pos[3*b_index_i  ]);
-           dx.y = (b_pos[3*b_index_j+1] - b_pos[3*b_index_i+1]);
-           dx.z = (b_pos[3*b_index_j+2] - b_pos[3*b_index_i+2]);
-           d = dx.x*dx.x + dx.y*dx.y + dx.z*dx.z; 
+           dx[0] = (b_pos[3*b_index_j  ] - b_pos[3*b_index_i  ]);
+           dx[1] = (b_pos[3*b_index_j+1] - b_pos[3*b_index_i+1]);
+           dx[2] = (b_pos[3*b_index_j+2] - b_pos[3*b_index_i+2]);
+           d = dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2]; 
            if (d > x_range2[1]) {
              b_j = b_j->next; 
              continue; 
@@ -777,9 +688,9 @@ int PreComp_solver::solve_using_neighbours(){
              continue; 
            }
            d = sqrt(d);
-           dx.x = dx.x / d;
-           dx.y = dx.y / d;
-           dx.z = dx.z / d;
+           dx[0] = dx[0] / d;
+           dx[1] = dx[1] / d;
+           dx[2] = dx[2] / d;
  
            f_ij = get_F(d, type_i, b_types[b_index_j]); 
 
@@ -787,7 +698,7 @@ int PreComp_solver::solve_using_neighbours(){
            e_j = b_elems[b_index_j];
            fieldenergy[(thread_id*num_blobs + e_i->daddy_blob->blob_index) * num_blobs + e_j->daddy_blob->blob_index] += get_U(d, type_i, b_types[b_index_j]);
 
-           arr3Resize<scalar,arr3>(f_ij, dx.data);
+           resize(f_ij, dx);
 
            phi_j[1] = b_rel_pos[3*b_index_j];
            phi_j[2] = b_rel_pos[3*b_index_j+1];
@@ -798,10 +709,10 @@ int PreComp_solver::solve_using_neighbours(){
            #pragma omp critical
            {
            for (int k=0; k<4; k++) {
-             arr3Resize2<scalar,arr3>(-phi_i[k], dx.data, dxik.data); 
-             arr3Resize2<scalar,arr3>(phi_j[k], dx.data, dxjk.data); 
-             e_i->add_force_to_node(k, &dxik);
-             e_j->add_force_to_node(k, &dxjk); 
+               resize2(-phi_i[k], dx, dxik);
+               resize2(phi_j[k], dx, dxjk);
+               e_i->add_force_to_node(k, dxik);
+               e_j->add_force_to_node(k, dxjk); 
            } // close k, nodes for the elements.
            } // close critical
 
@@ -813,16 +724,13 @@ int PreComp_solver::solve_using_neighbours(){
 #ifdef USE_OPENMP
     }
 #endif
-
-    return FFEA_OK;
 }
 
-int PreComp_solver::solve(scalar *blob_corr/*=NULL*/) {
-
+void PreComp_solver::solve(scalar *blob_corr/*=nullptr*/) {
     scalar d, f_ij; //, f_ijk_i, f_ijk_j; 
-    vector3 dx, dtemp;
+    arr3 dx, dtemp;
     int type_i; 
-    scalar phi_i[4], phi_j[4];
+    std::array<scalar, 4> phi_i, phi_j;
     tetra_element_linear *e_i, *e_j;
     int daddy_i, daddy_j;
 
@@ -855,7 +763,7 @@ int PreComp_solver::solve(scalar *blob_corr/*=NULL*/) {
         if (!isPairActive[type_i*ntypes+b_types[j]]) continue; 
 
         daddy_j = b_daddyblob[j];
-        if (blob_corr == NULL) {
+        if (!blob_corr) {
             dx[0] = (b_pos[3*j  ] - b_pos[3*i]);
             dx[1] = (b_pos[3*j+1] - b_pos[3*i+1]);
             dx[2] = (b_pos[3*j+2] - b_pos[3*i+2]);
@@ -865,13 +773,13 @@ int PreComp_solver::solve(scalar *blob_corr/*=NULL*/) {
             dx[2] = (b_pos[3*j+2] - blob_corr[3*(daddy_i*num_blobs + daddy_j) +2] - b_pos[3*i+2]);
         }
 
-        d = dx.x*dx.x + dx.y*dx.y + dx.z*dx.z; 
+        d = dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2]; 
         if (d > x_range2[1]) continue;
         else if (d < x_range2[0]) continue;
         d = sqrt(d);
-        dx.x = dx.x / d;
-        dx.y = dx.y / d;
-        dx.z = dx.z / d;
+        dx[0] = dx[0] / d;
+        dx[1] = dx[1] / d;
+        dx[2] = dx[2] / d;
         
  
         f_ij = get_F(d, type_i, b_types[j]); 
@@ -889,8 +797,8 @@ int PreComp_solver::solve(scalar *blob_corr/*=NULL*/) {
 	// Add energies to record 
    fieldenergy[(thread_id*num_blobs + e_i->daddy_blob->blob_index) * num_blobs + e_j->daddy_blob->blob_index] += get_U(d, type_i, b_types[j]);
 
-        arr3Resize<scalar,arr3>(f_ij, dx.data);
-        arr3Store<scalar,arr3>(dx.data, dtemp.data); 
+        resize(f_ij, dx);
+        store(dx, dtemp); 
 
         phi_j[1] = b_rel_pos[3*j];
         phi_j[2] = b_rel_pos[3*j+1];
@@ -901,13 +809,13 @@ int PreComp_solver::solve(scalar *blob_corr/*=NULL*/) {
         // and apply the force to all the nodes in the elements i and j:
         for (int k=0; k<4; k++) {
           // forces for e_i
-          arr3Resize<scalar,arr3>(-phi_i[k], dx.data);
-          e_i->add_force_to_node(k, &dx);
-          arr3Store<scalar,arr3>(dtemp.data, dx.data); 
+          resize(-phi_i[k], dx);
+          e_i->add_force_to_node(k, dx);
+          store(dtemp, dx); 
           // forces for e_j
-          arr3Resize<scalar,arr3>(phi_j[k], dx.data);
-          e_j->add_force_to_node(k, &dx);
-          arr3Store<scalar,arr3>(dtemp.data, dx.data); 
+          resize(phi_j[k], dx);
+          e_j->add_force_to_node(k, dx);
+          store(dtemp, dx); 
 
         } 
         }
@@ -917,13 +825,10 @@ int PreComp_solver::solve(scalar *blob_corr/*=NULL*/) {
     }
 #endif
     // cout << " total energy: " << e_tot*mesoDimensions::Energy/0.1660539040e-20 << endl;
-  
-    return FFEA_OK;
 }
 
 
-int PreComp_solver::compute_bead_positions() {
-
+void PreComp_solver::compute_bead_positions() {
     matrix3 J; 
 #ifdef USE_OPENMP
 #pragma omp parallel for default(none) private(J)
@@ -937,15 +842,13 @@ int PreComp_solver::compute_bead_positions() {
        // cout << "bead " << i << " in: " << b_pos[3*i]*mesoDimensions::length << ", " << b_pos[3*i+1]*mesoDimensions::length << ", " << b_pos[3*i+2]*mesoDimensions::length << endl;
  
     }
-    return FFEA_OK;
 }
 
 
 /** Calculate F as the numerical derivative of U, instead of reading .force files 
   * @param[in] int total_int: total number of different interactions.
   */
-int PreComp_solver::calc_force_from_pot() {
-
+void PreComp_solver::calc_force_from_pot() {
    // scalar ym, y0, yM;
    scalar twoDx = 2*Dx;
 
@@ -959,16 +862,12 @@ int PreComp_solver::calc_force_from_pot() {
      }
      index += 1;
      F[index] = 0; 
-   } 
-   return FFEA_OK;
-
-
+   }
 }
 
 /** Read either the .pot or .force files
   * and store its contents either in U or F */
-int PreComp_solver::read_tabulated_values(PreComp_params &pc_params, string kind, scalar *Z, scalar scale_Z){
-
+void PreComp_solver::read_tabulated_values(const PreComp_params &pc_params, string kind, std::vector<scalar> &Z, scalar scale_Z){
    stringstream ssfile; 
    ifstream fin;
    string line; 
@@ -1005,11 +904,8 @@ int PreComp_solver::read_tabulated_values(PreComp_params &pc_params, string kind
        x_0 = stod(vec_line[0]); 
        // check it: 
        if (x_range[0] != x_0){
-          FFEA_error_text();
-          msg("different starting point for file:");
-          msg(ssfile.str());
-          return FFEA_ERROR;
-       }
+           throw FFEAException("different starting point for file: %s", ssfile.str().c_str());
+        }
        // and store the potential:
        Z[index] = stod(vec_line[1]) * scale_Z;
        index += 1;
@@ -1018,10 +914,7 @@ int PreComp_solver::read_tabulated_values(PreComp_params &pc_params, string kind
        boost::split( vec_line, line, boost::is_any_of(" \t"), boost::token_compress_on);
        x = stod(vec_line[0]); 
        if (fabs(Dx - x + x_0) > 1e-6){
-          FFEA_error_text();
-          msg("different step size for x in file:");
-          msg(ssfile.str());
-          return FFEA_ERROR;
+           throw FFEAException("different step size for x in file: %s", ssfile.str().c_str());
        }
        // and store the potential:
        Z[index] = stod(vec_line[1]) * scale_Z;
@@ -1034,38 +927,28 @@ int PreComp_solver::read_tabulated_values(PreComp_params &pc_params, string kind
           boost::split( vec_line, line, boost::is_any_of(" \t"), boost::token_compress_on);
           x = stod(vec_line[0]); 
           // check Dx at every line:
-          if (fabs(Dx - x + x_0) > 1e-6) { 
-            FFEA_error_text();
-            msg("Aborting; delta x was found to be non-uniform for file:");
-            msg(ssfile.str());
-            return FFEA_ERROR;
+          if (fabs(Dx - x + x_0) > 1e-6) {
+              throw FFEAException("delta x was found to be non-uniform for file: %s", ssfile.str().c_str());
           } 
           x_0 = x; 
           // and check that the file is not too long:
           if (m_values > n_values) { 
             FFEA_error_text();
-            msg("Aborting; too many points for file:");
-            msg(ssfile.str());
-            return FFEA_ERROR;
+            throw FFEAException("too many points for file: %s", ssfile.str().c_str());
           } 
           Z[index] = stod(vec_line[1]) * scale_Z;
           index += 1;
        }  
        // and check that it is not too short:
-       if (m_values != n_values) { 
-         FFEA_error_text();
-         msg("Aborting; too many points for file:");
-         msg(ssfile.str());
-         return FFEA_ERROR;
+       if (m_values != n_values) {
+           throw FFEAException("too few points for file: %s", ssfile.str().c_str());
        } 
        fin.close();
        ssfile.str("");
        isPairActive[i*ntypes+j] = true;
        isPairActive[j*ntypes+i] = true; 
      }
-   } 
-     
-   return 0;
+   }
 }
 
 /**
@@ -1075,10 +958,8 @@ int PreComp_solver::read_tabulated_values(PreComp_params &pc_params, string kind
  * between bead types typei and typej. Kept just for clarity, may be removed
  * in the future.
  */
-scalar PreComp_solver::get_U(scalar x, int typei, int typej) {
- 
-  return finterpolate(U, x, typei, typej); 
-
+scalar PreComp_solver::get_U(scalar x, int typei, int typej) { 
+  return finterpolate(U, x, typei, typej);
 }
 
 
@@ -1089,10 +970,8 @@ scalar PreComp_solver::get_U(scalar x, int typei, int typej) {
  * between bead types typei and typej. Kept just for clarity, may be removed
  * in the future.
  */
-scalar PreComp_solver::get_F(scalar x, int typei, int typej) {
- 
-  return finterpolate(F, x, typei, typej); 
-
+scalar PreComp_solver::get_F(scalar x, int typei, int typej) { 
+  return finterpolate(F, x, typei, typej);
 }
 
 /** @brief Get the value Z value (either U or F) at x between types typei and typej.
@@ -1100,8 +979,7 @@ scalar PreComp_solver::get_F(scalar x, int typei, int typej) {
   * For production purposes it may be reasonable to move it to public, and 
   * remove get_U and get_F
   */
-scalar PreComp_solver::finterpolate(scalar *Z, scalar x, int typei, int typej){
-
+scalar PreComp_solver::finterpolate(std::vector<scalar> &Z, scalar x, int typei, int typej){
    //scalar y0, y1;
    scalar x0, x1;
    int index = 0;
@@ -1139,11 +1017,9 @@ scalar PreComp_solver::finterpolate(scalar *Z, scalar x, int typei, int typej){
    x0 = index_l * Dx; 
    x1 = x0 + Dx; 
    return Z[index] + (Z[index +1] - Z[index])*(x - x0)/Dx;
-
 }  
 
 scalar PreComp_solver::get_field_energy(int index0, int index1) {
-
 	// Sum over all field
    scalar energy = 0.0;
 	if(index0 == -1 || index1 == -1) {
@@ -1165,12 +1041,10 @@ scalar PreComp_solver::get_field_energy(int index0, int index1) {
 	}
 
    return energy;
-
 }
 
 
-int PreComp_solver::build_pc_nearest_neighbour_lookup() {
-
+void PreComp_solver::build_pc_nearest_neighbour_lookup() {
    pcLookUp.clear(); 
    int x, y, z; 
    for (int i=0; i<n_beads; i++) {
@@ -1178,19 +1052,12 @@ int PreComp_solver::build_pc_nearest_neighbour_lookup() {
      y = (int) floor(b_pos[3*i+1] / pcVoxelSize);
      z = (int) floor(b_pos[3*i+2] / pcVoxelSize);
 
-     if (pcLookUp.add_node_to_stack(i, x, y, z) == FFEA_ERROR) {
-        FFEA_ERROR_MESSG("Error when trying to add bead %d to nearest neighbour stack at (%d, %d, %d)\n", i, x,y,z);
-     }
- 
+     pcLookUp.add_node_to_stack(i, x, y, z); 
    }
-
-   return FFEA_OK; 
-
 }
 
 
-int PreComp_solver::prebuild_pc_nearest_neighbour_lookup_and_swap() {
- 
+void PreComp_solver::prebuild_pc_nearest_neighbour_lookup_and_swap() { 
    pcLookUp.clear_shadow_layer();
    int x, y, z; 
    for (int i=0; i<n_beads; i++) {
@@ -1198,19 +1065,13 @@ int PreComp_solver::prebuild_pc_nearest_neighbour_lookup_and_swap() {
      y = (int) floor(b_pos[3*i+1] / pcVoxelSize);
      z = (int) floor(b_pos[3*i+2] / pcVoxelSize);
 
-     if (pcLookUp.add_node_to_stack_shadow(i, x, y, z) == FFEA_ERROR) {
-        FFEA_ERROR_MESSG("Error when trying to add bead %d to nearest neighbour stack at (%d, %d, %d)\n", i, x,y,z);
-     }
- 
+     pcLookUp.add_node_to_stack_shadow(i, x, y, z); 
    }
    pcLookUp.safely_swap_layers();
-   return FFEA_OK; 
-
 }
 
 
-int PreComp_solver::prebuild_pc_nearest_neighbour_lookup() {
- 
+void PreComp_solver::prebuild_pc_nearest_neighbour_lookup() { 
    pcLookUp.clear_shadow_layer();
    pcLookUp.forbid_swapping();
    int x, y, z; 
@@ -1219,25 +1080,17 @@ int PreComp_solver::prebuild_pc_nearest_neighbour_lookup() {
      y = (int) floor(b_pos[3*i+1] / pcVoxelSize);
      z = (int) floor(b_pos[3*i+2] / pcVoxelSize);
 
-     if (pcLookUp.add_node_to_stack_shadow(i, x, y, z) == FFEA_ERROR) {
-        FFEA_ERROR_MESSG("Error when trying to add bead %d to nearest neighbour stack at (%d, %d, %d)\n", i, x,y,z);
-     }
- 
+     pcLookUp.add_node_to_stack_shadow(i, x, y, z); 
    }
    pcLookUp.allow_swapping();
-   return FFEA_OK; 
-
 }
 
 
-int PreComp_solver::safely_swap_pc_layers() {
-
-   return pcLookUp.safely_swap_layers();
-
+void PreComp_solver::safely_swap_pc_layers() {
+   pcLookUp.safely_swap_layers();
 }
   
 void PreComp_solver::write_beads_to_file(FILE *fout, int timestep){
-
    const float toA = mesoDimensions::length * 1e10;
    fprintf(fout, "MODEL %12d\n", timestep); 
    for (int i=0; i<n_beads; i++){ 
@@ -1247,7 +1100,6 @@ void PreComp_solver::write_beads_to_file(FILE *fout, int timestep){
                b_elems_ndx[i], b_blob_ndx[i]); 
    } 
    fprintf(fout, "ENDMDL\n");
-
 } 
 
 

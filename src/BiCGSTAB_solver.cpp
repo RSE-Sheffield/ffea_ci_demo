@@ -23,286 +23,123 @@
 
 #include "BiCGSTAB_solver.h"
 
-BiCGSTAB_solver::BiCGSTAB_solver() {
-    N = 0;
-    tol = 0;
-    max_num_iterations = 0;
+#include "mat_vec_fns_II.h"
 
-    inv_M = NULL;
-    r = NULL;
-    r_hat = NULL;
-    p = NULL;
-    p_hat = NULL;
-    q = NULL;
-    s = NULL;
-    s_hat = NULL;
-    t = NULL;
-}
-
-BiCGSTAB_solver::~BiCGSTAB_solver() {
-    delete[] inv_M;
-    delete[] r;
-    delete[] r_hat;
-    delete[] p;
-    delete[] p_hat;
-    delete[] q;
-    delete[] s;
-    delete[] s_hat;
-    delete[] t;
-
-    inv_M = NULL;
-    r = NULL;
-    r_hat = NULL;
-    p = NULL;
-    p_hat = NULL;
-    q = NULL;
-    s = NULL;
-    s_hat = NULL;
-    t = NULL;
-
-    N = 0;
-    tol = 0;
-    max_num_iterations = 0;
-}
-
-int BiCGSTAB_solver::init(int N, scalar tol, int max_num_iterations) {
-    this->N = N;
-    this->tol = tol;
-    this->max_num_iterations = max_num_iterations;
-
+void BiCGSTAB_solver::init(const int N, const scalar _tol, const int _max_num_iterations) {
+    if (_max_num_iterations == 0) {
+        throw FFEAException("BiCGSTAB_solver::max_num_iterations should not be set to zero.");
+    }
+    this->tol = _tol;
+    this->max_num_iterations = _max_num_iterations;
+    
     // Allocate all required memory
-    inv_M = new(std::nothrow) scalar[N];
-    r = new(std::nothrow) scalar[N];
-    r_hat = new(std::nothrow) scalar[N];
-    p = new(std::nothrow) scalar[N];
-    p_hat = new(std::nothrow) scalar[N];
-    q = new(std::nothrow) scalar[N];
-    s = new(std::nothrow) scalar[N];
-    s_hat = new(std::nothrow) scalar[N];
-    t = new(std::nothrow) scalar[N];
-
-    // Check that memory has been allocated
-    if (inv_M == NULL ||
-            r == NULL ||
-            r_hat == NULL ||
-            p == NULL ||
-            p_hat == NULL ||
-            q == NULL ||
-            s == NULL ||
-            s_hat == NULL ||
-            t == NULL) {
-        FFEA_ERROR_MESSG("While initialising BiCGSTAB_solver, could not allocate memory for vectors.\n");
+    try {
+        inv_M = std::vector<scalar>(N, 0);
+        r = std::vector<scalar>(N, 0);
+        r_hat = std::vector<scalar>(N, 0);
+        p = std::vector<scalar>(N, 0);
+        p_hat = std::vector<scalar>(N, 0);
+        q = std::vector<scalar>(N, 0);
+        s = std::vector<scalar>(N, 0);
+        s_hat = std::vector<scalar>(N, 0);
+        t = std::vector<scalar>(N, 0);
+    } catch (std::bad_alloc &) {
+        throw FFEAException("While initialising BiCGSTAB_solver, could not allocate memory for vectors.");
     }
-
-    // Initialise all vectors to zero
-    zero(inv_M, N);
-    zero(r, N);
-    zero(r_hat, N);
-    zero(p, N);
-    zero(p_hat, N);
-    zero(q, N);
-    zero(s, N);
-    zero(s_hat, N);
-    zero(t, N);
-
-    return FFEA_OK;
 }
 
-int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, scalar *x, scalar *b) {
+void BiCGSTAB_solver::solve(std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x, std::vector<scalar> &b, const int num_iterations) {
     scalar rho_last = 1, alpha = 1, omega = 1, rho, beta;
 
     // Get the inverse of the diagonal of the matrix to use as a preconditioner
     A->calc_inverse_diagonal(inv_M);
 
     // Get the initial residual vector using a first guess at the solution x (r_0 = b - A x_0)
-    get_residual_vector(r, b, A, x, N);
+    get_residual_vector(r, b, A, x);
 
     // r_hat_0 <- r_0
-    copy_vector(r_hat, r, N);
+    store(r, r_hat);
 
     // initialise q vector to zero
-    zero(q, N);
+    initialise(q);
 
+    // If num_iterations==0, we use max_num_iterations mode and check for convergence
+    const int do_iterations = num_iterations == 0 ? max_num_iterations : num_iterations;
+    
     // loop till convergence (or a threshold maximum number of iterations have elapsed -> convergence failure)
-    int i;
-    for (i = 0; i < max_num_iterations; i++) {
-
+    for (int i = 0; i < do_iterations; i++) {
         // rho_i = dot(r_hat_0, r_i_minus_1);
-        rho = dot(r_hat, r, N);
+        rho = dot(r_hat, r);
 
         if (rho == 0) {
-            FFEA_ERROR_MESSG("In BiCGSTAB_solver solve(), rho is zero. Solver stopping on iteration %d.\n", i);
+            throw FFEAException("In BiCGSTAB_solver solve(), rho is zero. Solver stopping on iteration %d.", i);
         }
 
         // beta = (rho_i/rho_i_minus_1) (alpha/omega_i_minus_1)
         beta = (rho / rho_last) * (alpha / omega);
 
         // p = r + beta * (p - omega * q);
-        complicated_machine(p, r, beta, p, -omega, q, N);
+        complicated_machine(p, r, beta, p, -omega, q);
 
-        // apply preconditioner to p (p_hat = inv_M p_i)
-        apply_diagonal_matrix(p_hat, inv_M, p, N);
-
-        // q = A p_hat
-        A->apply(p_hat, q);
-
-        // alpha = rho_i / dot(r_hat_0, q)
-        alpha = rho / dot(r_hat, q, N);
-
-        // s = r - alpha * q;
-        scalar_vector_add(s, r, -alpha, q, N);
-
-        // x = x + alpha * p_hat
-        scalar_vector_add(x, x, alpha, p_hat, N);
-
-        // Check for convergence
-        if (dot(s, s, N) < tol) {
-            //			printf("Convergence reached on iteration %d.\n", i);
-            return FFEA_OK;
-        }
-
-        // apply preconditioner to s (s_hat = inv_M s)
-        apply_diagonal_matrix(s_hat, inv_M, s, N);
-
-        // t = A s_hat
-        A->apply(s_hat, t);
-
-        // omega_i = dot(t, s) / dot(t, t)
-        omega = dot(t, s, N) / dot(t, t, N);
-
-        // x = x + omega * s_hat;
-        scalar_vector_add(x, x, omega, s_hat, N);
-
-        // r = s - omega * t;
-        scalar_vector_add(r, s, -omega, t, N);
-
-        //		printf("BiCGSTAB_solver: %f\n", dot(s,s,N));
-    }
-
-    FFEA_ERROR_MESSG("Bi-Conjugate Gradient Stabilised solver could not converge in max_num_iterations.\n");
-}
-
-int BiCGSTAB_solver::solve(SparseMatrixUnknownPattern *A, scalar *x, scalar *b, int num_iterations) {
-    scalar rho_last = 1, alpha = 1, omega = 1, rho, beta;
-
-    // Get the inverse of the diagonal of the matrix to use as a preconditioner
-    A->calc_inverse_diagonal(inv_M);
-
-    // Get the initial residual vector using a first guess at the solution x (r_0 = b - A x_0)
-    get_residual_vector(r, b, A, x, N);
-
-    // r_hat_0 <- r_0
-    copy_vector(r_hat, r, N);
-
-    // initialise q vector to zero
-    zero(q, N);
-
-    // loop till convergence (or a threshold maximum number of iterations have elapsed -> convergence failure)
-    int i;
-    for (i = 0; i < num_iterations; i++) {
-
-        // rho_i = dot(r_hat_0, r_i_minus_1);
-        rho = dot(r_hat, r, N);
-
-        if (rho == 0) {
-            FFEA_ERROR_MESSG("In BiCGSTAB_solver solve(), rho is zero. Solver stopping on iteration %d.\n", i);
-        }
-
-        // beta = (rho_i/rho_i_minus_1) (alpha/omega_i_minus_1)
-        beta = (rho / rho_last) * (alpha / omega);
-
-        // p = r + beta * (p - omega * q);
-        complicated_machine(p, r, beta, p, -omega, q, N);
-
-        // apply preconditioner to p (p_hat = inv_M p_i)
-        apply_diagonal_matrix(p_hat, inv_M, p, N);
+        // apply preconditioner to p (p_hat = inv_M * p_i)
+        prod(inv_M, p, p_hat);
 
         // q = A p_hat
         A->apply(p_hat, q);
 
         // alpha = rho_i / dot(r_hat_0, q)
-        alpha = rho / dot(r_hat, q, N);
+        alpha = rho / dot(r_hat, q);
 
         // s = r - alpha * q;
-        scalar_vector_add(s, r, -alpha, q, N);
+        scalar_vector_add(s, r, -alpha, q);
 
         // x = x + alpha * p_hat
-        scalar_vector_add(x, x, alpha, p_hat, N);
+        scalar_vector_add(x, x, alpha, p_hat);
 
-        // apply preconditioner to s (s_hat = inv_M s)
-        apply_diagonal_matrix(s_hat, inv_M, s, N);
+        // Check for convergence (if max_num_iterations mode)
+        if (num_iterations == 0 && dot(s, s) < tol) {
+            return;
+        }
+
+        // apply preconditioner to s (s_hat = inv_M * s)
+        prod(inv_M, s, s_hat);
 
         // t = A s_hat
         A->apply(s_hat, t);
 
         // omega_i = dot(t, s) / dot(t, t)
-        omega = dot(t, s, N) / dot(t, t, N);
+        omega = dot(t, s) / dot(t, t);
 
         // x = x + omega * s_hat;
-        scalar_vector_add(x, x, omega, s_hat, N);
+        scalar_vector_add(x, x, omega, s_hat);
 
         // r = s - omega * t;
-        scalar_vector_add(r, s, -omega, t, N);
+        scalar_vector_add(r, s, -omega, t);
 
         //		printf("BiCGSTAB_solver: %f\n", dot(s,s,N));
     }
-
-    return FFEA_OK;
+    if (num_iterations == 0) {
+        throw FFEAException("Bi-Conjugate Gradient Stabilised solver could not converge in %d iterations.", do_iterations);
+    }
 }
 
-void BiCGSTAB_solver::get_residual_vector(scalar *r, scalar *b, SparseMatrixUnknownPattern *A, scalar *x, int N) {
+void BiCGSTAB_solver::get_residual_vector(std::vector<scalar> &r, std::vector<scalar> &b, std::unique_ptr<SparseMatrixUnknownPattern> &A, std::vector<scalar> &x) {
     // Ax
     A->apply(x, r);
 
     // r = b - Ax
-    int i;
-    for (i = 0; i < N; i++)
-        r[i] = b[i] - r[i];
-}
-
-/* Copies the contents of vector b into vector a (a <- b) */
-void BiCGSTAB_solver::copy_vector(scalar *a, scalar *b, int N) {
-    int i;
-    for (i = 0; i < N; i++)
-        a[i] = b[i];
-}
-
-/* Returns the dot product of vectors a and b, of length N */
-scalar BiCGSTAB_solver::dot(scalar *a, scalar *b, int N) {
-    scalar result = 0;
-    int i;
-    for (i = 0; i < N; i++)
-        result += a[i] * b[i];
-
-    return result;
-}
-
-/* Calculates y = Mx for diagonal matrix and vectors of dimension N */
-void BiCGSTAB_solver::apply_diagonal_matrix(scalar *y, scalar *M, scalar *x, int N) {
-    int i;
-    for (i = 0; i < N; i++)
-        y[i] = M[i] * x[i];
-}
-
-/* Sets the given vector (length N) to zero */
-void BiCGSTAB_solver::zero(scalar *x, int N) {
-    int i;
-    for (i = 0; i < N; i++)
-        x[i] = 0;
+    sub(b, r, r);
 }
 
 /* Carries out the operation x = y + c*z, where c is a scalar, and x, y and z are vectors of length N. */
-void BiCGSTAB_solver::scalar_vector_add(scalar *x, scalar *y, scalar c, scalar *z, int N) {
-    int i;
-    for (i = 0; i < N; i++)
+void BiCGSTAB_solver::scalar_vector_add(std::vector<scalar> &x, const std::vector<scalar> &y, scalar c, const std::vector<scalar> &z) {
+    for (unsigned int i = 0; i < x.size(); i++)
         x[i] = y[i] + c * z[i];
 }
 
 /* Carries out the operation w = x + a * (y + b * z) */
 // p = r + beta(p - omega * v)
-
-void BiCGSTAB_solver::complicated_machine(scalar *w, scalar *x, scalar a, scalar *y, scalar b, scalar *z, int N) {
-    int i;
-    for (i = 0; i < N; i++)
+void BiCGSTAB_solver::complicated_machine(std::vector<scalar> &w, const std::vector<scalar> &x, scalar a, const std::vector<scalar> &y, scalar b, const std::vector<scalar> &z) {
+    for (unsigned int i = 0; i < w.size(); i++)
         w[i] = x[i] + a * (y[i] + b * z[i]);
 }

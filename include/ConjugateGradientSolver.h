@@ -45,13 +45,13 @@ public:
     ~ConjugateGradientSolver();
 
     /** Builds the sparse mass matrix and allocates the various work vectors required for conjugate gradient */
-    int init(int num_nodes, int num_elements, mesh_node *node, tetra_element_linear *elem, SimulationParams *params, int num_pinned_nodes, int *pinned_nodes_list, set<int> bsite_pinned_node_list);
+    void init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) override;
 
     /** Applies conjugate gradient with a Jacobi preconditioner to solve the system Mx = f */
-    int solve(vector3 *x);
+    void solve(std::vector<arr3> &x) override;
 
     /** Applies the mass matrix to the given vector, 'in', putting the result in 'result'*/
-    void apply_matrix(scalar *in, scalar *result);
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) override;
 
 private:
 
@@ -67,7 +67,7 @@ private:
     /** Array of all non-zero entries comprising the mass matrix, in the order they appear in the matrix
      * when scanned left to right across rows first (and columns secondary)
      */
-    sparse_entry *entry;
+    std::vector<sparse_entry> entry;
 
     /**
      * Array of size (num_nodes+1) containing the index (in the sparse_entry array above)
@@ -75,23 +75,23 @@ private:
      * The final entry in this vector, key[num_nodes], is the total number of non-zero entries
      * in the entire matrix.
      */
-    int *key;
+    std::vector<int> key;
 
     /** Jacobi preconditioner (inverse of the mass matrix diagonal) */
-    scalar *preconditioner;
+    std::vector<scalar> preconditioner;
 
     /** Work vectors */
-    vector3 *d, *r, *q, *s, *f;
+    std::vector<arr3> d, r, q, s, f;
 
     /* */
-    scalar conjugate_gradient_residual_assume_x_zero(vector3 *b);
+    scalar conjugate_gradient_residual_assume_x_zero(std::vector<arr3> &b);
 
     /* */
     scalar parallel_sparse_matrix_apply();
 
-    void parallel_vector_add_self(vector3 *v1, scalar a, vector3 *v2, int vec_size);
+    void parallel_vector_add_self(std::vector<arr3> &v1, scalar a, std::vector<arr3> &v2, int vec_size);
 
-    void parallel_vector_add(vector3 *v1, scalar a, vector3 *v2, int vec_size);
+    void parallel_vector_add(std::vector<arr3> &v1, scalar a, std::vector<arr3> &v2, int vec_size);
 
     /* */
     scalar parallel_apply_preconditioner();

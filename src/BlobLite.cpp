@@ -39,7 +39,7 @@ BlobLite::~BlobLite() {
   delete[] elem; 
 } 
 
-int BlobLite::load_topology(const char *topology_filename){
+void BlobLite::load_topology(const char *topology_filename){
     FILE *in = NULL;
     int i, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10;
     const int max_line_size = 50;
@@ -47,38 +47,38 @@ int BlobLite::load_topology(const char *topology_filename){
 
     // Now open the topology file
     if ((in = fopen(topology_filename, "r")) == NULL) {
-        FFEA_FILE_ERROR_MESSG(topology_filename)
+        throw FFEAFileException(topology_filename);
     }
     printf("\t\tReading in topology file: %s\n", topology_filename);
 
     // first line should be the file type "ffea topology file"
     if (fgets(line, max_line_size, in) == NULL) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading first line of topology file\n")
+        throw FFEAException("Error reading first line of topology file.");
     }
     if (strcmp(line, "walrus topology file\n") != 0 && strcmp(line, "ffea topology file\n") != 0) {
         fclose(in);
-        FFEA_ERROR_MESSG("This is not a 'ffea topology file' (read '%s') \n", line)
+        throw FFEAException("This is not a 'ffea topology file' (read '%s').", line);
     }
 
     // read in the total number of elements in the file
     if (fscanf(in, "num_elements %d\n", &num_elements) != 1) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading number of elements\n")
+        throw FFEAException("Error reading number of elements.");
     }
     printf("\t\t\tNumber of elements = %d\n", num_elements);
 
     // read in the number of surface elements in the file
     if (fscanf(in, "num_surface_elements %d\n", &num_surface_elements) != 1) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading number of surface elements\n")
+        throw FFEAException("Error reading number of surface elements.");
     }
     printf("\t\t\tNumber of surface elements = %d\n", num_surface_elements);
 
     // read in the number of interior elements in the file
     if (fscanf(in, "num_interior_elements %d\n", &num_interior_elements) != 1) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading number of interior elements\n")
+        throw FFEAException("Error reading number of interior elements.");
     }
 
     printf("\t\t\tNumber of interior elements = %d\n", num_interior_elements);
@@ -87,17 +87,17 @@ int BlobLite::load_topology(const char *topology_filename){
     elem = new(std::nothrow) int[NUM_NODES_QUADRATIC_TET*num_elements];
     if (elem == NULL) {
         fclose(in);
-        FFEA_ERROR_MESSG("Unable to allocate memory for element array.\n")
+        throw FFEAException("Unable to allocate memory for element array.");
     }
 
     // Check for "surface elements:" line
     if (fgets(line, max_line_size, in) == NULL) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error when looking for 'surface elements:' line\n")
+        throw FFEAException("Error when looking for 'surface elements:' line.");
     }
     if (strcmp(line, "surface elements:\n") != 0) {
         fclose(in);
-        FFEA_ERROR_MESSG("Could not find 'surface elements:' line (found '%s' instead)\n", line)
+        throw FFEAException("Could not find 'surface elements:' line (found '%s' instead).", line);
     }
 
     // Read in all the elements from file
@@ -106,17 +106,17 @@ int BlobLite::load_topology(const char *topology_filename){
             // Check for "interior elements:" line
             if (fgets(line, max_line_size, in) == NULL) {
                 fclose(in);
-                FFEA_ERROR_MESSG("Error when looking for 'interior elements:' line\n")
+                throw FFEAException("Error when looking for 'interior elements:' line.");
             }
             if (strcmp(line, "interior elements:\n") != 0) {
                 fclose(in);
-                FFEA_ERROR_MESSG("Could not find 'interior elements:' line (found '%s' instead)\n", line)
+                throw FFEAException("Could not find 'interior elements:' line (found '%s' instead).", line);
             }
         }
 
         if (fscanf(in, "%d %d %d %d %d %d %d %d %d %d\n", &n1, &n2, &n3, &n4, &n5, &n6, &n7, &n8, &n9, &n10) != 10) {
             fclose(in);
-            FFEA_ERROR_MESSG("Error reading from elements file at element %d\n", i)
+            throw FFEAException("Error reading from elements file at element %d.", i);
         } else {
             // check that none of these reference nodes outside of the node array
             if (n1 < 0 || n1 >= num_nodes ||
@@ -130,7 +130,7 @@ int BlobLite::load_topology(const char *topology_filename){
                     n9 < 0 || n9 >= num_nodes ||
                     n10 < 0 || n10 >= num_nodes) {
                 fclose(in);
-                FFEA_ERROR_MESSG("Error: Element %d references an out of bounds node index\n", i)
+                throw FFEAException("Error: Element %d references an out of bounds node index.", i);
             }
 
        // Link element nodes to actual nodes
@@ -154,22 +154,16 @@ int BlobLite::load_topology(const char *topology_filename){
         printf("\t\t\tRead 1 element from %s\n", topology_filename);
     else
         printf("\t\t\tRead %d elements from %s\n", i, topology_filename);
-
-    return FFEA_OK;
 }
 
    
 
-int BlobLite::store_index_to_elemnode(int node_index, int elem_number, int node_number){ 
-
+void BlobLite::store_index_to_elemnode(int node_index, int elem_number, int node_number){ 
     elem[elem_number*NUM_NODES_QUADRATIC_TET + node_number] = node_index;
-    return FFEA_OK;
-
-
 }
 
 
-int BlobLite::load_nodes(const char *node_filename, scalar scale) {
+void BlobLite::load_nodes(const char *node_filename, scalar scale) {
     FILE *in = NULL;
     int i;
     double x, y, z;
@@ -178,53 +172,53 @@ int BlobLite::load_nodes(const char *node_filename, scalar scale) {
 
     // open the node file
     if ((in = fopen(node_filename, "r")) == NULL) {
-        FFEA_FILE_ERROR_MESSG(node_filename)
+        throw FFEAFileException(node_filename);
     }
     printf("\t\tReading in nodes file: %s\n", node_filename);
 
     // first line should be the file type "ffea node file"
     if (fgets(line, max_line_size, in) == NULL) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading first line of node file\n")
+        throw FFEAException("Error reading first line of node file.");
     }
     if (strcmp(line, "walrus node file\n") != 0 && strcmp(line, "ffea node file\n") != 0) {
         fclose(in);
-        FFEA_ERROR_MESSG("This is not a 'ffea node file' (read '%s') \n", line)
+        throw FFEAException("This is not a 'ffea node file' (read '%s').", line);
     }
 
     // read in the number of nodes in the file
     if (fscanf(in, "num_nodes %d\n", &num_nodes) != 1) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading number of nodes\n")
+        throw FFEAException("Error reading number of nodes.");
     }
     printf("\t\t\tNumber of nodes = %d\n", num_nodes);
 
     // read in the number of surface nodes in the file
     if (fscanf(in, "num_surface_nodes %d\n", &num_surface_nodes) != 1) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading number of surface nodes\n")
+        throw FFEAException("Error reading number of surface nodes.");
     }
     printf("\t\t\tNumber of surface nodes = %d\n", num_surface_nodes);
 
     // read in the number of interior nodes in the file
     if (fscanf(in, "num_interior_nodes %d\n", &num_interior_nodes) != 1) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error reading number of interior nodes\n")
+        throw FFEAException("Error reading number of interior nodes.");
     }
     printf("\t\t\tNumber of interior nodes = %d\n", num_interior_nodes);
 
     // Allocate the memory for all these nodes
     coord = new(std::nothrow) scalar[3*num_nodes];
-    if (coord == NULL) FFEA_ERROR_MESSG("Failed to allocate node coordinates\n");
+    if (coord == NULL) throw FFEAException("Failed to allocate node coordinates.");;
 
     // Check for "surface nodes:" line
     if (fgets(line, max_line_size, in) == NULL) {
         fclose(in);
-        FFEA_ERROR_MESSG("Error when looking for 'surface nodes:' line\n")
+        throw FFEAException("Error when looking for 'surface nodes:' line.");
     }
     if (strcmp(line, "surface nodes:\n") != 0) {
         fclose(in);
-        FFEA_ERROR_MESSG("Could not find 'surface nodes:' line (found '%s' instead)\n", line)
+        throw FFEAException("Could not find 'surface nodes:' line (found '%s' instead).", line);
     }
 
     // Read in all the surface nodes from file
@@ -234,17 +228,17 @@ int BlobLite::load_nodes(const char *node_filename, scalar scale) {
             // Check for "interior nodes:" line
             if (fgets(line, max_line_size, in) == NULL) {
                 fclose(in);
-                FFEA_ERROR_MESSG("Error when looking for 'interior nodes:' line\n")
+                throw FFEAException("Error when looking for 'interior nodes:' line.");
             }
             if (strcmp(line, "interior nodes:\n") != 0) {
                 fclose(in);
-                FFEA_ERROR_MESSG("Could not find 'interior nodes:' line (found '%s' instead)\n", line)
+                throw FFEAException("Could not find 'interior nodes:' line (found '%s' instead).", line);
             }
         }
 
         if (fscanf(in, "%le %le %le\n", &x, &y, &z) != 3) {
             fclose(in);
-            FFEA_ERROR_MESSG("Error reading from nodes file at node %d\n", i)
+            throw FFEAException("Error reading from nodes file at node %d.", i);
         } else {
             coord[3*i] = scale * (scalar) x;
             coord[3*i+1] = scale * (scalar) y;
@@ -254,13 +248,11 @@ int BlobLite::load_nodes(const char *node_filename, scalar scale) {
 
     fclose(in);
     printf("\t\t\tRead %d nodes from %s\n", i, node_filename);
-
-    return FFEA_OK;
 }
 
 
 
-int BlobLite::read_nodes_from_file(FILE *trj) {
+void BlobLite::read_nodes_from_file(FILE *trj) {
 
     const int line_size = 256;
     char state_str[line_size];
@@ -270,23 +262,23 @@ int BlobLite::read_nodes_from_file(FILE *trj) {
     if (blob_state == FFEA_BLOB_IS_STATIC) {
         result = fgets(state_str, line_size, trj);
         if (result == NULL) {
-            FFEA_ERROR_MESSG("Problem when reading 'STATIC' (expected) line in trajectory file\n")
+            throw FFEAException("Problem when reading 'STATIC' (expected) line in trajectory file.");
         }
         if (strcmp(state_str, "STATIC\n") != 0) {
-            FFEA_ERROR_MESSG("When restarting from trajectory file, expected to read 'STATIC', but instead found '%s...'\n", state_str)
+            throw FFEAException("When restarting from trajectory file, expected to read 'STATIC', but instead found '%s...'.", state_str);
         }
-        return FFEA_OK;
+        return;
     } else {
         result = fgets(state_str, line_size, trj);
         if (result == NULL) {
-            FFEA_ERROR_MESSG("Problem when reading state line in trajectory file\n")
+            throw FFEAException("Problem when reading state line in trajectory file.");
         }
     }
 
     scalar x, y, z, u;
     for (int i = 0; i < num_nodes; i++) {
         if (fscanf(trj, "%le %le %le %le %le %le %le %le %le %le\n", &x, &y, &z, &u, &u, &u, &u, &u, &u, &u) != 10) {
-            FFEA_ERROR_MESSG("(When restarting) Error reading from trajectory file, for node %d\n", i)
+            throw FFEAException("(When restarting) Error reading from trajectory file, for node %d.", i);
         } else {
           coord[3*i] = (scalar) x / mesoDimensions::length;
           coord[3*i+1] = (scalar) y / mesoDimensions::length;
@@ -304,17 +296,13 @@ int BlobLite::read_nodes_from_file(FILE *trj) {
         } 
 
     }
-    return FFEA_OK;
 }
 
 int BlobLite::icoord_for_elem_node(int elemi, int nodei){
-
    return 3*elem[elemi * NUM_NODES_QUADRATIC_TET + nodei ];
-
 }
 
-int BlobLite::center_of_coord(arr3 &cm){
-
+void BlobLite::center_of_coord(arr3 &cm){
    cm[0] = 0;
    cm[1] = 0;
    cm[2] = 0;
@@ -326,7 +314,4 @@ int BlobLite::center_of_coord(arr3 &cm){
    cm[0] /= num_nodes;
    cm[1] /= num_nodes;
    cm[2] /= num_nodes;
-
-   return FFEA_OK;
-
 }

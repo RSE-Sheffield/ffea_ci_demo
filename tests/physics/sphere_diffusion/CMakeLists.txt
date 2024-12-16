@@ -21,26 +21,23 @@
 #  the research papers on the package.
 #
 
+if(Python3_EXECUTABLE)
+    #add_test(NAME sphere_diffusion_mass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_coarse_mass_norestart.ffea)
+    #set_tests_properties(sphere_diffusion_mass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
+    #add_test(NAME sphere_diffusion_mass_check COMMAND ${Python3_EXECUTABLE} diffusion_mass.py)
+    #set_tests_properties(sphere_diffusion_mass_check PROPERTIES DEPENDS sphere_diffusion_mass ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
 
-#add_test(NAME sphere_diffusion_mass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_coarse_mass_norestart.ffea)
-#set_tests_properties(sphere_diffusion_mass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
-#add_test(NAME sphere_diffusion_mass_check COMMAND ${PYTHON_EXECUTABLE} diffusion_mass.py)
-#set_tests_properties(sphere_diffusion_mass_check PROPERTIES DEPENDS sphere_diffusion_mass)
+    add_test(NAME sphere_diffusion_nomass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_nomass_norestart.ffea)
+    set_tests_properties(sphere_diffusion_nomass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
+    add_test(NAME sphere_diffusion_nomass_check COMMAND ${Python3_EXECUTABLE} diffusion_nomass.py sphere_nomass_norestart.ffea)
+    set_tests_properties(sphere_diffusion_nomass_check PROPERTIES 
+                         DEPENDS sphere_diffusion_nomass
+                ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
 
-add_test(NAME sphere_diffusion_nomass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_nomass_norestart.ffea)
-set_tests_properties(sphere_diffusion_nomass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
-add_test(NAME sphere_diffusion_nomass_check COMMAND ${PYTHON_EXECUTABLE} diffusion_nomass.py sphere_nomass_norestart.ffea)
-set_tests_properties(sphere_diffusion_nomass_check PROPERTIES 
-                     DEPENDS sphere_diffusion_nomass
-		     ENVIRONMENT PYTHONPATH=${PROJECT_SOURCE_DIR}/ffeatools/modules:$ENV{PYTHONPATH})
-
-add_test(NAME sphere_diffusion_mass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_mass_norestart.ffea)
-set_tests_properties(sphere_diffusion_mass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
-add_test(NAME sphere_diffusion_mass_check COMMAND ${PYTHON_EXECUTABLE} diffusion_mass.py sphere_mass_norestart.ffea)
-set_tests_properties(sphere_diffusion_mass_check PROPERTIES 
-                     DEPENDS sphere_diffusion_mass
-		     ENVIRONMENT PYTHONPATH=${PROJECT_SOURCE_DIR}/ffeatools/modules:$ENV{PYTHONPATH})
-
-
-
-
+    add_test(NAME sphere_diffusion_mass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_mass_norestart.ffea)
+    set_tests_properties(sphere_diffusion_mass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
+    add_test(NAME sphere_diffusion_mass_check COMMAND ${Python3_EXECUTABLE} diffusion_mass.py sphere_mass_norestart.ffea)
+    set_tests_properties(sphere_diffusion_mass_check PROPERTIES 
+                         DEPENDS sphere_diffusion_mass
+                ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

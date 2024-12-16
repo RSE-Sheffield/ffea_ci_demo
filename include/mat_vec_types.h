@@ -26,8 +26,10 @@
 
 #include <cstddef>
 #include <limits>
+#define _USE_MATH_DEFINES
 #include <cmath> 
 #include <array>
+#include <vector>
 
 /*
  * Defines what is meant by a scalar (essentially sets the precision of
@@ -66,45 +68,22 @@ namespace ffea_const {
    const scalar sphereFactor = 4.0 * 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148 / 3.0;
 }
 
-/** arr3 will hopefully substitute vector3 one day */ 
-typedef scalar arr3[3]; 
-typedef geoscalar grr3[3];
+typedef std::array<scalar, 3> arr3;
+typedef std::array<geoscalar, 3> grr3;
 
 
-typedef scalar arr4[4]; 
-typedef geoscalar grr4[4]; 
-
-/*
- * The old 3 dimensional vector (x, y, z)
- *   that is responsible of so many .x, .y, and .z,
- *   stopping people from simply looping.
-typedef struct {
-    scalar x, y, z;
-} vector3; */ 
-
-// The following class is a temporary replacement
-    //   for the old vector3 struct so that we have some
-    //   time to change from Whatever.x into Whatever[0] 
-    // Then vector3 will become arr3.
-    // Therefore, don't ever populate this class with methods!!
-class vector3 {
-public:
-    arr3 data;
-    scalar& x = data[0]; 
-    scalar& y = data[1]; 
-    scalar& z = data[2]; 
-    scalar& operator [](std::size_t i) { return data[i]; }
-    void assign( scalar t0, scalar t1, scalar t2 )
-    { data[0] = t0; data[1] = t1; data[2] = t2; }
-};
+typedef std::array<scalar, 4> arr4;
+typedef std::array<geoscalar, 4> grr4;
 
 /** arr3_view has the spirit of "span" or "array_view" 
  *    allowing us to have long arrays 
  *    and use the arr3 functions in mat_vec_fns_II  */
-template <class t_scalar, class brr3> class arr3_view
+
+template <class t_scalar, class brr3 = std::array<t_scalar, 3>>
+class arr3_view
 {
 public:
-    arr3_view(brr3 (&arr) ) : data(arr) {}
+    arr3_view(brr3 &arr ) : data(arr.data()) {}
     arr3_view(t_scalar* data, std::size_t size) : data(data) { }
 
     t_scalar* begin() { return data; }
@@ -113,28 +92,60 @@ public:
 
 private:
     t_scalar* data;
-}; 
+};
+
+template <typename T, size_t N>
+class arr_view {
+ public:
+    template<size_t X>
+    arr_view(std::array<T, X> &in, size_t offset)
+        : _data(in.data() + offset) { }
+    arr_view(std::vector<T>& in, const size_t offset)
+        : _data(in.data() + offset) { }
+    arr_view(T* in, const size_t offset)
+        : _data(in + offset) { }
+    constexpr size_t size() { return N; }
+    T* data() { return _data; }
+    T* begin() { return _data; }
+    T* end() { return _data + N; }
+    T& operator [](std::size_t i) { return _data[i]; }
+    const T* data() const { return _data; }
+    const T* cbegin() const { return _data; }
+    const T* cend() const { return _data + N; }
+    const T& operator [](std::size_t i) const { return _data[i]; }
+
+ private:
+    T *const _data;
+};
+template <typename T, size_t N>
+class const_arr_view {
+ public:
+    template<size_t X>
+    const_arr_view(const std::array<T, X>& in, const size_t offset)
+        : _data(in.data() + offset) { }
+    const_arr_view(const std::vector<T>& in, const size_t offset)
+        : _data(in.data() + offset) { }
+    const_arr_view(const T *in, const size_t offset)
+        : _data(in + offset) { }
+    static size_t size() { return N; }
+    const T* data() const { return _data; }
+    const T* cbegin() const { return _data; }
+    const T* cend() const { return _data + N; }
+    const T& operator [](std::size_t i) const { return _data[i]; }
+
+private:
+    const T *const _data;
+};
 
 
 /**
- * Defines a 12 vector (just for ease of use, clarity and compiler type checking)
+ * Defines vector and matrix types (just for ease of use, clarity and compiler type checking)
  */
-typedef scalar vector12[12];
-
-/**
- * Defines a 12x12 matrix
- */
-typedef scalar matrix12[12][12];
-
-/**
- * Defines a 3x3 matrix
- */
-typedef scalar matrix3[3][3];
-
-/**
- * Defines a 4x4 matrix
- */
-typedef scalar matrix4[4][4];
+typedef std::array<scalar,9> vector9;
+typedef std::array<scalar, 12> vector12;
+typedef std::array<std::array<scalar, 12>, 12> matrix12;
+typedef std::array<std::array<scalar, 3>, 3> matrix3;
+typedef std::array<std::array<scalar, 4>, 4> matrix4;
 
 /**
  * A useful type for holding the upper triangular part of symmetric 4x4 matrices

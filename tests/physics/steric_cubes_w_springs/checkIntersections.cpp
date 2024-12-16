@@ -37,7 +37,7 @@ int print_tet(scalar (&T)[4][3]);
 FILE *set_up_trajfile(const char *traj_filename){
   
    FILE *trj; 
-   char c;
+   char c = 0;
    if ((trj = fopen(traj_filename, "r")) == NULL) {
       cout << "Failed to open: " << traj_filename << endl; 
       return NULL; 
@@ -57,7 +57,7 @@ int skipnlines(FILE *iFile, int n) {
 
    int i=0;
    char *ignore;
-   int len_crap = 256;
+   constexpr int len_crap = 256;
    char crap[len_crap];
    for (i=0; i<n; i++){
      ignore = fgets(crap, len_crap, iFile);
@@ -110,15 +110,19 @@ int main(int argc, char** argv) {
    // for every time step:
    for (int t=0; t<num_steps; t++) {
      // load the coordinates of this time step:
-     if (b1.read_nodes_from_file(trj)) break; 
-     skipnlines(trj,1);
-     if (b2.read_nodes_from_file(trj)) break; 
-     skipnlines(trj,6);
-     if (t < 3) continue;
+       try {
+           b1.read_nodes_from_file(trj);
+       } catch (...) { break; }
+       skipnlines(trj,1);
+       try {
+           b2.read_nodes_from_file(trj);
+       } catch (...) { break; }
+       skipnlines(trj,6);
+       if (t < 3) continue;
 
      b1.center_of_coord(cm1);
      b2.center_of_coord(cm2);
-     d = arr3arr3Distance<scalar,arr3>(cm2, cm1);
+     d = distance(cm2, cm1);
      if ( (d - d0) > 1e-4) {
        cout << " CMs separating... something went wrong! t: " << t << endl; 
        cout << " cm1: " << cm1[0] << endl;
@@ -131,7 +135,7 @@ int main(int argc, char** argv) {
      // calculate if there is any tetrahedra intersecting:
      checks = 0;
      i_vol = 0; 
-     scalar tet1[4][3], tet2[4][3];
+     std::array<arr3, 4> tet1, tet2;
      for (int i=0; i<b1.num_elements; i++){ 
        // set up tetrahedron 1:
        for (int nn = 0; nn<4; nn++) {
@@ -147,7 +151,7 @@ int main(int argc, char** argv) {
            }
          }
          checks += 1;
-         if (volumeIntersection<scalar,arr3>(tet1, tet2, false, aux)){
+         if (volumeIntersection(tet1, tet2, false, aux)){
            // cout << " ivol " << endl;
            i_vol += 1;
          }

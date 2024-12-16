@@ -21,13 +21,14 @@
 #  the research papers on the package.
 #
 
-set (CONNECTIONENERGYDIR "${PROJECT_BINARY_DIR}/tests/rods/unit/connection_energy_2/")
-file (COPY connection_energy_2.ffeatest DESTINATION ${CONNECTIONENERGYDIR})
-file (COPY bend.rod DESTINATION ${CONNECTIONENERGYDIR})
-file (COPY realistic.ffea DESTINATION ${CONNECTIONENERGYDIR})
-file (COPY realistic_reversed.ffea DESTINATION ${CONNECTIONENERGYDIR})
-file (COPY plot.py DESTINATION ${CONNECTIONENERGYDIR})
-add_subdirectory(sphere_structure)
-add_test(NAME connection_energy_2 COMMAND ${PYTHON_EXECUTABLE} plot.py)
-set_tests_properties(connection_energy_2 PROPERTIES ENVIRONMENT PYTHONPATH=${PROJECT_SOURCE_DIR}/ffeatools/modules:$ENV{PYTHONPATH})
-
+if(Python3_EXECUTABLE)
+    set (CONNECTIONENERGYDIR "${PROJECT_BINARY_DIR}/tests/rods/unit/connection_energy_2/")
+    file (COPY connection_energy_2.ffeatest DESTINATION ${CONNECTIONENERGYDIR})
+    file (COPY bend.rod DESTINATION ${CONNECTIONENERGYDIR})
+    file (COPY realistic.ffea DESTINATION ${CONNECTIONENERGYDIR})
+    file (COPY realistic_reversed.ffea DESTINATION ${CONNECTIONENERGYDIR})
+    file (COPY plot.py DESTINATION ${CONNECTIONENERGYDIR})
+    add_subdirectory(sphere_structure)
+    add_test(NAME connection_energy_2 COMMAND ${Python3_EXECUTABLE} plot.py)
+    set_tests_properties(connection_energy_2 PROPERTIES ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

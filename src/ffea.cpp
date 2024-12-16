@@ -46,7 +46,7 @@
 #endif
 
 namespace b_po = boost::program_options;
-namespace b_fs = boost::filesystem;
+namespace fs = std::filesystem;
 using std::cout;
 using std::endl;
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
             FFEA_error_text();
             cout << "Unrecognised argument to --mode" << endl;
             cout << desc << endl;
-            return FFEA_ERROR;
+            return EXIT_FAILURE;
         }
     }
 
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
             FFEA_error_text();
             cout << "Argument to --delete_frames cannot be less than zero. We can't magic up simulation frames for you! :D" << endl;
             cout << desc << endl;
-            return FFEA_ERROR;
+            return EXIT_FAILURE;
         }
     }
 
@@ -133,19 +133,19 @@ int main(int argc, char *argv[])
     // Help text is built in to boost
     if (var_map.count("help")) {
         cout << desc << endl;
-        return FFEA_OK;
+        return EXIT_SUCCESS;
     }
 
     // Check we have an input script
     if (! var_map.count("input-file")) {
         cout << "\n\nUsage: ffea [FFEA SCRIPT FILE (.ffea)] [OPTIONS]\n\n\n" << endl;
         cout << desc << endl;
-        return FFEA_ERROR;
+        return EXIT_FAILURE;
     }
 
     // set up a script_fname with the absolute path
-    b_fs::path fs_script_fname = script_fname;
-    b_fs::path canonicalPath = b_fs::canonical(fs_script_fname.parent_path());
+    fs::path fs_script_fname = fs::absolute(script_fname);
+    fs::path canonicalPath = fs::canonical(fs_script_fname.parent_path());
     fs_script_fname = canonicalPath / fs_script_fname.filename();
     script_fname = fs_script_fname.string();
     cout << "\tInput FFEA script - " << script_fname << "\n\n";
@@ -159,40 +159,18 @@ int main(int argc, char *argv[])
     }
 
     //The system of all proteins, electrostatics and water
-    World *world;
-
-    // Allocate the world
-    world = new World();
+    std::unique_ptr<World> world = std::make_unique<World>();
 
     // Initialise the world, loading all blobs, parameters, electrostatics, kinetics etc.
     cout << "Initialising the world:\n" << endl;
-    if(world->init(script_fname, frames_to_delete, mode, !var_map.count("no-detail")) == FFEA_ERROR) {
-        FFEA_error_text();
-        cout << "Errors during initialisation mean World cannot be constructed properly." << endl;
-
-        // Delete the world (oh no!)
-        cout << "Deleting world..." << endl;
-        delete world;
-        cout << "...done. World has been sucessfully destroyed." << endl;
-
-        return FFEA_ERROR;
-    }
+    world->init(script_fname, frames_to_delete, mode, !var_map.count("no-detail"));
 
     /* World is initialised. How shall we run FFEA? */
-    int myreturn = FFEA_OK;
     if(mode == 0) {
-
         // Full FFEA
         cout << "FFEA simulation - Running world...\n" << endl;
-        if(world->run() == FFEA_ERROR) {
-            FFEA_error_text();
-            cout << "Error occurred when running World\n" << endl;
-            myreturn = FFEA_ERROR;
-        } else {
-            cout << "...done\n" << endl;
-            myreturn = FFEA_OK;
-        }
-
+        world->run();
+        cout << "...done\n" << endl;
     } else if(mode == 1 || mode == 2 || mode == 4) {
 
         // Some form of network model
@@ -223,7 +201,7 @@ int main(int argc, char *argv[])
 
                 // Get index as string
                 cin >> buf;
-                if(buf.compare("q") == 0 or buf.compare("Q") == 0 or buf.compare("") == 0) {
+                if(buf.compare("q") == 0 || buf.compare("Q") == 0 || buf.compare("") == 0) {
                     cout << endl << "\tThat's all the blobs!" << endl;
                     break;
                 }
@@ -248,7 +226,7 @@ int main(int argc, char *argv[])
 
         if(blobs.size() == 0) {
             cout << "No blobs selected. No elastic network models will be found :(" << endl;
-            return FFEA_OK;
+            return EXIT_SUCCESS;
         }
 
         // How many modes?
@@ -273,7 +251,7 @@ int main(int argc, char *argv[])
 
             } catch(exception &e) {
                 FFEA_error_text();
-                cout << "Exception occured:" << endl;
+                cout << "Exception occurred:" << endl;
                 cout << e.what() << endl;
                 cout << "\tPlease enter a whole number less than 3 * the total number of nodes in your system and greater than zero." << endl;
             }
@@ -286,71 +264,34 @@ int main(int argc, char *argv[])
         }
 
         if(mode == 1) {
-
             /* Linear Elastic Model */
             cout << endl << endl << "\tBeginning the calculation of the LEMs..." << endl;
-            if(world->lem(blobs, num_modes) == FFEA_ERROR) {
-                cout << endl;
-                FFEA_error_text();
-                cout << "Problem when calculating linear elastic models." << endl;
-                myreturn = FFEA_ERROR;
-
-            } else {
-                cout << "...done! " << endl;
-                myreturn = FFEA_OK;
-            }
-
+            world->lem(blobs, num_modes);
+            cout << "...done! " << endl;
         } else if (mode == 2) {
-
             /* Dynamic Mode Model */
             cout << endl << endl << "\tBeginning the calculation of the DMMs..." << endl;
-            if(world->dmm(blobs, num_modes) == FFEA_ERROR) {
-                cout << endl;
-                FFEA_error_text();
-                cout << "Problem when calculating dynamic mode models." << endl;
-                myreturn = FFEA_ERROR;
-            } else {
-                cout << "...done! " << endl;
-                myreturn = FFEA_OK;
-            }
-
+            world->dmm(blobs, num_modes);
+            cout << "...done! " << endl;
         } else if (mode == 4) {
-
             /* Rotne-Prager Dynamic Mode Model */
             cout << endl << endl << "\tBeginning the calculation of the Rotne-Prager DMMs..." << endl;
-            if(world->dmm_rp(blobs, num_modes) == FFEA_ERROR) {
-                cout << endl;
-                FFEA_error_text();
-                cout << "Problem when calculating RP dynamic mode models." << endl;
-                myreturn = FFEA_ERROR;
-            } else {
-                cout << "...done! " << endl;
-                myreturn = FFEA_OK;
-            }
+            world->dmm_rp(blobs, num_modes);
+            cout << "...done! " << endl;
         }
-
     } else if(mode == 3) {
-
         /* Calculate maximum allowed timestep for system */
         cout << "\n\n\n***************************************************\n\tFFEA - Timestep Calculator\n***************************************************\n\n";
-        if(world->get_smallest_time_constants() == FFEA_ERROR) {
-            FFEA_error_text();
-            cout << "Error occurred in 'get_smallest_time_constants()' in World\n" << endl;
-            myreturn = FFEA_ERROR;
-        } else {
-            myreturn = FFEA_OK;
-        }
+        world->get_smallest_time_constants();
     } else {
         cout << "Error. Unrecognised argument to --mode \"" << mode << "\"" << endl << endl;
         cout << desc << endl;
+        return EXIT_FAILURE;
     }
 
     /* Delete the world (oh no!) */
     cout << "Deleting world..." << endl;
-    if (myreturn != FFEA_ERROR){
-        std::cout << "Exiting gracefully...\n";
-        //delete world;
-    }
+    world.reset();
 #ifdef USE_MPI
     st = MPI::Wtime();
     et = MPI::Wtime()-st;
@@ -358,10 +299,10 @@ int main(int argc, char *argv[])
     cout<< "benchmarking--------Finalising time of ffea:"<<et<<"seconds"<<endl;
     cout<< "benchmarking--------total executing time:"<<et1<<"seconds"<<endl;
 #endif
-    cout << "...done. World has been sucessfully destroyed." << endl;
+    cout << "...done. World has been successfully destroyed." << endl;
 
 #ifdef USE_MPI
     MPI::Finalize();
 #endif
-    return myreturn;
+    return EXIT_SUCCESS;
 }

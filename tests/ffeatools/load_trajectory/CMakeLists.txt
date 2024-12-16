@@ -20,9 +20,10 @@
 #  To help us fund FFEA development, we humbly ask that you cite 
 #  the research papers on the package.
 #
-
-set (TESTPYTHONTRAJ "${PROJECT_BINARY_DIR}/tests/ffeatools/load_trajectory")
-file (COPY unit_test_traj.ftj DESTINATION ${TESTPYTHONTRAJ})
-file (COPY python_load_trajectory.py DESTINATION ${TESTPYTHONTRAJ})
-add_test(NAME python_load_trajectory COMMAND ${PYTHON_EXECUTABLE} python_load_trajectory.py)
-set_tests_properties(python_load_trajectory PROPERTIES ENVIRONMENT PYTHONPATH=${PROJECT_SOURCE_DIR}/ffeatools/modules:$ENV{PYTHONPATH})
+if(Python3_EXECUTABLE)
+    set (TESTPYTHONTRAJ "${PROJECT_BINARY_DIR}/tests/ffeatools/load_trajectory")
+    file (COPY unit_test_traj.ftj DESTINATION ${TESTPYTHONTRAJ})
+    file (COPY python_load_trajectory.py DESTINATION ${TESTPYTHONTRAJ})
+    add_test(NAME python_load_trajectory COMMAND ${Python3_EXECUTABLE} python_load_trajectory.py)
+    set_tests_properties(python_load_trajectory PROPERTIES ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

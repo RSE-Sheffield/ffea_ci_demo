@@ -7,11 +7,11 @@ int main(){
     test_rod.load_header("realistic_rod.rodtraj");
     test_rod.load_contents("realistic_rod.rodtraj");
     test_rod.set_units();
-    float ref_current_r[30];
+    std::array<float, 30> ref_current_r;
     for (int i=0; i<30; i++){
         ref_current_r[i] = test_rod.current_r[i];
     }
-    float euler_angles[3] = {3.141592654*2, 3.141592654*2, 3.141592654*2};
+    rod::float3 euler_angles = {3.141592654*2, 3.141592654*2, 3.141592654*2};
     test_rod.rotate_rod(euler_angles);
     for (int i=0; i<30; i++){
         if (std::abs(ref_current_r[i] - test_rod.current_r[i]) > 0.01){

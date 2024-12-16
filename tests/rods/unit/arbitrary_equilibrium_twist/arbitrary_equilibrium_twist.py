@@ -24,12 +24,14 @@
 #  the research papers on the package.
 #
 
+import sys
 import subprocess
 
 def main():
 
     return_value = subprocess.call(["../../../../src/ffea", "arbitrary_equilibrium_twist.ffeatest"])
-    raise SystemExit, return_value
+    return return_value
 
 if __name__ == "__main__":
-    main()
+    error_status = main()
+    sys.exit(error_status)

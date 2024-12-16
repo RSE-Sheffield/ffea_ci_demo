@@ -26,6 +26,7 @@
 
 #include <list>
 #include <vector>
+#include <memory>
 
 #include "mat_vec_types.h"
 #include "FFEA_return_codes.h"
@@ -43,30 +44,23 @@ typedef struct {
 
 class SparsityPattern {
 public:
-    SparsityPattern();
-
-    ~SparsityPattern();
-
-    int init(int num_rows);
+    void init(int num_rows);
 
     /* * */
-    int register_contribution(int i, int j, scalar *contrib_memory_loc);
+    void register_contribution(int i, int j, scalar *contrib_memory_loc);
 
     bool check_for_contribution(int i, int j);
 
     /** Factory function for making empty fixed sparsity pattern matrices from this sparsity pattern */
-    SparseMatrixFixedPattern * create_sparse_matrix();
+    std::shared_ptr<SparseMatrixFixedPattern> create_sparse_matrix();
 
     void print();
 
 private:
-
-    int num_rows; ///< Number of rows in matrix 
-
     /** An array of vectors containing the indices of the occupied sites */
-    list<sparse_contribution_location*> *row;
+    std::vector<list<std::unique_ptr<sparse_contribution_location>>> row;
 
-    int num_nonzero_elements; ///< Total number of nonzero elements in the sparsity pattern */
+    int num_nonzero_elements = 0; ///< Total number of nonzero elements in the sparsity pattern */
 };
 
 #endif

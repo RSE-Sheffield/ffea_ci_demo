@@ -62,16 +62,17 @@ If you have questions and comments, please contact us! For biophysics, contact S
    * Ryan Cocking
    * Molly Gravett
    * Ben Hanson
-   * [Oliver Harlen](https://www.maths.leeds.ac.uk/index.php?id=263&uid=1025)
-   * [Sarah Harris](http://www.comp-bio.physics.leeds.ac.uk/)
-   * [Joanna Leng](https://www.eps.leeds.ac.uk/computing/staff/1509/joanna-leng)
+   * [Oliver Harlen](https://eps.leeds.ac.uk/maths/staff/4035/dr-oliver-harlen)
+   * [Sarah Harris](https://eps.leeds.ac.uk/physics/staff/4109/dr-sarah-harris)
+   * [Joanna Leng](https://eps.leeds.ac.uk/computing/staff/1509/joanna-leng)
    * Robin Oliver
-   * [Daniel Read](http://www1.maths.leeds.ac.uk/~djread/)
+   * [Daniel Read](https://eps.leeds.ac.uk/maths/staff/4074/professor-daniel-read)
    * Robin Richardson
    * Tom Ridley
    * Jarvellis Rogers
    * Albert Solernou
    * [Rob Welch](http://robwel.ch/)
+   * Changqing Zheng
    
 
 # Thanks {#thanks}

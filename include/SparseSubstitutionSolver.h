@@ -24,9 +24,9 @@
 #ifndef SPARSESUBSTITUTIONSOLVER_H_INCLUDED
 #define SPARSESUBSTITUTIONSOLVER_H_INCLUDED
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
 
 #include "FFEA_return_codes.h"
 #include "mat_vec_types.h"
@@ -40,14 +40,8 @@
 
 class SparseSubstitutionSolver : public Solver {
 public:
-    /** Constructor */
-    SparseSubstitutionSolver();
-
-    /** Destructor */
-    ~SparseSubstitutionSolver();
-
     /** Builds the lower triangular Cholesky decomposed mass matrix */
-    int init(int num_nodes, int num_elements, mesh_node *node, tetra_element_linear *elem, SimulationParams *params, int num_pinned_nodes, int *pinned_nodes_list, set<int> bsite_pinned_node_list);
+    void init(std::vector<mesh_node >&node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) override;
 
     /**
      * Solves the equation Ax = b for the unknown vector x, for
@@ -58,14 +52,14 @@ public:
      *
      * This implementation is memory efficient as it modifies the vector x in place (no temporary vectors are needed).
      */
-    int solve(vector3 *x);
+    void solve(std::vector<arr3> &x) override;
 
-    void apply_matrix(scalar *in, scalar *result);
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) override;
 
 private:
 
     /** Number of rows in this cholesky variable band matrix */
-    int num_rows;
+    int num_rows = 0;
 
     //@{
     /**
@@ -74,14 +68,11 @@ private:
      * in that column, that starts from the diagonal (travelling downwards or upwards for
      * the L and U matrices respectively).
      */
-    int *L_key, *U_key;
+    std::vector<int> L_key, U_key;
     //@}
 
-    /** Stores the number of entries stored in the upper triangle */
-    int total_entries_in_U;
-
     /** Stores the inverse of the diagonal elements (need for LU solving) */
-    scalar *inverse_diag;
+    std::vector<scalar> inverse_diag;
 
     //@{
     /**
@@ -91,7 +82,7 @@ private:
      *
      * The off-diagonal data for the lower and upper triangles are stored in L and U respectively.
      */
-    scalar *L, *U;
+    std::vector<scalar> L, U;
     //@}
 };
 

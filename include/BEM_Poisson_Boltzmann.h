@@ -30,7 +30,7 @@
 #ifndef BEM_POISSON_BOLTZMANN_H_INCLUDED
 #define BEM_POISSON_BOLTZMANN_H_INCLUDED
 
-#include <math.h>
+#include <cmath>
 
 #include "FFEA_return_codes.h"
 #include "NearestNeighbourLinkedListCube.h"
@@ -43,15 +43,15 @@ class BEM_Poisson_Boltzmann : GaussianQuadrature_tri, GaussianQuadrature_1d {
 public:
     BEM_Poisson_Boltzmann();
     ~BEM_Poisson_Boltzmann();
-    int init(NearestNeighbourLinkedListCube *lookup);
+    void init(NearestNeighbourLinkedListCube *lookup);
     /** Sets the inverse debye screening length for the system */
     void set_kappa(scalar kappa);
     void build_BEM_matrices();
-    void perform_integrals_for_lookup_cell_self(LinkedListNode<Face> *l_i, vector3 gqp[4]);
-    void perform_integrals_for_lookup_cell_relative(LinkedListNode<Face> *l_i, vector3 gqp[4], int dx, int dy, int dz);
+    void perform_integrals_for_lookup_cell_self(const LinkedListNode<Face> *l_i, std::array<arr3, 4> &gqp);
+    void perform_integrals_for_lookup_cell_relative(const LinkedListNode<Face> *l_i, std::array<arr3, 4> &gqp, int dx, int dy, int dz);
     void print_matrices();
-    SparseMatrixUnknownPattern * get_C();
-    SparseMatrixUnknownPattern * get_D();
+    std::unique_ptr<SparseMatrixUnknownPattern> &get_C();
+    std::unique_ptr<SparseMatrixUnknownPattern> &get_D();
 
 private:
 
@@ -63,7 +63,7 @@ private:
 
     //@{
     /** BEM matrices */
-    SparseMatrixUnknownPattern *mat_C, *mat_D;
+    std::unique_ptr<SparseMatrixUnknownPattern> mat_C, mat_D;
     //@}
 
     /** The inverse Debye-screening length, kappa */
@@ -76,16 +76,16 @@ private:
     scalar grad_u_4pi(scalar r, scalar r2);
 
     /*
-                    scalar screened_R_theta(scalar r_perp_mag, scalar half_theta_max, scalar theta_bar, scalar xi);
+      scalar screened_R_theta(scalar r_perp_mag, scalar half_theta_max, scalar theta_bar, scalar xi);
      */
 
-    void gauss_quadrature_4_point(vector3 gqp[4], vector3 *p, scalar *int_u, scalar *int_du, Face *f);
+    void gauss_quadrature_4_point(std::array<arr3, 4> &gqp, arr3 &p, scalar &int_u, scalar &int_du, Face *f);
 
-    scalar self_term(vector3 *n0, vector3 *n1, vector3 *n2, int precision);
+    scalar self_term(const arr3 &n0, const arr3 &n1, const arr3 &n2, int precision);
 
     scalar f_1d(scalar r);
 
-    scalar f_3d(vector3 *p, vector3 *q);
+    scalar f_3d(const arr3 &p, const arr3 &q);
 };
 
 #endif

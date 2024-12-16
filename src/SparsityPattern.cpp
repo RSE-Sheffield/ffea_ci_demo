@@ -23,45 +23,22 @@
 
 #include "SparsityPattern.h"
 
-SparsityPattern::SparsityPattern() {
-    num_rows = 0;
-    row = NULL;
-    num_nonzero_elements = 0;
-}
-
-SparsityPattern::~SparsityPattern() {
-    list<sparse_contribution_location*>::iterator it;
-    for(int i = 0; i < num_rows; ++i) {
-        for (it = row[i].begin(); it != row[i].end(); ++it) {
-	    delete (*it);
-	}	
+void SparsityPattern::init(int num_rows) {
+    try {
+        row = std::vector<list<std::unique_ptr<sparse_contribution_location>>>(num_rows);
+    } catch (std::bad_alloc&) {
+        throw FFEAException("Could not allocate memory for 'row' array in SparsityPattern.");
     }
-    delete[] row;
-    num_rows = 0;
-    row = NULL;
-    num_nonzero_elements = 0;
-}
-
-int SparsityPattern::init(int num_rows) {
-    this->num_rows = num_rows;
-    row = new(std::nothrow) list<sparse_contribution_location*>[num_rows];
-    if (row == NULL) {
-        printf("Could not allocate memory for 'row' array in SparsityPattern\n");
-        return FFEA_ERROR;
-    }
-
-    return FFEA_OK;
 }
 
 /* * */
-int SparsityPattern::register_contribution(int i, int j, scalar *contrib_memory_loc) {
-    list<sparse_contribution_location*>::iterator it;
-    for (it = row[i].begin(); it != row[i].end(); ++it) {
-
+void SparsityPattern::register_contribution(int i, int j, scalar *contrib_memory_loc) {
+    auto it = row[i].begin();
+    for (; it != row[i].end(); ++it) {
         // If element already has sources, add the source to the list
         if ((*it)->column_index == j) {
             (*it)->source_list.push_back(contrib_memory_loc);
-            return FFEA_OK;
+            return;
         } 
 
         // If we've passed the point where we'd expect our element to be,
@@ -72,19 +49,14 @@ int SparsityPattern::register_contribution(int i, int j, scalar *contrib_memory_
     }
 
     num_nonzero_elements++;
-    sparse_contribution_location *scl = new(std::nothrow) sparse_contribution_location();
-    if (scl == NULL) FFEA_ERROR_MESSG("Failed to allocate memory for 'scl' in SparsityPattern::register_contribution\n"); 
+    std::unique_ptr<sparse_contribution_location> scl = std::make_unique<sparse_contribution_location>();
     scl->column_index = j;
     scl->source_list.push_back(contrib_memory_loc);
-    row[i].insert(it, scl);
-    
-    return FFEA_OK;
-
+    row[i].insert(it, std::move(scl));
 }
 
 bool SparsityPattern::check_for_contribution(int i, int j) {
-    list<sparse_contribution_location*>::iterator it;
-    for (it = row[i].begin(); it != row[i].end(); ++it) {
+    for (auto it = row[i].begin(); it != row[i].end(); ++it) {
         // If element already has sources, add the source to the list
         if ((*it)->column_index == j) {
             return true;
@@ -94,32 +66,26 @@ bool SparsityPattern::check_for_contribution(int i, int j) {
 }
 
 /* Factory function for making empty fixed sparsity pattern matrices from this sparsity pattern */
-SparseMatrixFixedPattern * SparsityPattern::create_sparse_matrix() {
-    SparseMatrixFixedPattern *sm = new SparseMatrixFixedPattern();
+std::shared_ptr<SparseMatrixFixedPattern> SparsityPattern::create_sparse_matrix() {
+    std::shared_ptr<SparseMatrixFixedPattern> sm = std::make_shared<SparseMatrixFixedPattern>();
 
     // Generate the array of sparse matrix elements from this sparsity pattern
-    sparse_entry *entry = new sparse_entry[num_nonzero_elements];
+    std::vector<sparse_entry> entry = std::vector<sparse_entry>(num_nonzero_elements);
 
     // Also generate the key (array of pointers that take us to the start of each row)
-    int *key = new int[num_rows + 1];
-
-    // Initialise it to zero (to get rid of compiler warnings)
-    for (int i = 0; i < num_rows; i++) {
-        key[i] = 0;
-    }
+    std::vector<int> key = std::vector<int>(row.size() + 1, 0);
 
     // Generate the array of sources for each element in the sparse matrix
-    sparse_entry_sources *source_list = new sparse_entry_sources[num_nonzero_elements];
+    std::vector<sparse_entry_sources> source_list = std::vector<sparse_entry_sources>(num_nonzero_elements);
 
     int pos = 0;
-    for (int i = 0; i < num_rows; i++) {
-
+    for (int i = 0; i < row.size(); i++) {
         // Store the index of the start of each row in the key
         key[i] = pos;
 
         // Dump the data serially, initialising values to zero and column indices to those
         // given by the sparsity pattern
-        for (list<sparse_contribution_location*>::iterator it = row[i].begin(); it != row[i].end(); ++it) {
+        for (auto it = row[i].begin(); it != row[i].end(); ++it) {
             entry[pos].val = 0;
             entry[pos].column_index = (*it)->column_index;
 
@@ -128,25 +94,26 @@ SparseMatrixFixedPattern * SparsityPattern::create_sparse_matrix() {
                 source_list[pos].set_source(j, (*it)->source_list[j]);
             }
 
-            pos++;
+            ++pos;
         }
     }
 
     // Last index in the key array should contain the total number of nonzero elements in the matrix
-    key[num_rows] = pos;
+    key[row.size()] = pos;
 
     // Initialise the sparse matrix with the array of entries and the row access key
-    sm->init(num_rows, num_nonzero_elements, entry, key, source_list);
+    // Use of std::move() here moves the local scope entry/key into the method (converts them to rval)
+    sm->init(row.size(), num_nonzero_elements, std::move(entry), std::move(key), source_list);
 
     // Return pointer to the newly allocated and initialised sparse matrix
     return sm;
 }
 
 void SparsityPattern::print() {
-    for (int i = 0; i < num_rows; i++) {
+    for (int i = 0; i < row.size(); i++) {
         printf("= ");
-        for (list<sparse_contribution_location*>::iterator it = row[i].begin(); it != row[i].end(); ++it) {
-            printf("[%d %d] ", (*it)->column_index, (int) ((*it)->source_list.size()));
+        for (auto it = row[i].begin(); it != row[i].end(); ++it) {
+            printf("[%d %d] ", (*it)->column_index, static_cast<int>((*it)->source_list.size()));
         }
         printf("\n");
     }

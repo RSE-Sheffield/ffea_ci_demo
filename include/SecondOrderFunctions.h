@@ -45,6 +45,10 @@
 #define DT_BY_DZ 7
 #define DU_BY_DZ 8
 
+// Also defined in tetra_element_linear.h/BlobLite.h
+#ifndef NUM_NODES_QUADRATIC_TET
+#define NUM_NODES_QUADRATIC_TET 10
+#endif
 
 #include "mesh_node.h"
 
@@ -57,6 +61,7 @@ namespace SecondOrderFunctions {
     struct abcd {
         scalar a, b, c, d;
     };
+    typedef std::array<std::array<abcd, 3>, 3> abcd_mat3x3;
 
      static stu stu_lookup[10] ={
         {0, 0, 0},
@@ -71,7 +76,7 @@ namespace SecondOrderFunctions {
         {0, .5, .5}
     }; 
 
-    static void calc_psi(scalar psi[10], scalar s, scalar t, scalar u) {
+    static void calc_psi(std::array<scalar, NUM_NODES_QUADRATIC_TET> &psi, scalar s, scalar t, scalar u) {
         scalar r = 1 - s - t - u;
         psi[0] = (2 * r - 1) * r;
         psi[1] = (2 * s - 1) * s;
@@ -85,56 +90,56 @@ namespace SecondOrderFunctions {
         psi[9] = 4 * t * u;
     } 
 
-     static void calc_grad_psi(vector3 grad_psi[10], scalar s, scalar t, scalar u, scalar J_inv[9]) {
+     static void calc_grad_psi(std::array<arr3, NUM_NODES_QUADRATIC_TET> &grad_psi, scalar s, scalar t, scalar u, const vector9& J_inv) {
         scalar dpsi1_by_dstu = 4 * (s + t + u) - 3;
-        grad_psi[GRAD_PSI_1].x = dpsi1_by_dstu * (J_inv[DS_BY_DX] + J_inv[DT_BY_DX] + J_inv[DU_BY_DX]);
-        grad_psi[GRAD_PSI_1].y = dpsi1_by_dstu * (J_inv[DS_BY_DY] + J_inv[DT_BY_DY] + J_inv[DU_BY_DY]);
-        grad_psi[GRAD_PSI_1].z = dpsi1_by_dstu * (J_inv[DS_BY_DZ] + J_inv[DT_BY_DZ] + J_inv[DU_BY_DZ]);
+        grad_psi[GRAD_PSI_1][0] = dpsi1_by_dstu * (J_inv[DS_BY_DX] + J_inv[DT_BY_DX] + J_inv[DU_BY_DX]);
+        grad_psi[GRAD_PSI_1][1] = dpsi1_by_dstu * (J_inv[DS_BY_DY] + J_inv[DT_BY_DY] + J_inv[DU_BY_DY]);
+        grad_psi[GRAD_PSI_1][2] = dpsi1_by_dstu * (J_inv[DS_BY_DZ] + J_inv[DT_BY_DZ] + J_inv[DU_BY_DZ]);
 
         scalar dpsi2_by_ds = 4 * s - 1;
-        grad_psi[GRAD_PSI_2].x = dpsi2_by_ds * J_inv[DS_BY_DX];
-        grad_psi[GRAD_PSI_2].y = dpsi2_by_ds * J_inv[DS_BY_DY];
-        grad_psi[GRAD_PSI_2].z = dpsi2_by_ds * J_inv[DS_BY_DZ];
+        grad_psi[GRAD_PSI_2][0] = dpsi2_by_ds * J_inv[DS_BY_DX];
+        grad_psi[GRAD_PSI_2][1] = dpsi2_by_ds * J_inv[DS_BY_DY];
+        grad_psi[GRAD_PSI_2][2] = dpsi2_by_ds * J_inv[DS_BY_DZ];
 
         scalar dpsi3_by_dt = 4 * t - 1;
-        grad_psi[GRAD_PSI_3].x = dpsi3_by_dt * J_inv[DT_BY_DX];
-        grad_psi[GRAD_PSI_3].y = dpsi3_by_dt * J_inv[DT_BY_DY];
-        grad_psi[GRAD_PSI_3].z = dpsi3_by_dt * J_inv[DT_BY_DZ];
+        grad_psi[GRAD_PSI_3][0] = dpsi3_by_dt * J_inv[DT_BY_DX];
+        grad_psi[GRAD_PSI_3][1] = dpsi3_by_dt * J_inv[DT_BY_DY];
+        grad_psi[GRAD_PSI_3][2] = dpsi3_by_dt * J_inv[DT_BY_DZ];
 
         scalar dpsi4_by_du = 4 * u - 1;
-        grad_psi[GRAD_PSI_4].x = dpsi4_by_du * J_inv[DU_BY_DX];
-        grad_psi[GRAD_PSI_4].y = dpsi4_by_du * J_inv[DU_BY_DY];
-        grad_psi[GRAD_PSI_4].z = dpsi4_by_du * J_inv[DU_BY_DZ];
+        grad_psi[GRAD_PSI_4][0] = dpsi4_by_du * J_inv[DU_BY_DX];
+        grad_psi[GRAD_PSI_4][1] = dpsi4_by_du * J_inv[DU_BY_DY];
+        grad_psi[GRAD_PSI_4][2] = dpsi4_by_du * J_inv[DU_BY_DZ];
 
         scalar dpsi5_by_ds = 4 * (1 - 2 * s - t - u), dpsi5_by_dtu = -4 * s;
-        grad_psi[GRAD_PSI_5].x = dpsi5_by_ds * J_inv[DS_BY_DX] + dpsi5_by_dtu * (J_inv[DT_BY_DX] + J_inv[DU_BY_DX]);
-        grad_psi[GRAD_PSI_5].y = dpsi5_by_ds * J_inv[DS_BY_DY] + dpsi5_by_dtu * (J_inv[DT_BY_DY] + J_inv[DU_BY_DY]);
-        grad_psi[GRAD_PSI_5].z = dpsi5_by_ds * J_inv[DS_BY_DZ] + dpsi5_by_dtu * (J_inv[DT_BY_DZ] + J_inv[DU_BY_DZ]);
+        grad_psi[GRAD_PSI_5][0] = dpsi5_by_ds * J_inv[DS_BY_DX] + dpsi5_by_dtu * (J_inv[DT_BY_DX] + J_inv[DU_BY_DX]);
+        grad_psi[GRAD_PSI_5][1] = dpsi5_by_ds * J_inv[DS_BY_DY] + dpsi5_by_dtu * (J_inv[DT_BY_DY] + J_inv[DU_BY_DY]);
+        grad_psi[GRAD_PSI_5][2] = dpsi5_by_ds * J_inv[DS_BY_DZ] + dpsi5_by_dtu * (J_inv[DT_BY_DZ] + J_inv[DU_BY_DZ]);
 
         scalar dpsi6_by_dt = 4 * (1 - s - 2 * t - u), dpsi6_by_dsu = -4 * t;
-        grad_psi[GRAD_PSI_6].x = dpsi6_by_dt * J_inv[DT_BY_DX] + dpsi6_by_dsu * (J_inv[DS_BY_DX] + J_inv[DU_BY_DX]);
-        grad_psi[GRAD_PSI_6].y = dpsi6_by_dt * J_inv[DT_BY_DY] + dpsi6_by_dsu * (J_inv[DS_BY_DY] + J_inv[DU_BY_DY]);
-        grad_psi[GRAD_PSI_6].z = dpsi6_by_dt * J_inv[DT_BY_DZ] + dpsi6_by_dsu * (J_inv[DS_BY_DZ] + J_inv[DU_BY_DZ]);
+        grad_psi[GRAD_PSI_6][0] = dpsi6_by_dt * J_inv[DT_BY_DX] + dpsi6_by_dsu * (J_inv[DS_BY_DX] + J_inv[DU_BY_DX]);
+        grad_psi[GRAD_PSI_6][1] = dpsi6_by_dt * J_inv[DT_BY_DY] + dpsi6_by_dsu * (J_inv[DS_BY_DY] + J_inv[DU_BY_DY]);
+        grad_psi[GRAD_PSI_6][2] = dpsi6_by_dt * J_inv[DT_BY_DZ] + dpsi6_by_dsu * (J_inv[DS_BY_DZ] + J_inv[DU_BY_DZ]);
 
         scalar dpsi7_by_du = 4 * (1 - s - t - 2 * u), dpsi7_by_dst = -4 * u;
-        grad_psi[GRAD_PSI_7].x = dpsi7_by_du * J_inv[DU_BY_DX] + dpsi7_by_dst * (J_inv[DS_BY_DX] + J_inv[DT_BY_DX]);
-        grad_psi[GRAD_PSI_7].y = dpsi7_by_du * J_inv[DU_BY_DY] + dpsi7_by_dst * (J_inv[DS_BY_DY] + J_inv[DT_BY_DY]);
-        grad_psi[GRAD_PSI_7].z = dpsi7_by_du * J_inv[DU_BY_DZ] + dpsi7_by_dst * (J_inv[DS_BY_DZ] + J_inv[DT_BY_DZ]);
+        grad_psi[GRAD_PSI_7][0] = dpsi7_by_du * J_inv[DU_BY_DX] + dpsi7_by_dst * (J_inv[DS_BY_DX] + J_inv[DT_BY_DX]);
+        grad_psi[GRAD_PSI_7][1] = dpsi7_by_du * J_inv[DU_BY_DY] + dpsi7_by_dst * (J_inv[DS_BY_DY] + J_inv[DT_BY_DY]);
+        grad_psi[GRAD_PSI_7][2] = dpsi7_by_du * J_inv[DU_BY_DZ] + dpsi7_by_dst * (J_inv[DS_BY_DZ] + J_inv[DT_BY_DZ]);
 
         scalar dpsi8_by_ds = 4 * t, dpsi8_by_dt = 4 * s;
-        grad_psi[GRAD_PSI_8].x = dpsi8_by_ds * J_inv[DS_BY_DX] + dpsi8_by_dt * J_inv[DT_BY_DX];
-        grad_psi[GRAD_PSI_8].y = dpsi8_by_ds * J_inv[DS_BY_DY] + dpsi8_by_dt * J_inv[DT_BY_DY];
-        grad_psi[GRAD_PSI_8].z = dpsi8_by_ds * J_inv[DS_BY_DZ] + dpsi8_by_dt * J_inv[DT_BY_DZ];
+        grad_psi[GRAD_PSI_8][0] = dpsi8_by_ds * J_inv[DS_BY_DX] + dpsi8_by_dt * J_inv[DT_BY_DX];
+        grad_psi[GRAD_PSI_8][1] = dpsi8_by_ds * J_inv[DS_BY_DY] + dpsi8_by_dt * J_inv[DT_BY_DY];
+        grad_psi[GRAD_PSI_8][2] = dpsi8_by_ds * J_inv[DS_BY_DZ] + dpsi8_by_dt * J_inv[DT_BY_DZ];
 
         scalar dpsi9_by_ds = 4 * u, dpsi9_by_du = 4 * s;
-        grad_psi[GRAD_PSI_9].x = dpsi9_by_ds * J_inv[DS_BY_DX] + dpsi9_by_du * J_inv[DU_BY_DX];
-        grad_psi[GRAD_PSI_9].y = dpsi9_by_ds * J_inv[DS_BY_DY] + dpsi9_by_du * J_inv[DU_BY_DY];
-        grad_psi[GRAD_PSI_9].z = dpsi9_by_ds * J_inv[DS_BY_DZ] + dpsi9_by_du * J_inv[DU_BY_DZ];
+        grad_psi[GRAD_PSI_9][0] = dpsi9_by_ds * J_inv[DS_BY_DX] + dpsi9_by_du * J_inv[DU_BY_DX];
+        grad_psi[GRAD_PSI_9][1] = dpsi9_by_ds * J_inv[DS_BY_DY] + dpsi9_by_du * J_inv[DU_BY_DY];
+        grad_psi[GRAD_PSI_9][2] = dpsi9_by_ds * J_inv[DS_BY_DZ] + dpsi9_by_du * J_inv[DU_BY_DZ];
 
         scalar dpsi10_by_dt = 4 * u, dpsi10_by_du = 4 * t;
-        grad_psi[GRAD_PSI_10].x = dpsi10_by_dt * J_inv[DT_BY_DX] + dpsi10_by_du * J_inv[DU_BY_DX];
-        grad_psi[GRAD_PSI_10].y = dpsi10_by_dt * J_inv[DT_BY_DY] + dpsi10_by_du * J_inv[DU_BY_DY];
-        grad_psi[GRAD_PSI_10].z = dpsi10_by_dt * J_inv[DT_BY_DZ] + dpsi10_by_du * J_inv[DU_BY_DZ];
+        grad_psi[GRAD_PSI_10][0] = dpsi10_by_dt * J_inv[DT_BY_DX] + dpsi10_by_du * J_inv[DU_BY_DX];
+        grad_psi[GRAD_PSI_10][1] = dpsi10_by_dt * J_inv[DT_BY_DY] + dpsi10_by_du * J_inv[DU_BY_DY];
+        grad_psi[GRAD_PSI_10][2] = dpsi10_by_dt * J_inv[DT_BY_DZ] + dpsi10_by_du * J_inv[DU_BY_DZ];
 
         //		for(int i = 0; i < 10; i++) {
         //			printf("dpsi%d/dx = %+e\n", i + 1, grad_psi[i].x);
@@ -144,66 +149,66 @@ namespace SecondOrderFunctions {
     } 
 
   /** Construct jacobian column coefficients */ 
-  static void calc_jacobian_column_coefficients(mesh_node *n[10], abcd J_coeff[3][3]) {
+  static void calc_jacobian_column_coefficients(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n, abcd_mat3x3 &J_coeff) {
         // dx/ds
-        J_coeff[0][0].a = 4 * (n[0]->pos.x + n[1]->pos.x - 2 * n[4]->pos.x);
-        J_coeff[0][0].b = 4 * (n[0]->pos.x - n[4]->pos.x - n[5]->pos.x + n[7]->pos.x);
-        J_coeff[0][0].c = 4 * (n[0]->pos.x - n[4]->pos.x - n[6]->pos.x + n[8]->pos.x);
-        J_coeff[0][0].d = 4 * n[4]->pos.x - 3 * n[0]->pos.x - n[1]->pos.x;
+        J_coeff[0][0].a = 4 * (n[0]->pos[0] + n[1]->pos[0] - 2 * n[4]->pos[0]);
+        J_coeff[0][0].b = 4 * (n[0]->pos[0] - n[4]->pos[0] - n[5]->pos[0] + n[7]->pos[0]);
+        J_coeff[0][0].c = 4 * (n[0]->pos[0] - n[4]->pos[0] - n[6]->pos[0] + n[8]->pos[0]);
+        J_coeff[0][0].d = 4 * n[4]->pos[0] - 3 * n[0]->pos[0] - n[1]->pos[0];
 
         // dy/ds
-        J_coeff[1][0].a = 4 * (n[0]->pos.y + n[1]->pos.y - 2 * n[4]->pos.y);
-        J_coeff[1][0].b = 4 * (n[0]->pos.y - n[4]->pos.y - n[5]->pos.y + n[7]->pos.y);
-        J_coeff[1][0].c = 4 * (n[0]->pos.y - n[4]->pos.y - n[6]->pos.y + n[8]->pos.y);
-        J_coeff[1][0].d = 4 * n[4]->pos.y - 3 * n[0]->pos.y - n[1]->pos.y;
+        J_coeff[1][0].a = 4 * (n[0]->pos[1] + n[1]->pos[1] - 2 * n[4]->pos[1]);
+        J_coeff[1][0].b = 4 * (n[0]->pos[1] - n[4]->pos[1] - n[5]->pos[1] + n[7]->pos[1]);
+        J_coeff[1][0].c = 4 * (n[0]->pos[1] - n[4]->pos[1] - n[6]->pos[1] + n[8]->pos[1]);
+        J_coeff[1][0].d = 4 * n[4]->pos[1] - 3 * n[0]->pos[1] - n[1]->pos[1];
 
         // dz/ds
-        J_coeff[2][0].a = 4 * (n[0]->pos.z + n[1]->pos.z - 2 * n[4]->pos.z);
-        J_coeff[2][0].b = 4 * (n[0]->pos.z - n[4]->pos.z - n[5]->pos.z + n[7]->pos.z);
-        J_coeff[2][0].c = 4 * (n[0]->pos.z - n[4]->pos.z - n[6]->pos.z + n[8]->pos.z);
-        J_coeff[2][0].d = 4 * n[4]->pos.z - 3 * n[0]->pos.z - n[1]->pos.z;
+        J_coeff[2][0].a = 4 * (n[0]->pos[2] + n[1]->pos[2] - 2 * n[4]->pos[2]);
+        J_coeff[2][0].b = 4 * (n[0]->pos[2] - n[4]->pos[2] - n[5]->pos[2] + n[7]->pos[2]);
+        J_coeff[2][0].c = 4 * (n[0]->pos[2] - n[4]->pos[2] - n[6]->pos[2] + n[8]->pos[2]);
+        J_coeff[2][0].d = 4 * n[4]->pos[2] - 3 * n[0]->pos[2] - n[1]->pos[2];
 
 
         // dx/dt
-        J_coeff[0][1].a = 4 * (n[0]->pos.x - n[4]->pos.x - n[5]->pos.x + n[7]->pos.x);
-        J_coeff[0][1].b = 4 * (n[0]->pos.x + n[2]->pos.x - 2 * n[5]->pos.x);
-        J_coeff[0][1].c = 4 * (n[0]->pos.x - n[5]->pos.x - n[6]->pos.x + n[9]->pos.x);
-        J_coeff[0][1].d = 4 * n[5]->pos.x - 3 * n[0]->pos.x - n[2]->pos.x;
+        J_coeff[0][1].a = 4 * (n[0]->pos[0] - n[4]->pos[0] - n[5]->pos[0] + n[7]->pos[0]);
+        J_coeff[0][1].b = 4 * (n[0]->pos[0] + n[2]->pos[0] - 2 * n[5]->pos[0]);
+        J_coeff[0][1].c = 4 * (n[0]->pos[0] - n[5]->pos[0] - n[6]->pos[0] + n[9]->pos[0]);
+        J_coeff[0][1].d = 4 * n[5]->pos[0] - 3 * n[0]->pos[0] - n[2]->pos[0];
 
         // dy/dt
-        J_coeff[1][1].a = 4 * (n[0]->pos.y - n[4]->pos.y - n[5]->pos.y + n[7]->pos.y);
-        J_coeff[1][1].b = 4 * (n[0]->pos.y + n[2]->pos.y - 2 * n[5]->pos.y);
-        J_coeff[1][1].c = 4 * (n[0]->pos.y - n[5]->pos.y - n[6]->pos.y + n[9]->pos.y);
-        J_coeff[1][1].d = 4 * n[5]->pos.y - 3 * n[0]->pos.y - n[2]->pos.y;
+        J_coeff[1][1].a = 4 * (n[0]->pos[1] - n[4]->pos[1] - n[5]->pos[1] + n[7]->pos[1]);
+        J_coeff[1][1].b = 4 * (n[0]->pos[1] + n[2]->pos[1] - 2 * n[5]->pos[1]);
+        J_coeff[1][1].c = 4 * (n[0]->pos[1] - n[5]->pos[1] - n[6]->pos[1] + n[9]->pos[1]);
+        J_coeff[1][1].d = 4 * n[5]->pos[1] - 3 * n[0]->pos[1] - n[2]->pos[1];
 
         // dz/dt
-        J_coeff[2][1].a = 4 * (n[0]->pos.z - n[4]->pos.z - n[5]->pos.z + n[7]->pos.z);
-        J_coeff[2][1].b = 4 * (n[0]->pos.z + n[2]->pos.z - 2 * n[5]->pos.z);
-        J_coeff[2][1].c = 4 * (n[0]->pos.z - n[5]->pos.z - n[6]->pos.z + n[9]->pos.z);
-        J_coeff[2][1].d = 4 * n[5]->pos.z - 3 * n[0]->pos.z - n[2]->pos.z;
+        J_coeff[2][1].a = 4 * (n[0]->pos[2] - n[4]->pos[2] - n[5]->pos[2] + n[7]->pos[2]);
+        J_coeff[2][1].b = 4 * (n[0]->pos[2] + n[2]->pos[2] - 2 * n[5]->pos[2]);
+        J_coeff[2][1].c = 4 * (n[0]->pos[2] - n[5]->pos[2] - n[6]->pos[2] + n[9]->pos[2]);
+        J_coeff[2][1].d = 4 * n[5]->pos[2] - 3 * n[0]->pos[2] - n[2]->pos[2];
 
 
         // dx/du
-        J_coeff[0][2].a = 4 * (n[0]->pos.x - n[4]->pos.x - n[6]->pos.x + n[8]->pos.x);
-        J_coeff[0][2].b = 4 * (n[0]->pos.x - n[5]->pos.x - n[6]->pos.x + n[9]->pos.x);
-        J_coeff[0][2].c = 4 * (n[0]->pos.x + n[3]->pos.x - 2 * n[6]->pos.x);
-        J_coeff[0][2].d = 4 * n[6]->pos.x - 3 * n[0]->pos.x - n[3]->pos.x;
+        J_coeff[0][2].a = 4 * (n[0]->pos[0] - n[4]->pos[0] - n[6]->pos[0] + n[8]->pos[0]);
+        J_coeff[0][2].b = 4 * (n[0]->pos[0] - n[5]->pos[0] - n[6]->pos[0] + n[9]->pos[0]);
+        J_coeff[0][2].c = 4 * (n[0]->pos[0] + n[3]->pos[0] - 2 * n[6]->pos[0]);
+        J_coeff[0][2].d = 4 * n[6]->pos[0] - 3 * n[0]->pos[0] - n[3]->pos[0];
 
         // dy/du
-        J_coeff[1][2].a = 4 * (n[0]->pos.y - n[4]->pos.y - n[6]->pos.y + n[8]->pos.y);
-        J_coeff[1][2].b = 4 * (n[0]->pos.y - n[5]->pos.y - n[6]->pos.y + n[9]->pos.y);
-        J_coeff[1][2].c = 4 * (n[0]->pos.y + n[3]->pos.y - 2 * n[6]->pos.y);
-        J_coeff[1][2].d = 4 * n[6]->pos.y - 3 * n[0]->pos.y - n[3]->pos.y;
+        J_coeff[1][2].a = 4 * (n[0]->pos[1] - n[4]->pos[1] - n[6]->pos[1] + n[8]->pos[1]);
+        J_coeff[1][2].b = 4 * (n[0]->pos[1] - n[5]->pos[1] - n[6]->pos[1] + n[9]->pos[1]);
+        J_coeff[1][2].c = 4 * (n[0]->pos[1] + n[3]->pos[1] - 2 * n[6]->pos[1]);
+        J_coeff[1][2].d = 4 * n[6]->pos[1] - 3 * n[0]->pos[1] - n[3]->pos[1];
 
         // dz/du
-        J_coeff[2][2].a = 4 * (n[0]->pos.z - n[4]->pos.z - n[6]->pos.z + n[8]->pos.z);
-        J_coeff[2][2].b = 4 * (n[0]->pos.z - n[5]->pos.z - n[6]->pos.z + n[9]->pos.z);
-        J_coeff[2][2].c = 4 * (n[0]->pos.z + n[3]->pos.z - 2 * n[6]->pos.z);
-        J_coeff[2][2].d = 4 * n[6]->pos.z - 3 * n[0]->pos.z - n[3]->pos.z;
+        J_coeff[2][2].a = 4 * (n[0]->pos[2] - n[4]->pos[2] - n[6]->pos[2] + n[8]->pos[2]);
+        J_coeff[2][2].b = 4 * (n[0]->pos[2] - n[5]->pos[2] - n[6]->pos[2] + n[9]->pos[2]);
+        J_coeff[2][2].c = 4 * (n[0]->pos[2] + n[3]->pos[2] - 2 * n[6]->pos[2]);
+        J_coeff[2][2].d = 4 * n[6]->pos[2] - 3 * n[0]->pos[2] - n[3]->pos[2];
     }
 
-   static scalar calc_det_J(abcd J_coeff[3][3], scalar s, scalar t, scalar u, scalar J_inv[9]) {
-        scalar J[3][3];
+   static scalar calc_det_J(abcd_mat3x3 &J_coeff, scalar s, scalar t, scalar u, vector9 &J_inv) {
+        matrix3 J;
 
         // Construct Jacobian for the part of the element at (s, t, u)
         for (int i = 0; i < 3; i++) {

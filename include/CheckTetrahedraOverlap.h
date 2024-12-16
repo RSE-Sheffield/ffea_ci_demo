@@ -35,22 +35,20 @@ class checkVars {
 		~checkVars(); */ 
 		
 		// Member variables
-		scalar e_v1[6][3];            ///< vector edge-oriented 
-      scalar e_v2[6][3];            ///< vectors edge-oriented
-		int masks[4];  ///< for each face of the first tetrahedron stores the halfspace each vertex of the second tetrahedron belongs to
+		std::array<arr3, 6> e_v1;            ///< vector edge-oriented 
+		std::array<arr3, 6> e_v2;            ///< vectors edge-oriented
+		std::array<int, 4> masks;  ///< for each face of the first tetrahedron stores the halfspace each vertex of the second tetrahedron belongs to
 
-		scalar P_V1[4][3]; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
-      scalar P_V2[4][3]; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
+		std::array<arr3, 4> P_V1; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
+		std::array<arr3, 4> P_V2; ///< differences between the vertices of the second (first) tetrahedron and the vertex 0  of the first(second) tetrahedron
 
-		scalar  Coord_1[4][4]; ///< vertices coordinates in the affine space
-      scalar  Coord_2[4][4]; ///< vertices coordinates in the affine space
-		scalar n[3];	  ///< variable to store the normals
+		std::array<arr4, 4>  Coord_1; ///< vertices coordinates in the affine space
+		std::array<arr4, 4>  Coord_2; ///< vertices coordinates in the affine space
+		arr3 n;	  ///< variable to store the normals
 };
 
 /** Fast Tetrahedron-Tetrahedron Overlap Algorithm, by Fabio Ganovelli, Frederico Ponchio, Claudio Rocchini. ACM 2002. */
-bool tet_a_tetII(arr3 &V1_0, arr3 &V1_1, arr3 &V1_2, arr3 &V1_3,
-                 arr3 &V2_0, arr3 &V2_1, arr3 &V2_2, arr3 &V2_3);
-              
-
+bool tet_a_tetII(const arr3 &V1_0, const arr3 &V1_1, const arr3 &V1_2, const arr3 &V1_3,
+	            const arr3 &V2_0, const arr3 &V2_1, const arr3 &V2_2, const arr3 &V2_3);
 
 #endif 

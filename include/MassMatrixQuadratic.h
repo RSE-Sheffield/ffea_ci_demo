@@ -34,25 +34,22 @@
 #include "dimensions.h"
 class MassMatrixQuadratic {
 public:
-    MassMatrixQuadratic();
+    scalar *get_M_alpha_mem_loc(int i, int j);
 
-    scalar * get_M_alpha_mem_loc(int i, int j);
-
-    void build(mesh_node *n[10]);
+    void build(std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> &n);
 
     scalar get_M_alpha_value(int i, int j);
     void print_details();
+
 private:
-    scalar M_alpha[NUM_ELEMENTS_LOWER_TRIANGULAR_10X10];
+    std::array<scalar, NUM_ELEMENTS_LOWER_TRIANGULAR_10X10>  M_alpha = {};
 
     struct tetrahedron_gauss_point {
         scalar W;
-        scalar eta[4];
+        std::array<scalar, 4> eta;
     };
 
-    void add_psi_dot_products(scalar psi[10], scalar det_J, scalar weight);
-
-    void zero();
+    void add_psi_dot_products(std::array<scalar, NUM_NODES_QUADRATIC_TET> &psi, scalar det_J, scalar weight);
 };
 
 

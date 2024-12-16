@@ -38,28 +38,22 @@
 class MassLumpedSolver : public Solver {
 public:
 
-    /** Constructor */
-    MassLumpedSolver();
-
-    /** Destructor */
-    ~MassLumpedSolver();
-
     /** Builds the diagonal mass matrix and gets reciprocal of each value */
-    int init(int num_nodes, int num_elements, mesh_node *node, tetra_element_linear *elem, SimulationParams *params, int num_pinned_nodes, int *pinned_nodes_list, set<int> bsite_pinned_node_list);
+    void init(std::vector<mesh_node> &node, std::vector<tetra_element_linear> &elem, const SimulationParams &params, const std::vector<int> &pinned_nodes_list, const set<int> &bsite_pinned_node_list) override;
 
     /** Applies inverse mass matrix (since diagonal: Mx = f => x = f_i/M_i */
-    int solve(vector3 *x);
+    void solve(std::vector<arr3> &x) override;
 
     /** Applies the mass matrix to the given vector, 'in', putting the result in 'result'*/
-    void apply_matrix(scalar *in, scalar *result);
+    void apply_matrix(const std::vector<scalar> &in, std::vector<scalar> &result) override;
 
 private:
 
     /** Number of rows in original matrix */
-    int num_rows;
+    int num_rows = 0;
 
     /** Mass matrix diagonal inversed */
-    scalar *inv_M;
+    std::vector<scalar> inv_M;
 };
 
 #endif

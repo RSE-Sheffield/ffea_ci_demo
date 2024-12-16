@@ -28,13 +28,12 @@ ffeatoolsFound = False
 try:
     import ffeatools # python package
     ffeatoolsFound = True
-    FFEA_script = ffeatools.modules.FFEA_script
-    FFEA_material = ffeatools.modules.FFEA_script
+    FFEA_script = ffeatools.modules.FFEA_script.FFEA_script
 except:
     try:
-        import FFEA_script, FFEA_material
+        from ffeatools.ffea_script import ffea_script as FFEA_script
     except ImportError:
-        print("Failure to import relevent FFEA modules")
+        print("Failure to import relevant FFEA modules")
         sys.exit(1) # failure to import
 
 # Load trajectory
@@ -42,7 +41,7 @@ start = 5000
 #start = 0
 end = 10000
 try:
-	script = FFEA_script.FFEA_script(sys.argv[1])
+	script = FFEA_script(sys.argv[1])
 except:
 	sys.exit("Script please!")
 
@@ -73,9 +72,9 @@ r2theory = 6 * (script.params.kT / drag) * script.params.dt * script.params.chec
 err = 0
 tolerance = 0.05
 if np.fabs(r2mean - r2theory) / r2theory <= tolerance:
-	print "Non-Inertial Diffusion", ": correct ", np.fabs(r2mean - r2theory) / r2theory , " < ", tolerance
+	print("Non-Inertial Diffusion", ": correct ", np.fabs(r2mean - r2theory) / r2theory , " < ", tolerance)
 else:
-	print "Non-Inertial Diffusion", ": failed ", np.fabs(r2mean - r2theory) / r2theory , " > ", tolerance
+	print("Non-Inertial Diffusion", ": failed ", np.fabs(r2mean - r2theory) / r2theory , " > ", tolerance)
 	err = 1
 sys.exit(err)
 

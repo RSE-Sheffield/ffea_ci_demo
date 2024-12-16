@@ -41,7 +41,7 @@ public:
     scalar get_M_alpha_value(int i, int j);
     void print_details();
 private:
-    scalar M_alpha[NUM_ELEMENTS_LOWER_TRIANGULAR_4X4];
+    std::array<scalar, NUM_ELEMENTS_LOWER_TRIANGULAR_4X4> M_alpha;
 
     void zero();
 };

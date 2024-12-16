@@ -28,9 +28,12 @@
 
 // scalar volumeIntersection(arr3 (&tetA)[4], arr3 (&tetB)[4]);
 /** return the the overlapping volume between tetrahedra tetA and tetB */ 
-template <class t_scalar, class brr3> t_scalar volumeIntersection(brr3 (&tetA)[4], brr3 (&tetB)[4], bool calcCM, brr3 &cm);
-template <class t_scalar, class brr3> t_scalar volumeIntersectionII(brr3 &tetA0, brr3 &tetA1, brr3 &tetA2, brr3 &tetA3, brr3 &tetB0, brr3 &tetB1, brr3 &tetB2, brr3 &tetB3, bool calcCM, brr3 &cm);
+template <typename T>
+T volumeIntersection(const std::array<std::array<T,3>, 4> &tetA, const std::array<std::array<T,3>, 4> &tetB, bool calcCM, std::array<T,3> &cm);
+template <typename T>
+T volumeIntersectionII(const std::array<T,3> &tetA0, const std::array<T,3> &tetA1, const std::array<T,3> &tetA2, const std::array<T,3> &tetA3, const std::array<T,3> &tetB0, const std::array<T,3> &tetB1, const std::array<T,3> &tetB2, const std::array<T,3> &tetB3, bool calcCM, std::array<T,3> &cm);
 /** return the the overlapping volume between tetrahedra tetA and tetB, and the area enclosing this volume */ 
-template <class t_scalar, class brr3> void volumeAndAreaIntersection(brr3 (&tetA)[4], brr3 (&tetB)[4], t_scalar &vol, t_scalar &area);
+template <typename T>
+void volumeAndAreaIntersection(const std::array<std::array<T,3>,4> &tetA, const std::array<std::array<T,3>,4> &tetB, T &vol, T &area);
 
 #endif

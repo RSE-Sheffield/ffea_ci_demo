@@ -25,11 +25,10 @@
 
 
     /**Calculates GenSoftSSINT forces modified with periodic boundary correction in distance calculation*/
-void GenSoftSSINT_solver::do_interaction(Face *f1, Face *f2, scalar *blob_corr){
-
+void GenSoftSSINT_solver::do_interaction(Face *f1, Face *f2, std::vector<scalar> &blob_corr){
     bool gensoft = true;
-    bool intersection = false; 
-    if (blob_corr == NULL) {
+    bool intersection; 
+    if (blob_corr.empty()) {
        intersection = f1->checkTetraIntersection(f2);
     } else {
        intersection = f1->checkTetraIntersection(f2,
@@ -37,13 +36,11 @@ void GenSoftSSINT_solver::do_interaction(Face *f1, Face *f2, scalar *blob_corr){
     }
 
     if (intersection) {
-      if (do_steric_interaction(f1, f2, blob_corr)) gensoft = false; 
+      if (do_steric_interaction(f1, f2, blob_corr))
+          gensoft = false; 
     } 
 
     if (gensoft) {
         do_gensoft_interaction(f1, f2, blob_corr);
     }
-
-    return;
-
 }

@@ -1,0 +1,55 @@
+<param>
+    <calc_steric_rod = 0>
+	<pbc_rod = 1>
+    <calc_noise = 0>
+	<flow_profile = uniform>
+	<flow_velocity = (0, 1e3, 0)>  <! -- S.I. -->
+    <restart = 0>
+    <dt = 1e-12>
+    <check = 1>
+    <num_steps = 300>
+    <ssint_cutoff = 1e-9>  <!-- Simulation box, dimension L = 200 nm (1176.471) -->
+    <es_N_x = 200>
+    <es_N_y = 200>
+    <es_N_z = 200>
+    <rng_seed = time>
+    <trajectory_out_fname = del.ftj>
+    <measurement_out_fname = del.fm>
+    <checkpoint_out = del.fcp>
+    <epsilon = 0.01>
+    <max_iterations_cg = 1000>
+    <kappa = 2e9>
+    <epsilon_0 = 1>
+    <dielec_ext = 1>
+    <calc_stokes = 0>
+    <stokes_visc = 1e-03>
+    <calc_vdw = 0>
+    <calc_kinetics = 0>
+    <vdw_type = steric>
+    <inc_self_vdw = 0>
+    <vdw_steric_factor = 2e3>
+    <calc_es = 0>
+    <es_update = 4>
+    <sticky_wall_xz = 0>
+    <wall_x_1 = PBC>
+    <wall_x_2 = PBC>
+    <wall_y_1 = PBC>
+    <wall_y_2 = PBC>
+    <wall_z_1 = PBC>
+    <wall_z_2 = PBC>
+    <es_h = 1>
+    <num_blobs = 0>
+    <num_rods = 1>
+    <num_conformations = (1)>
+    <num_states = (1)>
+</param>
+<system>
+    <!-- Rods have radius R = 2.5 nm (14.706), length l = 50 nm (294.118), and point in z -->
+    <rod>
+            <input = z-axis.rod>
+            <output = 1.rodtraj>
+            <centroid_pos = (0, 0, 0)>
+            <rotation = (0, 0, 0)>
+            <scale = 1>
+    </rod>
+</system>

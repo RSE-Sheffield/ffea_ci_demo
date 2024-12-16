@@ -7,7 +7,7 @@ Input files {#iFiles}
 
 Main runner input file: .ffea   {#iffea}
 ------------------------------
- Corresponding to the main input file for the FFEA runner, this file is widely described 
+ Corresponding to the main input file for the FFEA runner, this file is widely described
   [here](\ref ffea_iFile), and [here](\ref keywordReference)
 
 
@@ -16,7 +16,7 @@ Nodes file: .node   {#ifnode}
 -----------------
 
 Contains a list of white-space separated coordinates specifying the position
- of each node in the blob. The file starts with a header of four lines, and 
+ of each node in the blob. The file starts with a header of four lines, and
  is followed by two separated lists with the interior and exterior nodes:
 
 
@@ -42,8 +42,8 @@ Topology file: .top   {#iftop}
 
 Contains a list a white-space separated indices specifying the node indices
 contained within each element. There are ten indices per element as they are second
-order elements (every tetrahedron has a node at each corner 
- and at the midpoint of each edge). Separated into internal (no surface faces) 
+order elements (every tetrahedron has a node at each corner
+ and at the midpoint of each edge). Separated into internal (no surface faces)
  and external (surface faces) elements for use in surface-surface interactions.
 
 
@@ -73,12 +73,12 @@ nodes on each surface face and the index of the containing element.
     faces:
     el0 n00 n01 n02
     el1 n10 n11 n12
-    ... 
+    ...
     el480 n4800 n4801 n4802
 
 
 
-Material file: .mat   {#ifmat} 
+Material file: .mat   {#ifmat}
 -------------------
 
 Contains a list of white-space separated material parameters for each element.
@@ -90,7 +90,7 @@ Contains a list of white-space separated material parameters for each element.
     density1 shear_visc1 bulk_visc1 shear_modulus1 bulk_modulus1 dielectric_const1
     ...
     density119 shear_visc119 bulk_visc119 shear_modulus119 bulk_modulus119 dielectric_const119
-    
+
 
 
 Stokes radii file: .stokes   {#ifstokes}
@@ -103,7 +103,7 @@ for the calculation of external drag.
     num_nodes 305
     radius0
     radius1
-    ... 
+    ...
     radius 304
 
 
@@ -112,7 +112,7 @@ Van der Waals file: .vdw    {#ifvdw}
 Contains a list of integers, ranging from -1 to 6, describing the type of vdw interaction
  this face will undergo, as described by the Lennard-Jones files, where:
    * -1 - stands for inactive faces.
-   * 0 to 6 - specifies the type of an active face, interacting 
+   * 0 to 6 - specifies the type of an active face, interacting
               with parameters defined in .lj file.
 
 
@@ -128,9 +128,9 @@ Contains a list of integers, ranging from -1 to 6, describing the type of vdw in
 Lennard-Jones file: .lj    {#iflj}
 -----------------------
 
-Contains a matrix of parameter pairs for the Lennard-Jones interactions 
- between the different face types specified in the .vdw file. 
- A description of this file can be found in the [Lennard-Jones](\ref ljPotential) section. 
+Contains a matrix of parameter pairs for the Lennard-Jones interactions
+ between the different face types specified in the .vdw file.
+ A description of this file can be found in the [Lennard-Jones](\ref ljPotential) section.
 
 <!-- In the following example:
 
@@ -147,13 +147,13 @@ Contains a matrix of parameter pairs for the Lennard-Jones interactions
 
 
 face type0 interacts with face type0 through a Lennard-Jones potential
- that has a well depth of \f$\epsilon_{0,0} = 10^{15} J/m^2\f$ and an 
- equilibrium distance \f$\sigma_{0,0} = 10^{-9} m\f$, 
- whereas face type 0 interacts with face type 1 
+ that has a well depth of \f$\epsilon_{0,0} = 10^{15} J/m^2\f$ and an
+ equilibrium distance \f$\sigma_{0,0} = 10^{-9} m\f$,
+ whereas face type 0 interacts with face type 1
  (and in fact, all other interaction types) with a Lennard-Jones potential
- with parameters \f$\epsilon_{0,1} = 10^{12} J/m^2\f$ and 
-  \f$\sigma_{0,1} = 10^{-9} m\f$. Therefore, this matrix should be symmetric. 
---> 
+ with parameters \f$\epsilon_{0,1} = 10^{12} J/m^2\f$ and
+  \f$\sigma_{0,1} = 10^{-9} m\f$. Therefore, this matrix should be symmetric.
+-->
 
 
 Pre-computed potentials: .pot and .force  {#potfile}
@@ -168,9 +168,9 @@ These files contain values for the potential and force in a two column format:
 
 
 where the first column give positions and the second column has energies and forces
- respectively. The runner input file will expect a conversion factor to \f$m\f$ and 
+ respectively. The runner input file will expect a conversion factor to \f$m\f$ and
  \f$J\f$ (and \f$Jm\f$) for them (see the [pre-computed potentials](\ref fm_inputfile)
- for more details). 
+ for more details).
 
 
 Springs file: .springs   {#ifsprings}
@@ -179,7 +179,7 @@ Springs file: .springs   {#ifsprings}
 This file contains a set of Hookean springs joining pairs of nodes to allow the addition of arbitrary interactions, if necessary.
  After an introductory header, every line specifies the details of a single spring through:
  spring constant (in ` N/m `), equilibrium distance (in meters)
- blob i, blob j, conformation k, conformation l, node m, node n. 
+ blob i, blob j, conformation k, conformation l, node m, node n.
 Specifically, a springs file with 3 springs could look like:
 
 
@@ -194,7 +194,7 @@ Specifically, a springs file with 3 springs could look like:
 Pinned nodes file: .pin   {#ifpin}
 ----------------------
 
-This file provides a list of nodes for the corresponding blob that will remain fixed 
+This file provides a list of nodes for the corresponding blob that will remain fixed
  in its initial position. The format for a valid ` .pin ` file with three nodes pinned would be:
 
 
@@ -210,46 +210,46 @@ This file provides a list of nodes for the corresponding blob that will remain f
 Constant forces file: .ctforces {#ifctforces}
 ---------------------------------------------
 
-This file provides a list of nodes or surfaces where a certain force is to be applied. 
- The forces can be linear or circular, and the header 
- specifies the total number of constant forces to take from 
+This file provides a list of nodes or surfaces where a certain force is to be applied.
+ The forces can be linear or circular, and the header
+ specifies the total number of constant forces to take from
  the input file, the number of linear forces onto nodes, the number of circular forces
- onto nodes, and the number of the linear forces onto faces. If any of these is zero, 
- it can be ommitted. 
- Then, the file has a section on linear forces, and a file on circular forces, 
+ onto nodes, and the number of the linear forces onto faces. If any of these is zero,
+ it can be ommitted.
+ Then, the file has a section on linear forces, and a file on circular forces,
  needed in this order but appearing only if the correspondent number of forces
- is higher than zero. 
+ is higher than zero.
 
-In the linear forces on nodes section, 
+In the linear forces on nodes section,
  each line writes Force module (in ` N `), a unit vector
- with the direction of the force, blob index, conformation index, and node 
- number ` or ` string all so that the same force is applied onto every on this 
- blob. 
+ with the direction of the force, blob index, conformation index, and node
+ number ` or ` string all so that the same force is applied onto every on this
+ blob.
 
 In the rotational forces on nodes section,
- each line writes Force module (in ` N `), a two letter keyword 
+ each line writes Force module (in ` N `), a two letter keyword
  (see later), a point and an axis, specifying the torque rotation axis,
- and three integer specifying blob, conformation and node where the force 
- is being applied. The first letter of the two-letter keyword specifies 
+ and three integer specifying blob, conformation and node where the force
+ is being applied. The first letter of the two-letter keyword specifies
  if the point given associated to the axis is given in Cartesian coordinates
  (`p`) or as a triad ` blob `, `conf`, `node` (`n`, **NOT SUPPORTED YET**).
- The second one 
- specifies if the circular force is a torque (`t`) \f$\tau = r\times F\f$ or 
+ The second one
+ specifies if the circular force is a torque (`t`) \f$\tau = r\times F\f$ or
  a constant force (`f`) \f$\tau = \hat{r}\times F\f$.
 
-In the linear forces on surfaces section, 
+In the linear forces on surfaces section,
  a force F is spread evenly on a surface composed of a number of faces. Thus,
- every line specifies the magnitude of the force (in ` N ` ), a unit 
- vector with the direction of the force, blob index, conformation index, 
- followed by a list of face indices. At every time step the total area 
- of the selected faces will be calculated \f$A = \sum_i a_i\f$, and 
- every face will receive a force \f$ f_i = F a_i / A\f$ at its centre. 
+ every line specifies the magnitude of the force (in ` N ` ), a unit
+ vector with the direction of the force, blob index, conformation index,
+ followed by a list of face indices. At every time step the total area
+ of the selected faces will be calculated \f$A = \sum_i a_i\f$, and
+ every face will receive a force \f$ f_i = F a_i / A\f$ at its centre.
 
 
-Thus, a valid ` ctforces ` file with force 1e-9 `N` applied onto 
- every node on blob 1 towards the z axis, 3 nodes on blob 2 pushed 
- towards x would look like, and all the nodes of blob 0 suffering a 
- torque resulting of a force with magnitude 1e-10 `N` around the 
+Thus, a valid ` ctforces ` file with force 1e-9 `N` applied onto
+ every node on blob 1 towards the z axis, 3 nodes on blob 2 pushed
+ towards x would look like, and all the nodes of blob 0 suffering a
+ torque resulting of a force with magnitude 1e-10 `N` around the
  axis going through point (-1.9e-9, -1.4313e-9, 8.911e-10) `m`
  and direction (0,1,0) would look like:
 
@@ -276,7 +276,7 @@ As in the main input FFEA file, XML comments are supported.
 
 Checkpoint file .fcp {#ffeaCheckpointFileIn}
 ----------------------------------------------
-This is the same type of file than the output [checkpoint file](\ref ffeaCheckpointFileOut). 
+This is the same type of file than the output [checkpoint file](\ref ffeaCheckpointFileOut).
 
 
 States file .states {#ffeaStatesFileIn}
@@ -309,7 +309,7 @@ This file defines the rates (units - Hz) of kinetic switching between states. It
     0 1e10
     1e9 0
 
-These rates are converted into switching probability / timestep within the code, 
+These rates are converted into switching probability / timestep within the code,
  so if your rate asks for a higher than 100% probability of
  switching at each timestep, FFEArunner will return an error. The identity rates (leading diagonal) are actually not used
  by the FFEArunner; because the sum of probabilities in each row must equal 1, the code calculates this value using all of the others.
@@ -341,9 +341,9 @@ Trajectory file: .ftj    {#oftrajectory}
 Contains a list of `*` separated frames specifying the structure of the blob at
 each outputted time-step. The frames contain a list of blobs which themselves
 contain a list of node positions, velocities and forces. If the motion state is
-STATIC, blob does not move, so frame is not outputted to save space, and improve 
+STATIC, blob does not move, so frame is not outputted to save space, and improve
 the performance. Only the positions are used in the viewer.
- In between each frame is a small segment showing whether any conformational 
+ In between each frame is a small segment showing whether any conformational
  changes have occurred. As such,
 each frame can be a different length, which is why the blob and conformation
 sizes are specified at the beginning of the file.
@@ -362,7 +362,7 @@ sizes are specified at the beginning of the file.
     DYNAMIC
     x0 y0 z0 velx0 vely0 velz0 phi0 forcex0 forcey0 forcez0
     x1 y1 z1 velx1 vely1 velz1 phi1 forcex1 forcey1 forcez1
-    ... 
+    ...
     Blob 1, Conformation 0, step 0 DYNAMIC x0 y0 z0 velx0 vely0 velz0 phi0
     forcex0 forcey0 forcez0
     x1 y1 z1 velx1 vely1 velz1 phi1 forcex1 forcey1 forcez1
@@ -372,19 +372,19 @@ sizes are specified at the beginning of the file.
     Blob 1: Conformation 0 -> Conformation 0
     *
     Blob 0, Conformation 1, step 1001
-    ... 
+    ...
     *
 
 
 
 Measurement files: .fm / .fdm   {#ofmeasurement}
 ------------------------
- 
+
 Contains a list of the relevant system properties of each outputted time-step.
 Two separate types of file for internal and external measurements.
 
 
-### Global measurements: .fm ### 
+### Global measurements: .fm ###
 
 Every simulation will print this file, which contains measurements of the entire
 system. Internal properties such as strain and kinetic energies, Centroids, Angular momentum, RMSD etc
@@ -406,19 +406,19 @@ Additionally, system details and a copy of the total input parameter set are wri
 		...
 
 	Measurements:
-	Time          StrainEnergy  Centroid.x    Centroid.y    Centroid.z    RMSD          
-	0.000000e+00  0.000000e+00  8.095944e-09  1.491714e-09  5.000000e-10  0.000000e+00   
-	5.000000e-11  2.478548e-19  8.017644e-09  1.455046e-09  5.094042e-10  1.446259e-10   
+	Time          StrainEnergy  Centroid.x    Centroid.y    Centroid.z    RMSD
+	0.000000e+00  0.000000e+00  8.095944e-09  1.491714e-09  5.000000e-10  0.000000e+00
+	5.000000e-11  2.478548e-19  8.017644e-09  1.455046e-09  5.094042e-10  1.446259e-10
 	1.000000e-10  2.868027e-19  7.978989e-09  1.376037e-09  4.846020e-10  2.252258e-10
 	...
 
 
 A small thing to note; if mass is not included, momenta and kinetic energies are not written. If VdW is not active, it is not written. Anything optional may not be written,
-as seen here with KineticEnergy, SpringEnergy, VdWEnergy and PreCompEnergy.
+as seen here with KineticEnergy, SpringEnergy, SurfSurfEnergy and PreCompEnergy.
 This is to avoid writing out many zeroes, gain some performance and save disk space.
 The [FFEA toolkit](\ref FFEAanalysistut) is equipped to read in these files in general.
 
-### Detailed measurements: .fdm ### 
+### Detailed measurements: .fdm ###
 
 This file records the measurements on individual blobs, and between each specific pair of blobs. It is created by default but can be suppressed with '-d' and the command line.
 and allows one to know specific details about individual molecules / pairs of molecules in a multi-blob simulation. Measurements specific to each blob are printed first, followed by each interacting pair.
@@ -428,7 +428,7 @@ and allows one to know specific details about individual molecules / pairs of mo
 	FFEA Detailed Measurement File
 
 	Measurements:
-	Time          | B0 StrainEnergy  Centroid.x    Centroid.y    Centroid.z    RMSD          | B1 StrainEnergy  Centroid.x    Centroid.y    Centroid.z    RMSD          | B0B1 SpringEnergy  VdWEnergy   
+	Time          | B0 StrainEnergy  Centroid[0]    Centroid[1]    Centroid[2]    RMSD          | B1 StrainEnergy  Centroid[1]    Centroid[1]    Centroid[2]    RMSD          | B0B1 SpringEnergy  SurfSurfEnergy
 	0.000000e+00       0.000000e+00  8.095944e-09  1.491714e-09  5.000000e-10  0.000000e+00       0.000000e+00  8.095944e-09  1.491714e-09  5.000000e-10  0.000000e+00	   0.000000e+00  0.000000e+00
 	5.000000e-11       2.478548e-19  8.017644e-09  1.455046e-09  5.094042e-10  1.446259e-10       2.478548e-19  8.017644e-09  1.455046e-09  5.094042e-10  1.446259e-10 	   5.123413e-21  0.000000e+00
 	1.000000e-10       2.868027e-19  7.978989e-09  1.376037e-09  4.846020e-10  2.252258e-10       2.868027e-19  7.978989e-09  1.376037e-09  4.846020e-10  2.252258e-10	   3.567162e-21  0.000000e+00
@@ -440,9 +440,9 @@ hence the zeroes. No blobs were interacting with themselves.
 
 Checkpoint file .fcp {#ffeaCheckpointFileOut}
 ------------------------------------------------
-The checkpoint file stores the state of the Random Number Generator(s) RNG(s) at the 
+The checkpoint file stores the state of the Random Number Generator(s) RNG(s) at the
  last saved step. The format of this file, that should be automatically written,
- starts with a single header line specifying the number of RNGStreams dedicated to 
+ starts with a single header line specifying the number of RNGStreams dedicated to
  the thermal stress:
 
      RNGStreams dedicated to the thermal stress: <N>
@@ -457,6 +457,6 @@ Afterwards, in the case of using kinetics, the following line will be found:
 
     RNGStream dedicated to the thermal stress:\n
 
-followed by a single line with 6 integers describing the state of 
+followed by a single line with 6 integers describing the state of
    the RNGStream dedicated to the kinetic stress.
 

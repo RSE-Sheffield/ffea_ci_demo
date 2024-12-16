@@ -1,0 +1,11 @@
+ffea_input_name: "ljtest"
+num_rods: 2
+num_nodes: 10
+num_vdw_sites: 5
+radius: 2.5e-9  # 2.5 nm
+length: 5.0e-8  # 50 nm
+ffea_length: 1.7e-10
+in_dir: ""
+out_dir: ""
+kT: 4.141945559999999e-21
+r_min: 1.0e-9

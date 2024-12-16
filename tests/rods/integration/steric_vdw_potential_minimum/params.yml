@@ -1,0 +1,10 @@
+num_rods: 2
+num_nodes: 6
+radius: 2.5e-9  # 2.5 nm
+length: 4.5e-8  # 45 nm
+ffea_length: 1.7e-10
+ffea_force: 2.4364705882352941e-11
+ffea_energy: 4.141945559999999e-21
+out_dir: "outputs"
+r_min: 1.0e-9
+eps_kT: 8.5  # A:a peak rupture force of 35 pN

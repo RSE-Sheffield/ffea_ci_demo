@@ -31,12 +31,13 @@
 using std::cout;
 using std::endl;
 
+// Also defined in tetra_element_linear.h/SecondOrderFunctions.h
 #define NUM_NODES_QUADRATIC_TET 10
 
 class BlobLite {
 public:  
   /** BlobLite constructor:
-   * Initialises all variables and pointers to 0 (or NULL). 
+   * Initialises all variables and pointers to 0 (or nullptr). 
    * Does not perform any memory allocation. */
   BlobLite();  
   /** BlobLite destructor:
@@ -45,15 +46,15 @@ public:
  
   /** Opens and reads the given 'ffea node file', extracting all the nodes for this Blob.
    * Records how many of these are surface nodes and how many are interior nodes.  */
-  int load_nodes(const char *node_filename, scalar scale); 
+  void load_nodes(const char *node_filename, scalar scale);
   /** Opens and reads the given 'ffea topology file', extracting all the elements for this Blob.
     * Records how many of these are surface elements and how many are interior elements.  */
-  int load_topology(const char *topology_filename);
+  void load_topology(const char *topology_filename);
   /** Read the following num_nodes lines within the given trj file 
     *  and set the coordinates of the nodes accordingly */ 
-  int read_nodes_from_file(FILE *trj); 
+  void read_nodes_from_file(FILE *trj); 
   /** Calculate and return the center of coordinates */
-  int center_of_coord(arr3 &cm); 
+  void center_of_coord(arr3 &cm); 
 
   int num_nodes; ///< number of nodes
   int num_surface_nodes; ///< number of surface nodes 
@@ -68,7 +69,7 @@ public:
 
 private: 
   /** Part of load_topology, it stores the index of a node within the *elem list */
-  int store_index_to_elemnode(int node_index, int elem_number, int node_number); 
+  void store_index_to_elemnode(int node_index, int elem_number, int node_number); 
   /** Returns the coord index for a node nodei in element elemi to be used in coord[ ] */ 
   int icoord_for_elem_node(int elemi, int nodei); 
 

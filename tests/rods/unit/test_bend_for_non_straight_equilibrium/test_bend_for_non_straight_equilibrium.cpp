@@ -5,20 +5,20 @@
 int main(){
     float mathematica_result = 0.08;
     
-    float e_im1[3] = {50, 0, 0};
-    float e_i[3] = {50, 0, 0};
-    float e_im1_bar[3] = {50, 0, 0};
-    float e_i_bar[3] = {0, 50, 0};
+    rod::float3 e_im1 = {50, 0, 0};
+    rod::float3 e_i = {50, 0, 0};
+    rod::float3 e_im1_bar = {50, 0, 0};
+    rod::float3 e_i_bar = {0, 50, 0};
 
-    float m_im1[3] = {0, 0, 1};
-    float m_im1_bar[3] = {0, 0, 1};
-    float m_i[3] = {0, 0, 1};
-    float m_i_bar[3] = {0, 0, 1};
+    rod::float3 m_im1 = {0, 0, 1};
+    rod::float3 m_im1_bar = {0, 0, 1};
+    rod::float3 m_i = {0, 0, 1};
+    rod::float3 m_i_bar = {0, 0, 1};
     
-    float m_im1_2[3];
-    float m_im1_bar_2[3];
-    float m_i_2[3];
-    float m_i_bar_2[3];
+    rod::float3 m_im1_2;
+    rod::float3 m_im1_bar_2;
+    rod::float3 m_i_2;
+    rod::float3 m_i_bar_2;
     
     rod::cross_product(m_im1, e_im1, m_im1_2);
     rod::cross_product(m_im1_bar, e_im1_bar, m_im1_bar_2);
@@ -30,10 +30,10 @@ int main(){
     rod::normalize(m_i_2, m_i_2);
     rod::normalize(m_i_bar_2, m_i_bar_2);
     
-    float B[4] = {1,0,0,1};
+    rod::float4 B = {1,0,0,1};
 
-    //float kbi[3];
-    //float kbibar[3];
+    //rod::float3 kbi;
+    //rod::float3 kbibar;
     
     float computed_energy = rod::get_bend_energy_from_p(
         e_im1,
@@ -51,7 +51,7 @@ int main(){
         B,
         B);
         
-    if (computed_energy > mathematica_result - 0.00001 and computed_energy < mathematica_result + 0.00001){
+    if (computed_energy > mathematica_result - 0.00001 && computed_energy < mathematica_result + 0.00001){
         return 0;
     }
     else{

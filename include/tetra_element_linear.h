@@ -43,6 +43,7 @@
 class Blob;
 
 #define NUM_NODES_LINEAR_TET 4
+// Also defined in BlobLite.h/SecondOrderFunctions.h
 #define NUM_NODES_QUADRATIC_TET 10
 
 /*
@@ -115,7 +116,7 @@ class Blob;
 	V[I + 3][J + 2] = B * K[3][2] + A * K[2][3]; \
 	V[I + 3][J + 3] = (B + A) * K[3][3]; \
 
-#define RAND(A, B) ((A) + ((B)-(A))*(rng[thread_id].RandU01()))
+#define RAND(A, B) ((A) + ((B)-(A))*((*rng)[thread_id].RandU01()))
 
 #define DPSI1_DX 0
 #define DPSI2_DX 1
@@ -148,7 +149,7 @@ public:
     scalar mass;
 
     /** @brief A quadratic tetrahedron has 10 nodes. Keep pointers to the actual memory location of the nodes. */
-    mesh_node *n[NUM_NODES_QUADRATIC_TET];
+    std::array<mesh_node*, NUM_NODES_QUADRATIC_TET> n;
 
     /** @brief The 12-vector containing the shape function derivatives for this element */
     vector12 dpsi;
@@ -162,7 +163,7 @@ public:
     PoissonMatrixQuadratic K_alpha;
 
     /** @brief Store the contribution from this element to the force on each of its four nodes */
-    vector3 node_force[NUM_NODES_QUADRATIC_TET];
+    std::array<arr3, NUM_NODES_QUADRATIC_TET> node_force;
 
     /** @brief The rest volume of this element */
     scalar vol_0;
@@ -188,7 +189,7 @@ public:
     /** @brief Index of this element in the parent Blob */
     int index;
 
-    vector3 centroid;
+    arr3 centroid;
 
     /** @brief
      * Get the memory location of the specified element of K_alpha
@@ -198,25 +199,25 @@ public:
     /** @brief Calc the diffusion matrix for this element */
     void calculate_K_alpha();
 
-    void construct_element_mass_matrix(MassMatrixQuadratic *M_alpha);
-    void construct_element_mass_matrix(MassMatrixLinear *M_alpha);
+    void construct_element_mass_matrix(MassMatrixQuadratic &M_alpha);
+    void construct_element_mass_matrix(MassMatrixLinear &M_alpha);
 
     void add_K_alpha(scalar *K, int num_nodes);
 
     /** @brief Returns the gradient of the potential at the given (s,t,u) position in the element */
-    void get_grad_phi_at_stu(vector3 &grad_phi, scalar s, scalar t, scalar u);
+    void get_grad_phi_at_stu(arr3 &grad_phi, scalar s, scalar t, scalar u);
 
     /** @brief Calculates the force on each node of the element due to the electrostatic potential gradient there */
     void calculate_electrostatic_forces();
 
     /** @brief Calculates the Jacobian matrix for this element */
-    void calculate_jacobian(matrix3 J);
+    void calculate_jacobian(matrix3 &J);
 
     /** @brief Calculates Deformation Gradient */
-    void calc_deformation(matrix3 J);
+    void calc_deformation(matrix3 &J);
 
     /** @brief Calculate the elastic contribution to the force */
-    void calc_elastic_force_vector(vector12 F);
+    void calc_elastic_force_vector(vector12 &F);
 
     /** @brief
      * Inverts the given jacobian matrix J, using this to calculate the derivatives
@@ -234,7 +235,7 @@ public:
      * Function also (as a by-product of the inversion) calculates the volume of the
      * element whose jacobian this is, which is stored in 'vol'.
      */
-    int calc_shape_function_derivatives_and_volume(matrix3 J);
+    bool calc_shape_function_derivatives_and_volume(matrix3 &J);
 
     /** @brief
      *  Prints a variety of structural details about the element to analyse it's configuration
@@ -255,13 +256,12 @@ public:
     /*
      *
      */
-    void add_shear_elastic_stress(matrix3 J, matrix3 stress);
+    void add_shear_elastic_stress(matrix3 &J, matrix3 &stress);
 
     /*
      *
      */
-    void add_bulk_elastic_stress(matrix3 stress);
-    void add_bulk_elastic_stress_OLD(matrix3 stress);
+    void add_bulk_elastic_stress(matrix3 &stress);
 
     /** @brief
      * Given the shape function derivatives, the element volume and a random number generator, this
@@ -270,25 +270,25 @@ public:
      * to the given 12-vector du.
      *
      */
-    void add_fluctuating_stress(SimulationParams *params, RngStream rng[], matrix3 stress, int thread_id);
+    void add_fluctuating_stress(const SimulationParams &params, std::shared_ptr<std::vector<RngStream>> &rng, matrix3 &stress, int thread_id);
 
     /** @brief
      * Applies the given stress tensor to the shape function derivatives to get the contribution to du
      */
-    void apply_stress_tensor(matrix3 stress, vector12 du);
+    void apply_stress_tensor(matrix3 &stress, vector12 &du);
 
     /** @brief
      * Sets the given 12-vector to the velocities of this element's four nodes,
      */
-    void get_element_velocity_vector(vector12 v);
+    void get_element_velocity_vector(vector12 &v);
 
     /** @brief
      * Add this element's nodal forces to those given in the force 12-vector
      */
-    void add_element_force_vector(vector12 force);
+    void add_element_force_vector(vector12 &force);
 
     /** @brief Add given force to the specified node of this element */
-    void add_force_to_node(int i, vector3 *f);
+    void add_force_to_node(int i, arr3 &f);
 
     /** @brief A roundabout and inefficient way of working out what node (from 0 to 9) this index corresponds to */
     int what_node_is_this(int index);
@@ -300,9 +300,9 @@ public:
      * Applies the mass matrix (for a linear tetrahedral element of density rho and equilibrium volume vol_0)
      * to the force vector du to get the correct distribution of force between nodes.
      */
-    void apply_element_mass_matrix(vector12 du);
+    void apply_element_mass_matrix(vector12 &du);
 
-    void volume_coord_to_xyz(scalar eta0, scalar eta1, scalar eta2, scalar eta3, vector3 *r);
+    void volume_coord_to_xyz(scalar eta0, scalar eta1, scalar eta2, scalar eta3, arr3 &r);
 
     void zero_force();
 
@@ -326,11 +326,11 @@ private:
      */
     void calc_del2_matrix();
 
-    void add_diffusion_matrix(matrix12 V);
+    void add_diffusion_matrix(matrix12 &V);
 
     struct tetrahedron_gauss_point {
         scalar W;
-        scalar eta[4];
+        std::array<scalar, 4> eta;
     };
 
 };

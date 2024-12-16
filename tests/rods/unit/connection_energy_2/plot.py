@@ -6,14 +6,15 @@ Created on Fri Jun 14 13:00:00 2019
 @author: rob
 """ 
 
+import sys
 import matplotlib.pyplot as plt
 import subprocess
 
 def read(log_file):
     results_dict = {0:{}, 1: {}, 2: {}, 3:{} }
-    for key, value in results_dict.iteritems():
+    for key in results_dict:
         results_dict[key] = { "+x": {}, "-x":{}, "+y":{}, "-y":{}, "+z":{}, "-z":{} }
-        
+
     with open(log_file) as log:
         for line in log.readlines():
             if "ENERGYPLOT" in line:
@@ -28,16 +29,17 @@ def read(log_file):
                 results_dict[node_index]["-z"][displacement] = float(line_list[11])
             if "EXPLODING" in line:
                 line_list = line.split(" ")
-                
+
     return results_dict
 
 def plot_one(plusdict, minusdict, node_index, axis, filename):
     x = []
     y = []
     minuskeys = minusdict.keys()
-    minuskeys.reverse()
+    minuskeys = reversed(list(minuskeys))
     minusvalues = minusdict.values()
-    minusvalues.reverse()
+#    minusvalues.reverse()
+    minusvalues = reversed(list(minusvalues))
     for key in minuskeys:
         x.append(key*-1)
     for key in plusdict.keys():
@@ -67,7 +69,9 @@ def auto():
     with open("log.txt", "wb") as f:
         subprocess.call(["../../../../src/ffea", "connection_energy_2.ffeatest"], stdout=f)
         plot_all(read("log.txt"))
-        raise SystemExit, 0
+
+    return 0
     
 if __name__ == "__main__":
-    auto()
+    error_status = auto()
+    sys.exit(error_status)

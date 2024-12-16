@@ -22,10 +22,12 @@
 #
 
 
+if(Python3_EXECUTABLE)
 add_test(NAME cyl_youngs_mod COMMAND ${PROJECT_BINARY_DIR}/src/ffea cyl_160_fine-E.ffea)
 set_tests_properties(cyl_youngs_mod PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
 
-add_test(NAME cyl_youngs_mod_check COMMAND ${PYTHON_EXECUTABLE} calcE.py)
+add_test(NAME cyl_youngs_mod_check COMMAND ${Python3_EXECUTABLE} calcE.py)
 set_tests_properties(cyl_youngs_mod_check PROPERTIES 
                      DEPENDS cyl_youngs_mod
-		     ENVIRONMENT PYTHONPATH=${PROJECT_SOURCE_DIR}/ffeatools/modules:$ENV{PYTHONPATH})
+             ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

@@ -24,24 +24,21 @@
 #include "BindingSite.h"
 
 BindingSite_matrix::BindingSite_matrix() {
-
 	num_interaction_types = 0;
-	interaction = NULL;
 }
 
 BindingSite_matrix::~BindingSite_matrix() {
-
 	num_interaction_types = 0;
-	interaction = NULL;
+	interaction.clear();
 }
 
-int BindingSite_matrix::init(string fname) {
+void BindingSite_matrix::init(string fname) {
 
 	// Open file
 	ifstream fin;
 	fin.open(fname.c_str());
 	if(fin.fail()) {
-		FFEA_ERROR_MESSG("'binding_params_fname' %s not found\n", fname.c_str())
+		throw FFEAException("'binding_params_fname' %s not found.", fname.c_str());
 	}
 
 	// Check if correct file
@@ -50,30 +47,36 @@ int BindingSite_matrix::init(string fname) {
    getline(fin, buf_string); 
 	boost::trim(buf_string);
 	if(buf_string != "ffea binding site params file") {
-		FFEA_ERROR_MESSG("Expected 'ffea binding site params file', got '%s'\n", buf_string.c_str())
+		throw FFEAException("Expected 'ffea binding site params file', got '%s'.", buf_string.c_str());
 	}
 
 	// Get num_site_types
 	fin >> buf_string >> num_interaction_types;
 	if (num_interaction_types <= 0 || num_interaction_types > 10) {
-		FFEA_ERROR_MESSG("In %s, %d is an invalid value for 'num_interaction_types'. Value should be 0 < num_interaction_types <= 10.\n", fname.c_str(), num_interaction_types)
+		throw FFEAException("In %s, %d is an invalid value for 'num_interaction_types'. Value should be 0 < num_interaction_types <= 10.", fname.c_str(), num_interaction_types);
 	}
 
 	// Get all interactions
-	interaction = new(std::nothrow) bool*[num_interaction_types];
-	if (interaction == NULL) FFEA_ERROR_MESSG("Could not allocate 2D interaction array\n"); 
+	try {
+		interaction = std::vector<std::vector<bool>>(num_interaction_types);
+	} catch (std::bad_alloc &) {
+		throw FFEAException("Could not allocate 2D interaction array.");
+	}
 	for(int i = 0; i < num_interaction_types; ++i) {
-		interaction[i] = new(std::nothrow) bool[num_interaction_types];
-		if (interaction[i] == NULL) FFEA_ERROR_MESSG("Could not allocate memory for interaction[%d]\n", i);
+	    try {
+			interaction[i] = std::vector<bool>(num_interaction_types);
+	    } catch (std::bad_alloc &) {
+			throw FFEAException("Could not allocate memory for interaction[%d].", i);
+	    }
 		for(int j = 0; j < num_interaction_types; ++j) {
 			if(fin.eof()) {
-				FFEA_ERROR_MESSG("EOF reached prematurely. For 'num_interaction types = %d', expected at %d x %d matrix of 0's and 1's\n", num_interaction_types, num_interaction_types, num_interaction_types)
+				throw FFEAException("EOF reached prematurely. For 'num_interaction types = %d', expected at %d x %d matrix of 0's and 1's.", num_interaction_types, num_interaction_types, num_interaction_types);
 			}
 
 			try {
 				fin >> inter;
 			} catch (...) {
-				FFEA_ERROR_MESSG("In %s, error reading interaction value at Row %d Column %d\n", fname.c_str(), i + 1, j + 1)		
+				throw FFEAException("In %s, error reading interaction value at Row %d Column %d.", fname.c_str(), i + 1, j + 1);
 			}
 
 			if (inter == 0) {
@@ -81,7 +84,7 @@ int BindingSite_matrix::init(string fname) {
 			} else if (inter == 1) {
 				interaction[i][j] = true;
 			} else {
-				FFEA_ERROR_MESSG("Binding Site Param Row %d Column %d must be either 0 or 1\n", i + 1, j + 1)
+				throw FFEAException("Binding Site Param Row %d Column %d must be either 0 or 1.", i + 1, j + 1);
 			}
 		}
 	}
@@ -90,21 +93,18 @@ int BindingSite_matrix::init(string fname) {
 	for(int i = 0; i < num_interaction_types; ++i) {
 		for(int j = i; j < num_interaction_types; ++j) {
 			if(interaction[i][j] != interaction[j][i]) {
-				FFEA_ERROR_MESSG("Binding Site Param Row %d Column %d must equal to Binding Site Param Row %d Column %d (symettric)\n", i + 1, j + 1, j + 1, i + 1)				
+				throw FFEAException("Binding Site Param Row %d Column %d must equal to Binding Site Param Row %d Column %d (symettric).", i + 1, j + 1, j + 1, i + 1);
 			} 
 		}
 	}
 	fin.close();
-	return FFEA_OK;
 }
 
-int BindingSite_matrix::get_num_interaction_types() {
-	
+int BindingSite_matrix::get_num_interaction_types() {	
 	return num_interaction_types;
 }
 
-void BindingSite_matrix::print_to_screen() {
-	
+void BindingSite_matrix::print_to_screen() {	
 	int i, j;
 	cout << "Binding Params Matrix:\n" << endl;
 	for(i = 0; i < num_interaction_types; ++i) {
@@ -124,7 +124,7 @@ BindingSite::BindingSite() {
 	num_faces = 0;
 	site_type = -1;
 	faces.clear();
-	vector3_set_zero(centroid);
+	initialise(centroid);
 	area = 0.0;
 	characteristic_length = 0.0;
 }
@@ -133,13 +133,12 @@ BindingSite::~BindingSite() {
 	num_faces = 0;
 	site_type = -1;
 	faces.clear();
-	vector3_set_zero(centroid);
+	initialise(centroid);
 	area = 0.0;
 	characteristic_length = 0.0;
 }
 
 void BindingSite::print_to_screen() {
-
 	vector<Face*>::iterator it;
 	cout << "Binding Site:";
 	cout << "type = " << site_type << ", num_faces = " << num_faces << endl;
@@ -158,7 +157,6 @@ void BindingSite::set_type(int site_type) {
 }
 
 int BindingSite::get_type() {
-
 	return site_type;
 }
 
@@ -166,27 +164,23 @@ void BindingSite::add_face(Face *aface) {
 	faces.push_back(aface);
 }
 
-void BindingSite::get_centroid(arr3 &v) {
-	
-   arr3Store<scalar,arr3>(centroid.data, v);
+void BindingSite::get_centroid(arr3 &v) {	
+   store(centroid, v);
 }
 
-void BindingSite::calculate_centroid() {
-	
-	vector3_set_zero(centroid);
-	vector3 *face_centroid;
+void BindingSite::calculate_centroid() {	
+	initialise(centroid);
 	vector<Face*>::iterator it;
 	for(it = faces.begin(); it != faces.end(); ++it) {
-		face_centroid = (*it)->get_centroid();
-		centroid.x += face_centroid->x;
-		centroid.y += face_centroid->y;
-		centroid.z += face_centroid->z;
+		arr3 &face_centroid = (*it)->get_centroid();
+		centroid[0] += face_centroid[0];
+		centroid[1] += face_centroid[1];
+		centroid[2] += face_centroid[2];
 	}
-	arr3Resize<scalar,arr3>(1.0/num_faces, centroid.data);
+	resize(1.0/num_faces, centroid);
 }
 
-set<int> BindingSite::get_nodes() {
-	
+set<int> BindingSite::get_nodes() {	
 	set<int> nodes;
 	vector<Face*>::iterator it;
 	for(it = faces.begin(); it != faces.end(); ++it) {
@@ -199,7 +193,6 @@ set<int> BindingSite::get_nodes() {
 }
 
 void BindingSite::calculate_area() {
-
 	area = 0.0;
 	vector<Face*>::iterator it;
 	for(it = faces.begin(); it != faces.end(); ++it) {
@@ -208,34 +201,30 @@ void BindingSite::calculate_area() {
 }
 
 scalar BindingSite::get_area() {
-
 	return area;
 }
 
 void BindingSite::calculate_characteristic_length() {
-
 	calculate_area();
 	characteristic_length = sqrt(area);
 }
 
 scalar BindingSite::get_characteristic_length() {
-
 	return characteristic_length;
 }
 
 bool BindingSite::sites_in_range(BindingSite a, BindingSite b) {
-
 	// Calculate separation and see if less than sum of characteristic length scales / radii
 	scalar separation;
-	vector3 a_cent, b_cent;
+	arr3 a_cent, b_cent;
 	a.calculate_characteristic_length();
 	b.calculate_characteristic_length();
 
 	a.calculate_centroid();
 	b.calculate_centroid();
-	a.get_centroid(a_cent.data);
-	b.get_centroid(b_cent.data);
-	separation = sqrt(pow(a_cent.x - b_cent.x, 2) + pow(a_cent.y - b_cent.y, 2) + pow(a_cent.z - b_cent.z, 2));
+	a.get_centroid(a_cent);
+	b.get_centroid(b_cent);
+	separation = sqrt(pow(a_cent[0] - b_cent[0], 2) + pow(a_cent[1] - b_cent[1], 2) + pow(a_cent[2] - b_cent[2], 2));
 	//cout << "Separation = " << separation << ", Limiting distance = " << a.get_characteristic_length() + b.get_characteristic_length() << endl;
 	//cout << "Char length a = " << a.get_characteristic_length() << ", Char length b = " << b.get_characteristic_length() << endl;
 	if(separation < a.get_characteristic_length() + b.get_characteristic_length()) {

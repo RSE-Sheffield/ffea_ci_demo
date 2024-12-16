@@ -1,0 +1,39 @@
+#
+#  This file is part of the FFEA simulation package
+#
+#  Copyright (c) by the Theory and Development FFEA teams,
+#  as they appear in the README.md file.
+#
+#  FFEA is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  FFEA is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with FFEA.  If not, see <http://www.gnu.org/licenses/>.
+#
+#  To help us fund FFEA development, we humbly ask that you cite
+#  the research papers on the package.
+#
+
+if(Python3_EXECUTABLE)
+    set (VDW_MIN_DIR          steric_vdw_potential_minimum)
+    set (VDW_MIN_CTEST        int_rod_${VDW_MIN_DIR})
+    set (VDW_MIN_DIR_PATH     "${PROJECT_BINARY_DIR}/tests/rods/integration/${VDW_MIN_DIR}/")
+
+    file (COPY run_test.py                  DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY create_straight_rod_vdw.py   DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY params.yml                   DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY z-axis.rod                   DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY steric_twoRods.ffea          DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY interp_twoRods.ffea          DESTINATION ${VDW_MIN_DIR_PATH})
+    file (COPY lj_twoRods.ffea              DESTINATION ${VDW_MIN_DIR_PATH})
+
+    add_test(NAME ${VDW_MIN_CTEST} COMMAND ${Python3_EXECUTABLE} run_test.py "${PROJECT_BINARY_DIR}/src/ffea")
+    set_tests_properties(${VDW_MIN_CTEST} PROPERTIES ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+endif()

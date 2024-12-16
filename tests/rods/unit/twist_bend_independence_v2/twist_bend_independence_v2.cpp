@@ -30,18 +30,18 @@ float twist_energy_perturbation_test(
     //int end_cutoff = rod_to_test.end_cutoff;
     //int p_i_node_node_no = rod_to_test.p_i_node_no;
         
-    float *B_matrix = rod_to_test.B_matrix;
-    float *material_params = rod_to_test.material_params;
-    float *r_all = rod_to_test.current_r;
-    float *r_all_equil = rod_to_test.equil_r;
-    float *m_all = rod_to_test.current_m;
-    float *m_all_equil = rod_to_test.equil_m;
+    const std::vector<float> &B_matrix = rod_to_test.B_matrix;
+    const std::vector<float> &material_params = rod_to_test.material_params;
+    const std::vector<float> &r_all = rod_to_test.current_r;
+    const std::vector<float> &r_all_equil = rod_to_test.equil_r;
+    const std::vector<float> &m_all = rod_to_test.current_m;
+    const std::vector<float> &m_all_equil = rod_to_test.equil_m;
     
     int start_cutoff;
     int end_cutoff;
     int *start_cutoff_ptr = &start_cutoff;
     int *end_cutoff_ptr = &end_cutoff; // for the multiple return values
-    rod::set_cutoff_values(p_i_node_no, rod_to_test.num_elements, start_cutoff_ptr, end_cutoff_ptr);
+    rod::set_cutoff_values(p_i_node_no, rod_to_test.num_nodes, start_cutoff_ptr, end_cutoff_ptr);
                 
     //feenableexcept( FE_INVALID | FE_OVERFLOW );
         
@@ -49,18 +49,18 @@ float twist_energy_perturbation_test(
     // We need to make a copy of it, because we'l be modifying it for our
     // Numerical differentiation later on.
 
-    float B_equil[4][4];
+    rod::float4x4 B_equil;
     rod::load_B_all(B_equil, B_matrix, p_i_node_no);
     
     // We'll end up modifying this, but we need the original later to update the material frame
-    float original_p[4][3];   
+    rod::float4x3 original_p;   
     rod::load_p(original_p, r_all, p_i_node_no);
 
-    float p[4][3]; // the perturbed e
-    float p_equil[4][3];
-    float m[4][3];
-    float m_equil[4][3];
-    float material[4][3]; // 0 = k (stretch), 1 = beta (twist), 2 = unused (for now)
+    rod::float4x3 p; // the perturbed e
+    rod::float4x3 p_equil;
+    rod::float4x3 m;
+    rod::float4x3 m_equil;
+    rod::float4x3 material; // 0 = k (stretch), 1 = beta (twist), 2 = unused (for now)
     
 //    rod::print_array("rod_to_test.current_m", rod_to_test.current_m, 18);
     
@@ -90,13 +90,13 @@ float twist_energy_perturbation_test(
     std::cout << "orig p = " << p[i][x] << ", " << p[i][y] << ", " << p[i][z] << "\n";
     
     // Apply our perturbation in x, y or z (for numerical differentiation)
-    if (perturbation_dimension < 4 and perturbation_amount != 0){ //e.g. if we're perturbing x, y, or z
+    if (perturbation_dimension < 4 && perturbation_amount != 0){ //e.g. if we're perturbing x, y, or z
         p[im1][perturbation_dimension] += perturbation_amount;
         p[i][perturbation_dimension] -= perturbation_amount;
     }
     
     // If we perturb our angle instead, we apply a rodrigues rotation.
-    if(perturbation_dimension == 4 and perturbation_amount != 0){ // if we're perturbing the twist
+    if(perturbation_dimension == 4 && perturbation_amount != 0){ // if we're perturbing the twist
         rod::rodrigues_rotation(m[i], p[i], perturbation_amount, m[i]);
     }
     
@@ -110,7 +110,7 @@ float twist_energy_perturbation_test(
     //std::cout << "]\n";
     //
     //If we've perturbed it in x, y, or z, we need to update m, and then adjust it to make sure it's perpendicular
-    if (perturbation_dimension < 4 and perturbation_amount != 0){ 
+    if (perturbation_dimension < 4 && perturbation_amount != 0){ 
         rod::update_m1_matrix_all(m, original_p, p, m, start_cutoff, end_cutoff);
     }
     
@@ -137,7 +137,7 @@ float twist_energy_perturbation_test(
     
     //std::cout << "start_cutoff = " << start_cutoff << "\n";
     
-    //float m_orig_temp[4][3];
+    //rod::float4x3 m_orig_temp;
     //rod::load_m(m_orig_temp, m_all, p_i_node_no);    
     //float m1_updated_twisten = rod::get_twist_energy(material[i][1], m[i], m[im1], m_orig_temp[i], m_orig_temp[im1], p[im1], p[i], original_p[im1], original_p[i]);
     //std::cout << "TWIST ENERGY DELIVERED BY UPDATING M1 (should be 0!): " << m1_updated_twisten << "\n";
@@ -149,8 +149,8 @@ float twist_energy_perturbation_test(
 //    std::cout << "\n";
 
     // Compute m_i_2 (we know it's perpendicular to e_i and m_i_1, so this shouldn't be too hard)
-    float n[4][3];
-    float n_equil[4][3];
+    rod::float4x3 n;
+    rod::float4x3 n_equil;
     rod::cross_all(p, m, n);
     rod::cross_all(p_equil, m_equil, n_equil);
     
@@ -164,23 +164,23 @@ float twist_energy_perturbation_test(
 //    return 0;
 //    std::cout << "start cutoff = " << start_cutoff << ", end cutoff = " << end_cutoff << "\n";
         
-    if (start_cutoff == 0 and end_cutoff == 0){
+    if (start_cutoff == 0 && end_cutoff == 0){
         twist_energy += rod::get_twist_energy(material[i][1], m[i], m[im1], m_equil[i], m_equil[im1], p[im1], p[i], p_equil[im1], p_equil[i]);
         twist_energy += rod::get_twist_energy(material[ip1][1], m[ip1], m[i], m_equil[ip1], m_equil[i], p[i], p[ip1], p_equil[i], p_equil[ip1]);
         twist_energy += rod::get_twist_energy(material[im1][1], m[im1], m[im2], m_equil[im1], m_equil[im2], p[im2], p[im1], p_equil[im2], p_equil[im1]);
     }
-    else if (start_cutoff == 1 and end_cutoff == 0){
+    else if (start_cutoff == 1 && end_cutoff == 0){
         twist_energy += rod::get_twist_energy(material[i][1], m[i], m[im1], m_equil[i], m_equil[im1], p[im1], p[i], p_equil[im1], p_equil[i]);
         twist_energy += rod::get_twist_energy(material[ip1][1], m[ip1], m[i], m_equil[ip1], m_equil[i], p[i], p[ip1], p_equil[i], p_equil[ip1]);
     }
-    else if (start_cutoff == 2 and end_cutoff == 0){
+    else if (start_cutoff == 2 && end_cutoff == 0){
         twist_energy += rod::get_twist_energy(material[ip1][1], m[ip1], m[i], m_equil[ip1], m_equil[i], p[i], p[ip1], p_equil[i], p_equil[ip1]);
     }
-    else if (start_cutoff == 0 and end_cutoff == 1){
+    else if (start_cutoff == 0 && end_cutoff == 1){
         twist_energy += rod::get_twist_energy(material[i][1], m[i], m[im1], m_equil[i], m_equil[im1], p[im1], p[i], p_equil[im1], p_equil[i]);
         twist_energy += rod::get_twist_energy(material[im1][1], m[im1], m[im2], m_equil[im1], m_equil[im2], p[im2], p[im1], p_equil[im2], p_equil[im1]);
     }    
-    else if (start_cutoff == 0 and end_cutoff == 2){
+    else if (start_cutoff == 0 && end_cutoff == 2){
         twist_energy += rod::get_twist_energy(material[im1][1], m[im1], m[im2], m_equil[im1], m_equil[im2], p[im2], p[im1], p_equil[im2], p_equil[im1]);
      }
     else{
@@ -196,7 +196,7 @@ int main(){
     test_rod.load_contents("twisted_bent_rod.rod");
     test_rod.set_units();
     
-    float* currm_data = test_rod.current_m;
+    const std::vector<float> &currm_data = test_rod.current_m;
     
 //    rod::print_array("rod current_r", currm_data, 18);
     
