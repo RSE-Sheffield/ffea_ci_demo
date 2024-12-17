@@ -14,7 +14,7 @@ on:
   # Pull requests to main, that do not only modify other workflow files
   pull_request:
     branches:
-      - 'main'
+      - 'master'
     paths:
       - "**"
       - "!.github/**"
