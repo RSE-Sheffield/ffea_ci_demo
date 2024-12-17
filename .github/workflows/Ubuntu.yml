@@ -10,15 +10,17 @@ on:
     paths:
       - "**"
       - "!.github/**"
+      - "!matlab/**"
       - ".github/workflows/Ubuntu.yml"
   # Pull requests to main, that do not only modify other workflow files
   pull_request:
     branches:
-      - 'master'
+      - 'main'
     paths:
       - "**"
       - "!.github/**"
-      - ".github/workflows/Ubuntu.yml"
+      - "!matlab/**"
+      - ".github/workflows/Windows.yml"
   # Allow manual invocation.
   workflow_dispatch:
 
