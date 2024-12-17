@@ -107,7 +107,7 @@ jobs:
         path: ${{ env.BUILD_DIR }}/src/ffea
         if-no-files-found: error
         retention-days: 5
-   - name: Upload FFEA Artifact
+   - name: Upload FFEA_MB Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARTIFACT_NAME_FFEAMB }}
