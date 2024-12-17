@@ -10,17 +10,15 @@ on:
     paths:
       - "**"
       - "!.github/**"
-      - "!matlab/**"
       - ".github/workflows/Ubuntu.yml"
   # Pull requests to main, that do not only modify other workflow files
   pull_request:
     branches:
-      - 'main'
+      - 'master'
     paths:
       - "**"
       - "!.github/**"
-      - "!matlab/**"
-      - ".github/workflows/Windows.yml"
+      - ".github/workflows/Ubuntu.yml"
   # Allow manual invocation.
   workflow_dispatch:
 
@@ -109,7 +107,7 @@ jobs:
         path: ${{ env.BUILD_DIR }}/src/ffea
         if-no-files-found: error
         retention-days: 5
-   - name: Upload FFEA_MB Artifact
+    - name: Upload FFEA_MB Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARTIFACT_NAME_FFEAMB }}
