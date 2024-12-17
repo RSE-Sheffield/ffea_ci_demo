@@ -39,8 +39,8 @@ jobs:
             os: ubuntu-22.04
           - compiler: gcc-11
             os: ubuntu-22.04
-          - compiler: gcc-8
-            os: ubuntu-20.04
+          - compiler: gcc-10
+            os: ubuntu-22.04
         config:
           - name: "Release"
             config: "Release"
@@ -54,7 +54,7 @@ jobs:
             config:
               name: "Debug"
           - cxx:
-              compiler: gcc-8
+              compiler: gcc-10
             config:
               name: "Debug"
 
