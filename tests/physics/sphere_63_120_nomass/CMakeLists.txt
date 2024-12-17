@@ -25,8 +25,10 @@
 if(Python3_EXECUTABLE)
     add_test(NAME sphere_nomass COMMAND ${PROJECT_BINARY_DIR}/src/ffea sphere_63_120_nomass.ffea)
     set_tests_properties(sphere_nomass PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1)
+    set_tests_properties(sphere_nomass PROPERTIES LABELS "SLOW_TEST")
     add_test(NAME sphere_nomass_check COMMAND ${Python3_EXECUTABLE} testAverages.py)
     set_tests_properties(sphere_nomass_check PROPERTIES DEPENDS sphere_nomass ENVIRONMENT_MODIFICATION PYTHONPATH=unset: ENVIRONMENT_MODIFICATION PYTHONHOME=unset:)
+    set_tests_properties(sphere_nomass_check PROPERTIES LABELS "SLOW_TEST")
 endif()
 
 

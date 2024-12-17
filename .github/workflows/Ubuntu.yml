@@ -114,3 +114,8 @@ jobs:
         path: ${{ env.BUILD_DIR }}/src/ffea_mb
         if-no-files-found: error
         retention-days: 5
+        
+    - name: Run Tests (Slow Tests are Excluded)
+      if: ${{ env.CONFIG }} == "Release"
+      working-directory: ${{ env.BUILD_DIR }}
+      run: ctest -LE SLOW_TEST
