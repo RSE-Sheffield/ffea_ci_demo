@@ -118,4 +118,4 @@ jobs:
     - name: Run Tests (Slow Tests are Excluded)
       if: ${{ env.CONFIG }} == "Release"
       working-directory: ${{ env.BUILD_DIR }}
-      run: ctest -LE SLOW_TEST
+      run: ctest -LE SLOW_TEST --output-on-failure
