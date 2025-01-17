@@ -29,4 +29,5 @@ file (COPY bend.ffea DESTINATION ${CONNECTIONPROPDIR})
 file (COPY twist.ffea DESTINATION ${CONNECTIONPROPDIR})
 add_subdirectory(sphere_structure)
 add_test(NAME connection_propagation COMMAND ${PROJECT_BINARY_DIR}/src/ffea connection_propagation.ffeatest)
+set_tests_properties(connection_propagation PROPERTIES LABELS "SLOW_TEST")
 
